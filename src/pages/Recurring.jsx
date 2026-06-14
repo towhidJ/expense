@@ -2,15 +2,31 @@ import { useState } from 'react';
 import { useRecurring } from '../hooks/useRecurring';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
-import { Repeat, Plus, Edit2, Trash2, CalendarClock } from 'lucide-react';
+import { useTransactions } from '../hooks/useTransactions';
+import { Repeat, Plus, Edit2, Trash2, CalendarClock, Play, Check } from 'lucide-react';
+
+function getNextRunDate(frequency, fromDate) {
+  const d = new Date(fromDate);
+  switch (frequency) {
+    case 'daily': d.setDate(d.getDate() + 1); break;
+    case 'weekly': d.setDate(d.getDate() + 7); break;
+    case 'monthly': d.setMonth(d.getMonth() + 1); break;
+    case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+    default: d.setMonth(d.getMonth() + 1);
+  }
+  return d.toISOString().split('T')[0];
+}
 
 export default function Recurring() {
   const { recurring, loading, addRecurring, updateRecurring, deleteRecurring } = useRecurring();
-  const { accounts } = useAccounts();
+  const { accounts, fetchAccounts } = useAccounts();
   const { categories } = useCategories();
-  
+  const { addTransaction } = useTransactions();
+
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [runningId, setRunningId] = useState(null);
+  const [ranId, setRanId] = useState(null);
 
   const initialForm = {
     title: '',
@@ -29,8 +45,10 @@ export default function Recurring() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Strip joined relations (categories/accounts) so we only write real columns
+      const { categories: _c, accounts: _a, ...cleanForm } = form;
       const payload = {
-        ...form,
+        ...cleanForm,
         amount: parseFloat(form.amount)
       };
       if (editingItem) {
@@ -47,6 +65,41 @@ export default function Recurring() {
     }
   };
 
+  const handleRunNow = async (item) => {
+    if (!window.confirm(`Run "${item.title}" now for ৳${item.amount.toLocaleString()}?`)) return;
+    setRunningId(item.id);
+    try {
+      // Create the transaction
+      await addTransaction({
+        account_id: item.account_id,
+        category_id: item.category_id,
+        type: item.type,
+        amount: item.amount,
+        date: new Date().toISOString().split('T')[0],
+        description: `${item.title} (Recurring - Manual Run)`
+      });
+      // Advance the next_run_date (strip joined relations before writing)
+      const nextDate = getNextRunDate(item.frequency, item.next_run_date);
+      const { categories: _c, accounts: _a, ...cleanItem } = item;
+      await updateRecurring(item.id, { ...cleanItem, next_run_date: nextDate });
+      await fetchAccounts();
+      setRanId(item.id);
+      setTimeout(() => setRanId(null), 2500);
+    } catch (err) {
+      console.error(err);
+      alert('Error running recurring transaction: ' + err.message);
+    }
+    setRunningId(null);
+  };
+
+  const totalMonthlyExpense = recurring
+    .filter(r => r.is_active && r.type === 'expense' && r.frequency === 'monthly')
+    .reduce((s, r) => s + Number(r.amount), 0);
+
+  const totalMonthlyIncome = recurring
+    .filter(r => r.is_active && r.type === 'income' && r.frequency === 'monthly')
+    .reduce((s, r) => s + Number(r.amount), 0);
+
   if (loading) return <div className="text-white/50 p-6">Loading recurring transactions...</div>;
 
   return (
@@ -62,6 +115,22 @@ export default function Recurring() {
         >
           <Plus size={18} /> Add Recurring
         </button>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <p className="text-xs text-white/40">Active Schedules</p>
+          <p className="text-xl font-bold text-white mt-1">{recurring.filter(r => r.is_active).length}</p>
+        </div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <p className="text-xs text-white/40">Monthly Expenses</p>
+          <p className="text-xl font-bold text-red-400 mt-1">৳{totalMonthlyExpense.toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <p className="text-xs text-white/40">Monthly Income</p>
+          <p className="text-xl font-bold text-emerald-400 mt-1">৳{totalMonthlyIncome.toLocaleString()}</p>
+        </div>
       </div>
 
       {(isAdding || editingItem) && (
@@ -164,6 +233,7 @@ export default function Recurring() {
                 </tr>
               ) : recurring.map(item => {
                 const isExpense = item.type === 'expense';
+                const isDue = new Date(item.next_run_date) <= new Date();
                 return (
                   <tr key={item.id} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${!item.is_active ? 'opacity-50' : ''}`}>
                     <td className="py-4 px-5">
@@ -179,7 +249,10 @@ export default function Recurring() {
                     </td>
                     <td className="py-4 px-5">
                       <p className="text-white/80 capitalize">{item.frequency}</p>
-                      <p className="text-white/40 text-xs">Next: {new Date(item.next_run_date).toLocaleDateString()}</p>
+                      <p className={`text-xs ${isDue && item.is_active ? 'text-orange-400 font-medium' : 'text-white/40'}`}>
+                        Next: {new Date(item.next_run_date).toLocaleDateString()}
+                        {isDue && item.is_active && ' ⚠️'}
+                      </p>
                     </td>
                     <td className={`py-4 px-5 text-right font-medium ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
                       {isExpense ? '-' : '+'}৳{item.amount.toLocaleString()}
@@ -191,6 +264,25 @@ export default function Recurring() {
                     </td>
                     <td className="py-4 px-5 text-right">
                       <div className="flex justify-end gap-2">
+                        {/* Run Now Button */}
+                        {item.is_active && (
+                          <button
+                            onClick={() => handleRunNow(item)}
+                            disabled={runningId === item.id}
+                            title="Run this transaction now"
+                            className={`p-1.5 rounded-lg transition-all ${
+                              ranId === item.id
+                                ? 'text-emerald-400 bg-emerald-500/10'
+                                : 'text-white/40 hover:text-orange-400 hover:bg-orange-500/10'
+                            }`}
+                          >
+                            {ranId === item.id ? <Check size={16} /> : runningId === item.id ? (
+                              <div className="w-4 h-4 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+                            ) : (
+                              <Play size={16} />
+                            )}
+                          </button>
+                        )}
                         <button onClick={() => { setEditingItem(item); setForm(item); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
                           <Edit2 size={16} />
                         </button>

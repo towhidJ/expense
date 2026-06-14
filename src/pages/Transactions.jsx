@@ -3,10 +3,12 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, CalendarDays } from 'lucide-react';
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function Transactions() {
-  const { transactions, loading, fetchTransactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
+  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -14,9 +16,22 @@ export default function Transactions() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
+  const now = new Date();
+  const [filterMode, setFilterMode] = useState('month'); // 'month' | 'all'
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+
   const filtered = transactions.filter(t => {
+    // Date filter
+    if (filterMode === 'month') {
+      const d = new Date(t.date);
+      if (d.getMonth() + 1 !== month || d.getFullYear() !== year) return false;
+    }
+    // Type filter
     if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+    // Category filter
     if (categoryFilter !== 'all' && t.category_id !== categoryFilter) return false;
+    // Search filter
     if (search) {
       const s = search.toLowerCase();
       return (t.description?.toLowerCase().includes(s) || t.categories?.name?.toLowerCase().includes(s));
@@ -76,8 +91,9 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters Row */}
       <div className="flex flex-wrap gap-3">
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
@@ -88,6 +104,8 @@ export default function Transactions() {
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
           />
         </div>
+
+        {/* Type Filter */}
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
@@ -97,6 +115,8 @@ export default function Transactions() {
           <option value="income" className="bg-[#12122a]">💰 Income</option>
           <option value="expense" className="bg-[#12122a]">💸 Expense</option>
         </select>
+
+        {/* Category Filter */}
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
@@ -107,6 +127,56 @@ export default function Transactions() {
             <option key={c.id} value={c.id} className="bg-[#12122a]">{c.icon} {c.name}</option>
           ))}
         </select>
+      </div>
+
+      {/* Date Filter Row */}
+      <div className="flex flex-wrap items-center gap-3 p-3 bg-white/[0.03] border border-white/8 rounded-xl">
+        <CalendarDays className="w-4 h-4 text-white/40 shrink-0" />
+        
+        {/* Mode Toggle */}
+        <div className="flex gap-1 bg-white/5 p-1 rounded-lg">
+          <button
+            onClick={() => setFilterMode('month')}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${filterMode === 'month' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/40 hover:text-white'}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setFilterMode('all')}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${filterMode === 'all' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/40 hover:text-white'}`}
+          >
+            All Time
+          </button>
+        </div>
+
+        {filterMode === 'month' && (
+          <>
+            <select
+              value={month}
+              onChange={e => setMonth(parseInt(e.target.value))}
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+            >
+              {MONTHS.map((m, i) => (
+                <option key={i} value={i + 1} className="bg-[#12122a]">{m}</option>
+              ))}
+            </select>
+            <select
+              value={year}
+              onChange={e => setYear(parseInt(e.target.value))}
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+            >
+              {[2024, 2025, 2026, 2027].map(y => (
+                <option key={y} value={y} className="bg-[#12122a]">{y}</option>
+              ))}
+            </select>
+            <span className="text-white/30 text-xs ml-1">
+              Showing: {MONTHS[month - 1]} {year} ({filtered.length} transactions)
+            </span>
+          </>
+        )}
+        {filterMode === 'all' && (
+          <span className="text-white/30 text-xs">Showing all {filtered.length} transactions</span>
+        )}
       </div>
 
       {/* Transaction List */}

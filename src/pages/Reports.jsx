@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
+import { useAccounts } from '../context/AccountContext';
 import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
 import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet } from 'lucide-react';
@@ -33,26 +34,32 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function Reports() {
   const { transactions } = useTransactions();
   const { categories } = useCategories();
+  const { accounts } = useAccounts();
   const now = new Date();
   const [filterType, setFilterType] = useState('monthly'); // 'monthly' or 'custom'
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]);
+  const [accountFilter, setAccountFilter] = useState('all');
 
   const monthTx = useMemo(() => {
     return transactions.filter(t => {
       const d = new Date(t.date);
+      let passDate = false;
       if (filterType === 'monthly') {
-        return d.getMonth() + 1 === month && d.getFullYear() === year;
+        passDate = d.getMonth() + 1 === month && d.getFullYear() === year;
       } else {
         const tTime = d.getTime();
         const sTime = new Date(startDate).getTime();
         const eTime = new Date(endDate).getTime();
-        return tTime >= sTime && tTime <= eTime;
+        passDate = tTime >= sTime && tTime <= eTime;
       }
+      if (!passDate) return false;
+      if (accountFilter !== 'all' && t.account_id !== accountFilter) return false;
+      return true;
     });
-  }, [transactions, month, year, filterType, startDate, endDate]);
+  }, [transactions, month, year, filterType, startDate, endDate, accountFilter]);
 
   const stats = useMemo(() => {
     const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -196,6 +203,18 @@ export default function Reports() {
               >Custom Range</button>
             </div>
           </div>
+
+          {/* Account filter */}
+          <select
+            value={accountFilter}
+            onChange={e => setAccountFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+          >
+            <option value="all" className="bg-[#12122a]">All Accounts</option>
+            {accounts.map(a => (
+              <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name}</option>
+            ))}
+          </select>
 
           {filterType === 'monthly' ? (
             <div className="flex gap-3">

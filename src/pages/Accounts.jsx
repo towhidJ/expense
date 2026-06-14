@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useAccounts } from '../context/AccountContext';
-import { Plus, Wallet, Building, CreditCard, Smartphone, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Wallet, Building, CreditCard, Smartphone, Edit2, Trash2, Landmark } from 'lucide-react';
+
+const ACCOUNT_TYPES = [
+  { id: 'bank', label: 'Bank', icon: Building, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  { id: 'cash', label: 'Cash', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { id: 'mobile', label: 'Mobile', icon: Smartphone, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { id: 'wallet', label: 'Wallet', icon: Wallet, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+  { id: 'credit_card', label: 'Credit Card', icon: CreditCard, color: 'text-red-400', bg: 'bg-red-500/10' },
+];
 
 export default function Accounts() {
   const { accounts, loading, addAccount, updateAccount, deleteAccount } = useAccounts();
@@ -35,15 +43,24 @@ export default function Accounts() {
   };
 
   const getIcon = (type) => {
-    switch(type) {
-      case 'bank': return <Building className="text-blue-400" size={24} />;
-      case 'cash': return <Wallet className="text-emerald-400" size={24} />;
-      case 'mobile': return <Smartphone className="text-purple-400" size={24} />;
-      case 'wallet': return <Wallet className="text-orange-400" size={24} />;
-      case 'credit_card': return <CreditCard className="text-red-400" size={24} />;
-      default: return <Building className="text-white/50" size={24} />;
-    }
+    const t = ACCOUNT_TYPES.find(at => at.id === type);
+    if (!t) return <Building className="text-white/50" size={24} />;
+    const Icon = t.icon;
+    return <Icon className={t.color} size={24} />;
   };
+
+  const getTypeBg = (type) => {
+    const t = ACCOUNT_TYPES.find(at => at.id === type);
+    return t ? t.bg : 'bg-white/5';
+  };
+
+  // Summary totals
+  const totalBalance = accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0);
+  const byType = ACCOUNT_TYPES.map(t => ({
+    ...t,
+    total: accounts.filter(a => a.type === t.id).reduce((s, a) => s + Number(a.current_balance || 0), 0),
+    count: accounts.filter(a => a.type === t.id).length
+  })).filter(t => t.count > 0);
 
   if (loading) return <div className="text-white/50 p-6">Loading accounts...</div>;
 
@@ -62,6 +79,34 @@ export default function Accounts() {
         </button>
       </div>
 
+      {/* Total Balance Hero */}
+      {accounts.length > 0 && (
+        <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 to-purple-600/10 border border-cyan-500/20 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Landmark className="w-5 h-5 text-cyan-400" />
+                <p className="text-sm text-white/60">Total Cash Position</p>
+              </div>
+              <p className="text-4xl font-bold text-white">৳{totalBalance.toLocaleString()}</p>
+              <p className="text-white/40 text-sm mt-1">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</p>
+            </div>
+            {/* Type breakdown */}
+            <div className="flex flex-wrap gap-3">
+              {byType.map(t => (
+                <div key={t.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${t.bg} border border-white/10`}>
+                  <div>{getIcon(t.id)}</div>
+                  <div>
+                    <p className="text-xs text-white/40">{t.label}</p>
+                    <p className="text-sm font-semibold text-white">৳{t.total.toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {(isAdding || editingAccount) && (
         <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">{editingAccount ? 'Edit Account' : 'New Account'}</h2>
@@ -73,11 +118,9 @@ export default function Accounts() {
             <div>
               <label className="block text-sm text-white/60 mb-1">Type</label>
               <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
-                <option value="bank">Bank Account</option>
-                <option value="cash">Cash</option>
-                <option value="mobile">Mobile Banking</option>
-                <option value="wallet">Digital Wallet</option>
-                <option value="credit_card">Credit Card</option>
+                {ACCOUNT_TYPES.map(t => (
+                  <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -101,33 +144,44 @@ export default function Accounts() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {accounts.map(acc => (
-          <div key={acc.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-colors group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#12122a] flex items-center justify-center">
-                  {getIcon(acc.type)}
+        {accounts.map(acc => {
+          const typeInfo = ACCOUNT_TYPES.find(t => t.id === acc.type);
+          const change = Number(acc.current_balance) - Number(acc.opening_balance);
+          return (
+            <div key={acc.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-colors group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full ${typeInfo?.bg || 'bg-white/5'} flex items-center justify-center`}>
+                    {getIcon(acc.type)}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium">{acc.name}</h3>
+                    <p className="text-white/40 text-xs capitalize">{acc.type.replace('_', ' ')}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-white font-medium">{acc.name}</h3>
-                  <p className="text-white/40 text-xs capitalize">{acc.type.replace('_', ' ')}</p>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => { setEditingAccount(acc); setForm(acc); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => deleteAccount(acc.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingAccount(acc); setForm(acc); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
-                  <Edit2 size={16} />
-                </button>
-                <button onClick={() => deleteAccount(acc.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
-                  <Trash2 size={16} />
-                </button>
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <div className="flex justify-between items-end">
+                  <p className="text-white/40 text-sm">Balance</p>
+                  {change !== 0 && (
+                    <span className={`text-xs font-medium ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {change >= 0 ? '+' : ''}৳{change.toLocaleString()} from opening
+                    </span>
+                  )}
+                </div>
+                <p className="text-2xl font-semibold text-white">{acc.currency}{Number(acc.current_balance).toLocaleString()}</p>
               </div>
             </div>
-            <div className="pt-4 border-t border-white/5">
-              <p className="text-white/40 text-sm">Balance</p>
-              <p className="text-2xl font-semibold text-white">{acc.currency}{acc.current_balance.toLocaleString()}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {accounts.length === 0 && !isAdding && (
         <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">

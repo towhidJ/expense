@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCategories } from '../hooks/useCategories';
+import { useTransactions } from '../hooks/useTransactions';
 import { Plus, Edit2, Trash2, Check, X, ShieldAlert } from 'lucide-react';
 
 const COLORS = [
@@ -12,6 +13,23 @@ const ICONS = ['💰', '💻', '📈', '🎁', '💵', '🍔', '🚗', '🛍️'
 
 export default function Categories() {
   const { categories, loading, addCategory, updateCategory, deleteCategory } = useCategories();
+  const { transactions } = useTransactions();
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // Count transactions per category for this month
+  const txCountByCategory = useMemo(() => {
+    const map = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear && t.category_id) {
+        map[t.category_id] = (map[t.category_id] || 0) + 1;
+      }
+    });
+    return map;
+  }, [transactions, currentMonth, currentYear]);
   const [activeTab, setActiveTab] = useState('expense');
   const [isAdding, setIsAdding] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -137,30 +155,41 @@ export default function Categories() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredCategories.map(category => (
-          <div key={category.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner shrink-0" style={{ backgroundColor: `${category.color}15`, color: category.color, border: `1px solid ${category.color}30` }}>
-                {category.icon}
+        {filteredCategories.map(category => {
+          const txCount = txCountByCategory[category.id] || 0;
+          return (
+            <div key={category.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner shrink-0 relative" style={{ backgroundColor: `${category.color}15`, color: category.color, border: `1px solid ${category.color}30` }}>
+                  {category.icon}
+                  {txCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-cyan-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg">
+                      {txCount > 99 ? '99+' : txCount}
+                    </span>
+                  )}
+                </div>
+                <div className="overflow-hidden">
+                  <h3 className="text-white font-medium truncate" title={category.name}>{category.name}</h3>
+                  <p className="text-xs text-white/40">
+                    {category.is_default ? 'System Default' : 'Custom'}
+                    {txCount > 0 && <span className="text-cyan-400 ml-1">· {txCount} this month</span>}
+                  </p>
+                </div>
               </div>
-              <div className="overflow-hidden">
-                <h3 className="text-white font-medium truncate" title={category.name}>{category.name}</h3>
-                <p className="text-xs text-white/40">{category.is_default ? 'System Default' : 'Custom'}</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => { setEditingCategory(category); setForm(category); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg shrink-0">
-                <Edit2 size={16} />
-              </button>
-              {!category.is_default && (
-                <button onClick={() => handleDelete(category.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg shrink-0">
-                  <Trash2 size={16} />
+              
+              <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => { setEditingCategory(category); setForm(category); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg shrink-0">
+                  <Edit2 size={16} />
                 </button>
-              )}
+                {!category.is_default && (
+                  <button onClick={() => handleDelete(category.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg shrink-0">
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredCategories.length === 0 && !isAdding && (

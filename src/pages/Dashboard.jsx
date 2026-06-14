@@ -8,11 +8,12 @@ import { useAccounts } from '../context/AccountContext';
 import { useAssets } from '../hooks/useAssets';
 import { useInvestments } from '../hooks/useInvestments';
 import { useLiabilities } from '../hooks/useLiabilities';
+import { useRecurring } from '../hooks/useRecurring';
 import StatCard from '../components/StatCard';
 import ChartCard from '../components/ChartCard';
 import TransactionList from '../components/TransactionList';
 import BudgetCard from '../components/BudgetCard';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, Shield, Bike, Landmark, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, Shield, Bike, Landmark, Target, CalendarClock } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const CHART_COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#6366f1', '#f97316'];
@@ -44,6 +45,18 @@ export default function Dashboard() {
   const { assets } = useAssets();
   const { investments } = useInvestments();
   const { liabilities } = useLiabilities();
+  const { recurring } = useRecurring();
+
+  // Upcoming recurring in next 30 days
+  const upcomingRecurring = useMemo(() => {
+    const today = new Date();
+    const in30 = new Date();
+    in30.setDate(today.getDate() + 30);
+    return recurring
+      .filter(r => r.is_active && new Date(r.next_run_date) <= in30)
+      .sort((a, b) => new Date(a.next_run_date) - new Date(b.next_run_date))
+      .slice(0, 5);
+  }, [recurring]);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -271,6 +284,36 @@ export default function Dashboard() {
           </div>
         </ChartCard>
       </div>
+
+      {/* Upcoming Recurring */}
+      {upcomingRecurring.length > 0 && (
+        <ChartCard title="Upcoming Payments" subtitle="Recurring in next 30 days">
+          <div className="space-y-3">
+            {upcomingRecurring.map(item => {
+              const isExpense = item.type === 'expense';
+              const isOverdue = new Date(item.next_run_date) < new Date();
+              return (
+                <div key={item.id} className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isExpense ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
+                      {item.categories?.icon || <CalendarClock size={14} className={isExpense ? 'text-red-400' : 'text-emerald-400'} />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{item.title}</p>
+                      <p className={`text-xs ${isOverdue ? 'text-orange-400 font-medium' : 'text-white/40'}`}>
+                        {isOverdue ? '⚠️ Overdue · ' : ''}{new Date(item.next_run_date).toLocaleDateString()} · {item.frequency}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-sm font-semibold ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {isExpense ? '-' : '+'}৳{item.amount.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </ChartCard>
+      )}
     </div>
   );
 }

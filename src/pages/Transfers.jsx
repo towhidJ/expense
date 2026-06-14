@@ -5,7 +5,7 @@ import { ArrowRightLeft, Plus } from 'lucide-react';
 
 export default function Transfers() {
   const { transfers, loading: loadingTransfers, addTransfer } = useTransfers();
-  const { accounts } = useAccounts();
+  const { accounts, fetchAccounts } = useAccounts();
   const [isAdding, setIsAdding] = useState(false);
 
   const initialForm = {
@@ -37,13 +37,15 @@ export default function Transfers() {
       });
       setIsAdding(false);
       setForm(initialForm);
-      // We don't have a way to force AccountContext to refetch from here easily,
-      // but a page refresh will do it. In a real app we'd dispatch an event or use a global store.
+      // Refresh account balances after transfer
+      await fetchAccounts();
     } catch (err) {
       console.error(err);
       alert('Error processing transfer');
     }
   };
+
+  const fromAccount = accounts.find(a => a.id === form.from_account_id);
 
   if (loadingTransfers) return <div className="text-white/50 p-6">Loading transfers...</div>;
 
@@ -62,6 +64,18 @@ export default function Transfers() {
         </button>
       </div>
 
+      {/* Account balance preview */}
+      {accounts.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {accounts.map(acc => (
+            <div key={acc.id} className="bg-white/5 border border-white/10 rounded-xl p-3">
+              <p className="text-white/40 text-xs truncate">{acc.name}</p>
+              <p className="text-white font-semibold mt-1">{acc.currency}{Number(acc.current_balance).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {isAdding && (
         <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Record a Transfer</h2>
@@ -72,12 +86,15 @@ export default function Transfers() {
                 <option value="">Select Account</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
               </select>
+              {fromAccount && (
+                <p className="text-xs text-white/40 mt-1">Available: {fromAccount.currency}{Number(fromAccount.current_balance).toLocaleString()}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm text-white/60 mb-1">To Account</label>
               <select required value={form.to_account_id} onChange={e => setForm({...form, to_account_id: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
                 <option value="">Select Account</option>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                {accounts.filter(a => a.id !== form.from_account_id).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
@@ -122,7 +139,7 @@ export default function Transfers() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <span className="text-white/80">{t.from_account?.name || 'Unknown'}</span>
-                      <ArrowRightLeft size={14} className="text-white/30" />
+                      <ArrowRightLeft size={14} className="text-white/30 shrink-0" />
                       <span className="text-white/80">{t.to_account?.name || 'Unknown'}</span>
                     </div>
                   </td>

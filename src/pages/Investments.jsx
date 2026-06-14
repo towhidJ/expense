@@ -11,7 +11,9 @@ export default function Investments() {
     name: '',
     type: 'stocks',
     invested_amount: 0,
-    current_value: 0
+    current_value: 0,
+    purchase_date: new Date().toISOString().split('T')[0],
+    notes: ''
   };
   const [form, setForm] = useState(initialForm);
 
@@ -29,7 +31,7 @@ export default function Investments() {
     try {
       const roi = calculateROI(form.invested_amount, form.current_value);
       const profit_loss = calculateProfitLoss(form.invested_amount, form.current_value);
-      
+
       const payload = {
         ...form,
         roi,
@@ -101,7 +103,7 @@ export default function Investments() {
 
       {(isAdding || editingInvestment) && (
         <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editingInvestment ? 'Edit Asset' : 'New Investment'}</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">{editingInvestment ? 'Edit Investment' : 'New Investment'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/60 mb-1">Asset Name / Ticker</label>
@@ -125,6 +127,14 @@ export default function Investments() {
               <label className="block text-sm text-white/60 mb-1">Current Market Value</label>
               <input required type="number" step="0.01" value={form.current_value} onChange={e => setForm({...form, current_value: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
             </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1">Purchase Date</label>
+              <input type="date" value={form.purchase_date} onChange={e => setForm({...form, purchase_date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1">Notes</label>
+              <input type="text" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50" placeholder="Optional notes..." />
+            </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
               <button type="button" onClick={() => {setIsAdding(false); setEditingInvestment(null);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition-all font-medium">Save Investment</button>
@@ -139,6 +149,7 @@ export default function Investments() {
             <thead>
               <tr className="bg-white/5 border-b border-white/10">
                 <th className="text-left py-4 px-5 text-white/60 font-medium">Asset</th>
+                <th className="text-left py-4 px-5 text-white/60 font-medium">Date</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Invested</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Current Value</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Profit/Loss</th>
@@ -149,7 +160,7 @@ export default function Investments() {
             <tbody>
               {investments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-12 text-white/40">
+                  <td colSpan="7" className="text-center py-12 text-white/40">
                     <TrendingUp className="mx-auto mb-3 opacity-20" size={32} />
                     No investments found. Start building your portfolio!
                   </td>
@@ -166,20 +177,24 @@ export default function Investments() {
                         <div>
                           <p className="text-white font-medium">{inv.name}</p>
                           <p className="text-white/40 text-xs capitalize">{inv.type.replace('_', ' ')}</p>
+                          {inv.notes && <p className="text-white/30 text-xs mt-0.5 truncate max-w-[150px]">{inv.notes}</p>}
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-right text-white/70">৳{inv.invested_amount.toLocaleString()}</td>
-                    <td className="py-4 px-5 text-right font-medium text-white">৳{inv.current_value.toLocaleString()}</td>
+                    <td className="py-4 px-5 text-white/50 text-xs">
+                      {inv.purchase_date ? new Date(inv.purchase_date).toLocaleDateString() : '—'}
+                    </td>
+                    <td className="py-4 px-5 text-right text-white/70">৳{Number(inv.invested_amount).toLocaleString()}</td>
+                    <td className="py-4 px-5 text-right font-medium text-white">৳{Number(inv.current_value).toLocaleString()}</td>
                     <td className={`py-4 px-5 text-right font-medium ${isProfitable ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {isProfitable ? '+' : ''}৳{inv.profit_loss.toLocaleString()}
+                      {isProfitable ? '+' : ''}৳{Number(inv.profit_loss).toLocaleString()}
                     </td>
                     <td className={`py-4 px-5 text-right font-medium ${isProfitable ? 'text-emerald-400' : 'text-red-400'}`}>
                       {isProfitable ? '+' : ''}{inv.roi}%
                     </td>
                     <td className="py-4 px-5 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => { setEditingInvestment(inv); setForm(inv); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
+                        <button onClick={() => { setEditingInvestment(inv); setForm({...inv, purchase_date: inv.purchase_date || '', notes: inv.notes || ''}); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => deleteInvestment(inv.id)} className="text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">

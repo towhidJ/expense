@@ -11,6 +11,7 @@ export default function Liabilities() {
   const expenseCategories = categories?.filter(c => c.type === 'expense') || [];
   const [isAdding, setIsAdding] = useState(false);
   const [editingLiability, setEditingLiability] = useState(null);
+  const [showPaid, setShowPaid] = useState(false);
   
   // Repayment Modal State
   const [repayingLiability, setRepayingLiability] = useState(null);
@@ -128,12 +129,22 @@ export default function Liabilities() {
           <h1 className="text-2xl font-bold text-white">Liabilities & Debts</h1>
           <p className="text-white/40 text-sm mt-1">Manage loans, credit cards, and installments.</p>
         </div>
-        <button
-          onClick={() => { setIsAdding(true); setEditingLiability(null); setForm(initialForm); }}
-          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-500/20"
-        >
-          <Plus size={18} /> Add Liability
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowPaid(v => !v)}
+            className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
+              showPaid ? 'bg-white/10 text-white border-white/20' : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {showPaid ? 'Hide Paid' : 'Show Paid'}
+          </button>
+          <button
+            onClick={() => { setIsAdding(true); setEditingLiability(null); setForm(initialForm); }}
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-500/20"
+          >
+            <Plus size={18} /> Add Liability
+          </button>
+        </div>
       </div>
 
       {(isAdding || editingLiability) && (
@@ -374,17 +385,27 @@ export default function Liabilities() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {liabilities.map(liability => {
+        {liabilities
+          .filter(l => showPaid || l.remaining_balance > 0)
+          .map(liability => {
+          const isPaidOff = liability.remaining_balance <= 0;
           const progress = liability.principal > 0 ? Math.min(((liability.principal - liability.remaining_balance) / liability.principal) * 100, 100) : 0;
           return (
-            <div key={liability.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group">
+            <div key={liability.id} className={`border rounded-2xl p-5 hover:border-white/20 transition-all group ${
+              isPaidOff ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-[#1a1a2e] border-white/10'
+            }`}>
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-[#12122a] flex items-center justify-center">
                     {getIcon(liability.type)}
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{liability.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-white font-medium">{liability.name}</h3>
+                      {isPaidOff && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✓ PAID</span>
+                      )}
+                    </div>
                     <p className="text-white/40 text-xs capitalize">{liability.type.replace('_', ' ')}</p>
                   </div>
                 </div>
