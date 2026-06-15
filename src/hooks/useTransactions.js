@@ -32,9 +32,10 @@ export function useTransactions() {
   }, [user]);
 
   const addTransaction = async (transaction) => {
+    let newId = null;
     if (transaction.account_id) {
       // Use the RPC to automatically update account balances
-      const { error } = await supabase.rpc('process_transaction', {
+      const { data, error } = await supabase.rpc('process_transaction', {
         p_user_id: user.id,
         p_entity_id: currentEntity.id,
         p_account_id: transaction.account_id,
@@ -46,15 +47,18 @@ export function useTransactions() {
         p_description: transaction.description || ''
       });
       if (error) throw error;
+      newId = data; // process_transaction returns the new transaction id
     } else {
-      const { error } = await supabase.from('transactions').insert({
+      const { data, error } = await supabase.from('transactions').insert({
         ...transaction,
         user_id: user.id,
         entity_id: currentEntity.id
-      });
+      }).select('id').single();
       if (error) throw error;
+      newId = data?.id;
     }
     await fetchTransactions();
+    return newId;
   };
 
   const updateTransaction = async (id, updates) => {

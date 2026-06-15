@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiabilities } from '../hooks/useLiabilities';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
+import { useAttachments } from '../hooks/useAttachments';
+import DocumentUpload from '../components/DocumentUpload';
 import { ShieldAlert, Plus, CreditCard, Landmark, Banknote, Edit2, Trash2 } from 'lucide-react';
 
 export default function Liabilities() {
   const { liabilities, repayments, loading, addLiability, updateLiability, deleteLiability, repayLiability, increaseLiability } = useLiabilities();
   const { accounts, fetchAccounts } = useAccounts();
   const { categories } = useCategories();
+  const { uploadMany, fetchAttachments, deleteAttachment } = useAttachments();
+  // Document state for each flow
+  const [liabilityFiles, setLiabilityFiles] = useState([]);
+  const [existingDocs, setExistingDocs] = useState([]);
+  const [repayFiles, setRepayFiles] = useState([]);
+  const [increaseFiles, setIncreaseFiles] = useState([]);
   const expenseCategories = categories?.filter(c => c.type === 'expense') || [];
   const [isAdding, setIsAdding] = useState(false);
   const [editingLiability, setEditingLiability] = useState(null);
@@ -47,17 +55,42 @@ export default function Liabilities() {
   };
   const [form, setForm] = useState(initialForm);
 
+  // Load already-saved documents when editing an existing liability
+  useEffect(() => {
+    setLiabilityFiles([]);
+    if (editingLiability) {
+      fetchAttachments({ liabilityId: editingLiability.id }).then(setExistingDocs);
+    } else {
+      setExistingDocs([]);
+    }
+  }, [editingLiability, fetchAttachments]);
+
+  const handleRemoveExistingDoc = async (att) => {
+    try {
+      await deleteAttachment(att);
+      setExistingDocs(prev => prev.filter(a => a.id !== att.id));
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting document');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let liabilityId = editingLiability?.id;
       if (editingLiability) {
         await updateLiability(editingLiability.id, form);
       } else {
         // For new liabilities, initial remaining balance is usually the principal
-        await addLiability({
+        const result = await addLiability({
           ...form,
           remaining_balance: form.remaining_balance || form.principal
         });
+        liabilityId = typeof result === 'string' ? result : result?.id;
+      }
+      if (liabilityId && liabilityFiles.length) {
+        await uploadMany(liabilityFiles, { liabilityId });
       }
       if (form.account_id) {
         await fetchAccounts();
@@ -65,6 +98,7 @@ export default function Liabilities() {
       setIsAdding(false);
       setEditingLiability(null);
       setForm(initialForm);
+      setLiabilityFiles([]);
     } catch (err) {
       console.error(err);
       alert('Error saving liability');
@@ -81,9 +115,13 @@ export default function Liabilities() {
         repayForm.date,
         repayForm.notes
       );
+      if (repayFiles.length) {
+        await uploadMany(repayFiles, { liabilityId: repayingLiability.id });
+      }
       await fetchAccounts();
       setRepayingLiability(null);
       setRepayForm({ account_id: '', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+      setRepayFiles([]);
       alert('Repayment processed successfully!');
     } catch (err) {
       console.error(err);
@@ -101,8 +139,12 @@ export default function Liabilities() {
         increaseForm.date,
         increaseForm.notes
       );
+      if (increaseFiles.length) {
+        await uploadMany(increaseFiles, { liabilityId: increasingLiability.id });
+      }
       setIncreasingLiability(null);
       setIncreaseForm({ amount: '', expense_category_id: '', date: new Date().toISOString().split('T')[0], notes: '' });
+      setIncreaseFiles([]);
       alert('Liability increased successfully!');
     } catch (err) {
       console.error(err);
@@ -268,8 +310,17 @@ export default function Liabilities() {
               <label className="block text-sm text-white/60 mb-1">Notes</label>
               <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" rows={2} />
             </div>
+            <div className="sm:col-span-2">
+              <DocumentUpload
+                files={liabilityFiles}
+                onChange={setLiabilityFiles}
+                existing={existingDocs}
+                onRemoveExisting={handleRemoveExistingDoc}
+                label="Documents (Optional) — agreement, cheque, receipt…"
+              />
+            </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
-              <button type="button" onClick={() => {setIsAdding(false); setEditingLiability(null);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => {setIsAdding(false); setEditingLiability(null); setLiabilityFiles([]);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium">Save Liability</button>
             </div>
           </form>
@@ -279,7 +330,7 @@ export default function Liabilities() {
       {/* Repayment Modal */}
       {repayingLiability && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-white mb-2">Record Repayment</h2>
             <p className="text-sm text-white/50 mb-6">Repaying: <strong className="text-white">{repayingLiability.name}</strong></p>
             
@@ -303,8 +354,13 @@ export default function Liabilities() {
                 <label className="block text-sm text-white/60 mb-1">Notes</label>
                 <input type="text" value={repayForm.notes} onChange={e => setRepayForm({...repayForm, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
               </div>
+              <DocumentUpload
+                files={repayFiles}
+                onChange={setRepayFiles}
+                label="Receipt / Proof (Optional)"
+              />
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setRepayingLiability(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => { setRepayingLiability(null); setRepayFiles([]); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-medium">Confirm Payment</button>
               </div>
             </form>
@@ -315,7 +371,7 @@ export default function Liabilities() {
       {/* Increase Due Modal */}
       {increasingLiability && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-white mb-2">Add Amount to Due</h2>
             <p className="text-sm text-white/50 mb-6">Increasing Liability: <strong className="text-white">{increasingLiability.name}</strong></p>
             
@@ -340,8 +396,13 @@ export default function Liabilities() {
                 <label className="block text-sm text-white/60 mb-1">Notes</label>
                 <input type="text" value={increaseForm.notes} onChange={e => setIncreaseForm({...increaseForm, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
               </div>
+              <DocumentUpload
+                files={increaseFiles}
+                onChange={setIncreaseFiles}
+                label="Document / Proof (Optional)"
+              />
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setIncreasingLiability(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => { setIncreasingLiability(null); setIncreaseFiles([]); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium">Add Amount</button>
               </div>
             </form>

@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAssets } from '../hooks/useAssets';
 import { useAccounts } from '../context/AccountContext';
+import { useAttachments } from '../hooks/useAttachments';
+import DocumentUpload from './DocumentUpload';
 
 export default function TransactionForm({ isOpen, onClose, onSubmit, categories, editData }) {
   const { assets } = useAssets();
   const { accounts } = useAccounts();
+  const { fetchAttachments, deleteAttachment } = useAttachments();
   const [form, setForm] = useState({
     type: 'expense',
     category_id: '',
@@ -15,9 +18,12 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
     description: '',
     date: new Date().toISOString().split('T')[0]
   });
+  const [files, setFiles] = useState([]);
+  const [existing, setExisting] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    setFiles([]);
     if (editData) {
       setForm({
         type: editData.type,
@@ -28,7 +34,9 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
         description: editData.description || '',
         date: editData.date
       });
+      fetchAttachments({ transactionId: editData.id }).then(setExisting);
     } else {
+      setExisting([]);
       setForm({
         type: 'expense',
         category_id: '',
@@ -39,9 +47,18 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
         date: new Date().toISOString().split('T')[0]
       });
     }
-  }, [editData, isOpen]);
+  }, [editData, isOpen, fetchAttachments]);
 
   const filteredCategories = categories.filter(c => c.type === form.type);
+
+  const handleRemoveExisting = async (att) => {
+    try {
+      await deleteAttachment(att);
+      setExisting(prev => prev.filter(a => a.id !== att.id));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +68,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
         ...form,
         amount: parseFloat(form.amount),
         asset_id: form.type === 'expense' && form.asset_id ? form.asset_id : null
-      }, editData?.id);
+      }, editData?.id, files);
       onClose();
     } catch (err) {
       alert(err.message);
@@ -63,7 +80,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-lg font-semibold text-white">{editData ? 'Edit' : 'Add'} Transaction</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
@@ -171,6 +188,13 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
             />
           </div>
+
+          <DocumentUpload
+            files={files}
+            onChange={setFiles}
+            existing={existing}
+            onRemoveExisting={handleRemoveExisting}
+          />
 
           <button
             type="submit"

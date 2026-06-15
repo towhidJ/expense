@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
+import { useAttachments } from '../hooks/useAttachments';
 import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
 import { Plus, Search, CalendarDays } from 'lucide-react';
@@ -10,6 +11,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 export default function Transactions() {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
+  const { uploadMany } = useAttachments();
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
   const [search, setSearch] = useState('');
@@ -39,9 +41,14 @@ export default function Transactions() {
     return true;
   });
 
-  const handleSubmit = async (data, editId) => {
-    if (editId) await updateTransaction(editId, data);
-    else await addTransaction(data);
+  const handleSubmit = async (data, editId, files = []) => {
+    if (editId) {
+      await updateTransaction(editId, data);
+      if (files.length) await uploadMany(files, { transactionId: editId });
+    } else {
+      const newId = await addTransaction(data);
+      if (newId && files.length) await uploadMany(files, { transactionId: newId });
+    }
   };
 
   const handleEdit = (t) => {
