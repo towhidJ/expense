@@ -25,7 +25,7 @@ export function useAssets() {
       setAssets(data || []);
     }
     setLoading(false);
-  }, [user]);
+  }, [user, currentEntity]);
 
   const addAsset = async (asset) => {
     const { error } = await supabase.from('assets').insert({

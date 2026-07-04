@@ -32,9 +32,12 @@ export function EntityProvider({ children }) {
         console.error('Error fetching entities:', error);
       } else if (data) {
         setEntities(data);
-        if (data.length > 0 && !currentEntity) {
-          // Default to the first entity (usually 'Personal')
-          setCurrentEntity(data[0]);
+        if (data.length > 0) {
+          setCurrentEntity(prev => {
+            if (prev && data.some(e => e.id === prev.id)) return prev;
+            const savedId = localStorage.getItem('currentEntityId');
+            return data.find(e => e.id === savedId) || data[0];
+          });
         }
       }
       setLoading(false);
@@ -47,6 +50,7 @@ export function EntityProvider({ children }) {
     const entity = entities.find(e => e.id === entityId);
     if (entity) {
       setCurrentEntity(entity);
+      localStorage.setItem('currentEntityId', entity.id);
     }
   };
 

@@ -474,7 +474,7 @@ export default function Liabilities() {
                   <button onClick={() => { setEditingLiability(liability); setForm(liability); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => deleteLiability(liability.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete "${liability.name}"? Repayment history will also be removed.`)) deleteLiability(liability.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={16} />
                   </button>
                 </div>

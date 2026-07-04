@@ -197,7 +197,7 @@ export default function Investments() {
                         <button onClick={() => { setEditingInvestment(inv); setForm({...inv, purchase_date: inv.purchase_date || '', notes: inv.notes || ''}); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => deleteInvestment(inv.id)} className="text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
+                        <button onClick={() => { if (confirm(`Delete investment "${inv.name}"?`)) deleteInvestment(inv.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
                           <Trash2 size={16} />
                         </button>
                       </div>

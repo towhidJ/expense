@@ -6,7 +6,7 @@ import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
 import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet } from 'lucide-react';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar,
+  PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart
 } from 'recharts';
 import jsPDF from 'jspdf';
@@ -46,7 +46,7 @@ export default function Reports() {
   const monthTx = useMemo(() => {
     return transactions.filter(t => {
       const d = new Date(t.date);
-      let passDate = false;
+      let passDate;
       if (filterType === 'monthly') {
         passDate = d.getMonth() + 1 === month && d.getFullYear() === year;
       } else {

@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
+import { useAccounts } from '../context/AccountContext';
 
 export function useTransactions() {
   const { user } = useAuth();
   const { currentEntity } = useEntity();
+  const { fetchAccounts } = useAccounts();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,10 +31,10 @@ export function useTransactions() {
     if (error) console.error('Error fetching transactions:', error);
     else setTransactions(data || []);
     setLoading(false);
-  }, [user]);
+  }, [user, currentEntity]);
 
   const addTransaction = async (transaction) => {
-    let newId = null;
+    let newId;
     if (transaction.account_id) {
       // Use the RPC to automatically update account balances
       const { data, error } = await supabase.rpc('process_transaction', {
@@ -57,28 +59,35 @@ export function useTransactions() {
       if (error) throw error;
       newId = data?.id;
     }
-    await fetchTransactions();
+    await Promise.all([fetchTransactions(), fetchAccounts()]);
     return newId;
   };
 
   const updateTransaction = async (id, updates) => {
-    const { error } = await supabase
-      .from('transactions')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', user.id);
+    // RPC reverses the old row's balance effect and applies the new one
+    const { error } = await supabase.rpc('update_transaction_with_balance', {
+      p_user_id: user.id,
+      p_transaction_id: id,
+      p_account_id: updates.account_id || null,
+      p_category_id: updates.category_id,
+      p_asset_id: updates.asset_id || null,
+      p_type: updates.type,
+      p_amount: updates.amount,
+      p_date: updates.date,
+      p_description: updates.description || ''
+    });
     if (error) throw error;
-    await fetchTransactions();
+    await Promise.all([fetchTransactions(), fetchAccounts()]);
   };
 
   const deleteTransaction = async (id) => {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
+    // RPC restores the account balance before removing the row
+    const { error } = await supabase.rpc('delete_transaction_with_balance', {
+      p_user_id: user.id,
+      p_transaction_id: id
+    });
     if (error) throw error;
-    await fetchTransactions();
+    await Promise.all([fetchTransactions(), fetchAccounts()]);
   };
 
   useEffect(() => {

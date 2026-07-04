@@ -3,7 +3,10 @@ import { useRecurring } from '../hooks/useRecurring';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
-import { Repeat, Plus, Edit2, Trash2, CalendarClock, Play, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useEntity } from '../context/EntityContext';
+import { supabase } from '../lib/supabase';
+import { Repeat, Plus, Edit2, Trash2, CalendarClock, Play, Check, Zap } from 'lucide-react';
 
 function getNextRunDate(frequency, fromDate) {
   const d = new Date(fromDate);
@@ -18,15 +21,18 @@ function getNextRunDate(frequency, fromDate) {
 }
 
 export default function Recurring() {
-  const { recurring, loading, addRecurring, updateRecurring, deleteRecurring } = useRecurring();
+  const { recurring, loading, fetchRecurring, addRecurring, updateRecurring, deleteRecurring } = useRecurring();
   const { accounts, fetchAccounts } = useAccounts();
   const { categories } = useCategories();
   const { addTransaction } = useTransactions();
+  const { user } = useAuth();
+  const { currentEntity } = useEntity();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [runningId, setRunningId] = useState(null);
   const [ranId, setRanId] = useState(null);
+  const [runningAll, setRunningAll] = useState(false);
 
   const initialForm = {
     title: '',
@@ -46,7 +52,9 @@ export default function Recurring() {
     e.preventDefault();
     try {
       // Strip joined relations (categories/accounts) so we only write real columns
-      const { categories: _c, accounts: _a, ...cleanForm } = form;
+      const cleanForm = { ...form };
+      delete cleanForm.categories;
+      delete cleanForm.accounts;
       const payload = {
         ...cleanForm,
         amount: parseFloat(form.amount)
@@ -80,7 +88,9 @@ export default function Recurring() {
       });
       // Advance the next_run_date (strip joined relations before writing)
       const nextDate = getNextRunDate(item.frequency, item.next_run_date);
-      const { categories: _c, accounts: _a, ...cleanItem } = item;
+      const cleanItem = { ...item };
+      delete cleanItem.categories;
+      delete cleanItem.accounts;
       await updateRecurring(item.id, { ...cleanItem, next_run_date: nextDate });
       await fetchAccounts();
       setRanId(item.id);
@@ -90,6 +100,26 @@ export default function Recurring() {
       alert('Error running recurring transaction: ' + err.message);
     }
     setRunningId(null);
+  };
+
+  const dueCount = recurring.filter(r => r.is_active && new Date(r.next_run_date) <= new Date()).length;
+
+  const handleRunAllDue = async () => {
+    if (!window.confirm(`Run all ${dueCount} due recurring transaction(s) now? Overdue items will catch up for every missed period.`)) return;
+    setRunningAll(true);
+    try {
+      const { data, error } = await supabase.rpc('run_due_recurring', {
+        p_user_id: user.id,
+        p_entity_id: currentEntity.id
+      });
+      if (error) throw error;
+      await Promise.all([fetchRecurring(), fetchAccounts()]);
+      alert(`${data} transaction(s) created.`);
+    } catch (err) {
+      console.error(err);
+      alert('Error running due transactions: ' + err.message);
+    }
+    setRunningAll(false);
   };
 
   const totalMonthlyExpense = recurring
@@ -109,12 +139,23 @@ export default function Recurring() {
           <h1 className="text-2xl font-bold text-white">Recurring Transactions</h1>
           <p className="text-white/40 text-sm mt-1">Manage subscriptions, salaries, and auto-payments.</p>
         </div>
-        <button
-          onClick={() => { setIsAdding(true); setEditingItem(null); setForm(initialForm); }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-orange-500/20"
-        >
-          <Plus size={18} /> Add Recurring
-        </button>
+        <div className="flex gap-2">
+          {dueCount > 0 && (
+            <button
+              onClick={handleRunAllDue}
+              disabled={runningAll}
+              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+            >
+              <Zap size={18} /> {runningAll ? 'Running...' : `Run ${dueCount} Due`}
+            </button>
+          )}
+          <button
+            onClick={() => { setIsAdding(true); setEditingItem(null); setForm(initialForm); }}
+            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-orange-500/20"
+          >
+            <Plus size={18} /> Add Recurring
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -286,7 +327,7 @@ export default function Recurring() {
                         <button onClick={() => { setEditingItem(item); setForm(item); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => deleteRecurring(item.id)} className="text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
+                        <button onClick={() => { if (confirm(`Delete recurring "${item.title}"?`)) deleteRecurring(item.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
                           <Trash2 size={16} />
                         </button>
                       </div>

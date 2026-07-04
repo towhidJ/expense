@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useMemo } from 'react';
 import { useEntity } from '../context/EntityContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
@@ -13,7 +12,7 @@ import StatCard from '../components/StatCard';
 import ChartCard from '../components/ChartCard';
 import TransactionList from '../components/TransactionList';
 import BudgetCard from '../components/BudgetCard';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, Shield, Bike, Landmark, Target, CalendarClock } from 'lucide-react';
+import { Shield, Bike, Landmark, Target, CalendarClock } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const CHART_COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#6366f1', '#f97316'];
@@ -35,11 +34,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
   const { currentEntity } = useEntity();
   
   const { transactions } = useTransactions();
-  const { categories } = useCategories();
+  useCategories(); // seeds default categories for new workspaces
   const { budgets } = useBudgets();
   const { accounts } = useAccounts();
   const { assets } = useAssets();
@@ -66,9 +64,12 @@ export default function Dashboard() {
   const totalCash = accounts.reduce((sum, a) => sum + Number(a.current_balance || 0), 0);
   const totalAssetsValue = assets.reduce((sum, a) => sum + Number(a.current_value || a.value || 0), 0);
   const totalInvestmentsValue = investments.reduce((sum, i) => sum + Number(i.current_value || 0), 0);
-  const totalLiabilities = liabilities.filter(l => l.status !== 'paid').reduce((sum, l) => sum + Number(l.remaining_balance || 0), 0);
-  
-  const netWorth = totalCash + totalAssetsValue + totalInvestmentsValue - totalLiabilities;
+  const activeLiabilities = liabilities.filter(l => Number(l.remaining_balance) > 0);
+  // Money you lent out (loan_given) is a receivable — it adds to net worth
+  const totalReceivables = activeLiabilities.filter(l => l.type === 'loan_given').reduce((sum, l) => sum + Number(l.remaining_balance || 0), 0);
+  const totalLiabilities = activeLiabilities.filter(l => l.type !== 'loan_given').reduce((sum, l) => sum + Number(l.remaining_balance || 0), 0);
+
+  const netWorth = totalCash + totalAssetsValue + totalInvestmentsValue + totalReceivables - totalLiabilities;
 
   const stats = useMemo(() => {
     const monthTx = transactions.filter(t => {

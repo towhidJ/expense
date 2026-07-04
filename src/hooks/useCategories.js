@@ -20,6 +20,10 @@ const DEFAULT_CATEGORIES = [
   { name: 'Other Expense', type: 'expense', icon: '💸', color: '#64748b' },
 ];
 
+// Entities that already had defaults seeded in this session (module-level so
+// every component instance of the hook shares it)
+const seededEntities = new Set();
+
 export function useCategories() {
   const { user } = useAuth();
   const { currentEntity } = useEntity();
@@ -46,6 +50,10 @@ export function useCategories() {
 
   const seedDefaults = useCallback(async () => {
     if (!user || !currentEntity) return;
+    // Guard against concurrent mounts (Dashboard + Transactions both use this
+    // hook) racing to seed the same entity twice
+    if (seededEntities.has(currentEntity.id)) return;
+    seededEntities.add(currentEntity.id);
     const inserts = DEFAULT_CATEGORIES.map(c => ({
       ...c,
       user_id: user.id,
@@ -57,11 +65,7 @@ export function useCategories() {
   }, [user, currentEntity, fetchCategories]);
 
   useEffect(() => {
-    if (user) {
-      fetchCategories().then(() => {
-        // seed defaults if empty
-      });
-    }
+    if (user) fetchCategories();
   }, [user, fetchCategories]);
 
   useEffect(() => {

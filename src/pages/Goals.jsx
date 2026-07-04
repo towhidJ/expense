@@ -145,7 +145,7 @@ export default function Goals() {
                   <button onClick={() => { setEditingGoal(goal); setForm(goal); setIsAdding(false); }} className="text-white/40 hover:text-purple-400 p-1.5 bg-white/5 hover:bg-purple-500/10 rounded-lg">
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => deleteGoal(goal.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete goal "${goal.title}"?`)) deleteGoal(goal.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={14} />
                   </button>
                 </div>

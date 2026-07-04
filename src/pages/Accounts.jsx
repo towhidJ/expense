@@ -49,10 +49,6 @@ export default function Accounts() {
     return <Icon className={t.color} size={24} />;
   };
 
-  const getTypeBg = (type) => {
-    const t = ACCOUNT_TYPES.find(at => at.id === type);
-    return t ? t.bg : 'bg-white/5';
-  };
 
   // Summary totals
   const totalBalance = accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0);
@@ -163,7 +159,7 @@ export default function Accounts() {
                   <button onClick={() => { setEditingAccount(acc); setForm(acc); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => deleteAccount(acc.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete account "${acc.name}"?`)) deleteAccount(acc.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={16} />
                   </button>
                 </div>

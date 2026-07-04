@@ -111,7 +111,7 @@ export default function FamilyMembers() {
                 <button onClick={() => { setEditingMember(member); setForm(member); setIsAdding(false); }} className="text-white hover:text-cyan-400 p-1 bg-[#12122a] border border-white/10 rounded-lg">
                   <Edit2 size={14} />
                 </button>
-                <button onClick={() => deleteMember(member.id)} className="text-white hover:text-red-400 p-1 bg-[#12122a] border border-white/10 rounded-lg">
+                <button onClick={() => { if (confirm(`Remove "${member.name}"?`)) deleteMember(member.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white hover:text-red-400 p-1 bg-[#12122a] border border-white/10 rounded-lg">
                   <Trash2 size={14} />
                 </button>
               </div>
