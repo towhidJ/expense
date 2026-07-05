@@ -2,15 +2,17 @@ import { useState, useMemo } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import { useAccounts } from '../context/AccountContext';
+import { useLiabilities } from '../hooks/useLiabilities';
 import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
 import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
-  XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart
+  XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart,
+  BarChart, Bar
 } from 'recharts';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 const COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#6366f1', '#f97316', '#14b8a6', '#64748b'];
@@ -31,10 +33,18 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const REPORT_TYPES = [
+  { id: 'full', label: 'Full Report' },
+  { id: 'income', label: 'Income Report' },
+  { id: 'expense', label: 'Expense Report' },
+  { id: 'loans', label: 'Loan & Due Report' }
+];
+
 export default function Reports() {
   const { transactions } = useTransactions();
   const { categories } = useCategories();
   const { accounts } = useAccounts();
+  const { liabilities, repayments } = useLiabilities();
   const now = new Date();
   const [filterType, setFilterType] = useState('monthly'); // 'monthly' or 'custom'
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -42,6 +52,14 @@ export default function Reports() {
   const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]);
   const [accountFilter, setAccountFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [reportType, setReportType] = useState('full');
+
+  const inPeriod = (dateStr) => {
+    const d = new Date(dateStr);
+    if (filterType === 'monthly') return d.getMonth() + 1 === month && d.getFullYear() === year;
+    return d.getTime() >= new Date(startDate).getTime() && d.getTime() <= new Date(endDate).getTime();
+  };
 
   const monthTx = useMemo(() => {
     return transactions.filter(t => {
@@ -57,9 +75,10 @@ export default function Reports() {
       }
       if (!passDate) return false;
       if (accountFilter !== 'all' && t.account_id !== accountFilter) return false;
+      if (categoryFilter !== 'all' && t.category_id !== categoryFilter) return false;
       return true;
     });
-  }, [transactions, month, year, filterType, startDate, endDate, accountFilter]);
+  }, [transactions, month, year, filterType, startDate, endDate, accountFilter, categoryFilter]);
 
   const stats = useMemo(() => {
     const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -116,62 +135,228 @@ export default function Reports() {
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  const exportPDF = () => {
+  // Income vs Expense for the last 6 calendar months (ignores period filter)
+  const sixMonthComparison = useMemo(() => {
+    const rows = [];
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const mTx = transactions.filter(t => {
+        const td = new Date(t.date);
+        return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear();
+      });
+      rows.push({
+        month: months[d.getMonth()],
+        Income: mTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+        Expense: mTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+      });
+    }
+    return rows;
+  }, [transactions]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const insights = useMemo(() => {
+    const list = [];
+    const { income, expense } = stats;
+
+    // Savings rate check
+    if (income > 0) {
+      const rate = ((income - expense) / income) * 100;
+      if (expense > income) {
+        list.push({ tone: 'bad', text: `You spent ৳${(expense - income).toLocaleString()} MORE than you earned this period. Check the biggest categories below.` });
+      } else if (rate < 10) {
+        list.push({ tone: 'warn', text: `You're saving only ${rate.toFixed(0)}% of your income this period. Try to push it to at least 20%.` });
+      } else if (rate < 20) {
+        list.push({ tone: 'info', text: `You're saving ${rate.toFixed(0)}% of your income. Not bad — 20%+ is a healthy target.` });
+      } else {
+        list.push({ tone: 'good', text: `Great — you're saving ${rate.toFixed(0)}% of your income this period. Keep it up!` });
+      }
+    }
+
+    // Biggest expense category + what cutting it 10% would save
+    if (categoryData.length > 0 && expense > 0) {
+      const top = categoryData[0];
+      const pctOfExpense = (top.value / expense) * 100;
+      const pctOfIncome = income > 0 ? (top.value / income) * 100 : null;
+      list.push({
+        tone: pctOfExpense > 35 ? 'warn' : 'info',
+        text: `Your biggest expense is ${top.name}: ৳${top.value.toLocaleString()} — ${pctOfExpense.toFixed(0)}% of all spending${pctOfIncome !== null ? ` and ${pctOfIncome.toFixed(0)}% of your income` : ''}. Cutting it by just 10% would save ৳${Math.round(top.value * 0.1).toLocaleString()}.`
+      });
+    }
+
+    // Categories that jumped vs the previous month (monthly mode only)
+    if (filterType === 'monthly') {
+      const prevMonth = month === 1 ? 12 : month - 1;
+      const prevYear = month === 1 ? year - 1 : year;
+      const sumByCat = (m, y) => {
+        const map = {};
+        transactions.forEach(t => {
+          const d = new Date(t.date);
+          if (t.type === 'expense' && d.getMonth() + 1 === m && d.getFullYear() === y) {
+            const name = t.categories?.name || 'Other';
+            map[name] = (map[name] || 0) + t.amount;
+          }
+        });
+        return map;
+      };
+      const cur = sumByCat(month, year);
+      const prev = sumByCat(prevMonth, prevYear);
+      Object.entries(cur)
+        .filter(([name, val]) => prev[name] > 0 && val > prev[name] * 1.3 && val - prev[name] >= 500)
+        .sort((a, b) => (b[1] - prev[b[0]]) - (a[1] - prev[a[0]]))
+        .slice(0, 3)
+        .forEach(([name, val]) => {
+          const p = prev[name];
+          list.push({ tone: 'warn', text: `${name} jumped ${(((val - p) / p) * 100).toFixed(0)}% vs last month (৳${p.toLocaleString()} → ৳${val.toLocaleString()}). Worth a look.` });
+        });
+    }
+
+    return list.slice(0, 6);
+  }, [stats, categoryData, transactions, filterType, month, year]);
+
+  const periodLabel = filterType === 'monthly' ? `${months[month - 1]} ${year}` : `${startDate} to ${endDate}`;
+  const categoryLabel = categoryFilter !== 'all' ? categories.find(c => c.id === categoryFilter)?.name : null;
+
+  const exportLoanPDF = () => {
     const doc = new jsPDF();
-    const title = `Financial Report - ${filterType === 'monthly' ? `${months[month - 1]} ${year}` : `${startDate} to ${endDate}`}`;
-    
+    const title = `Loan & Due Report - ${periodLabel}`;
+    const takenRemaining = liabilities.filter(l => l.type !== 'loan_given').reduce((s, l) => s + Number(l.remaining_balance), 0);
+    const givenRemaining = liabilities.filter(l => l.type === 'loan_given').reduce((s, l) => s + Number(l.remaining_balance), 0);
+
     doc.setFontSize(18);
     doc.text(title, 14, 22);
-    
     doc.setFontSize(12);
-    doc.text(`Total Income: BDT ${stats.income.toLocaleString()}`, 14, 32);
-    doc.text(`Total Expense: BDT ${stats.expense.toLocaleString()}`, 14, 38);
-    doc.text(`Net Savings: BDT ${stats.net.toLocaleString()}`, 14, 44);
+    doc.text(`Total Payable (loans taken, dues): BDT ${takenRemaining.toLocaleString()}`, 14, 32);
+    doc.text(`Total Receivable (loans given): BDT ${givenRemaining.toLocaleString()}`, 14, 38);
 
-    const tableData = monthTx.map(t => [
-      t.date,
-      t.type.toUpperCase(),
-      t.categories?.name || 'Other',
-      t.amount.toLocaleString(),
-      t.description || '-'
-    ]);
+    autoTable(doc, {
+      startY: 46,
+      head: [['Name', 'Type', 'Principal (BDT)', 'Remaining (BDT)', 'Due Date', 'Status']],
+      body: liabilities.map(l => [
+        l.name,
+        l.type.replace('_', ' '),
+        Number(l.principal).toLocaleString(),
+        Number(l.remaining_balance).toLocaleString(),
+        l.due_date || '-',
+        l.remaining_balance <= 0 ? 'PAID' : 'ACTIVE'
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68] }
+    });
 
-    doc.autoTable({
-      startY: 50,
-      head: [['Date', 'Type', 'Category', 'Amount', 'Description']],
-      body: tableData,
+    const periodRepayments = repayments.filter(r => inPeriod(r.date));
+    let y = (doc.lastAutoTable?.finalY || 46) + 12;
+    doc.setFontSize(14);
+    doc.text(`Repayments (${periodLabel})`, 14, y);
+    autoTable(doc, {
+      startY: y + 4,
+      head: [['Date', 'Liability', 'Account', 'Amount (BDT)', 'Notes']],
+      body: periodRepayments.length
+        ? periodRepayments.map(r => [
+            r.date,
+            liabilities.find(l => l.id === r.liability_id)?.name || 'Unknown',
+            r.accounts?.name || '-',
+            Number(r.amount).toLocaleString(),
+            r.notes || '-'
+          ])
+        : [['No repayments in this period', '', '', '', '']],
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] }
+    });
+
+    doc.save(`Loan_Due_Report_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+  };
+
+  const exportPDF = () => {
+    if (reportType === 'loans') {
+      exportLoanPDF();
+      return;
+    }
+
+    const doc = new jsPDF();
+    const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label || 'Report';
+    const title = `${typeLabel}${categoryLabel ? ` (${categoryLabel})` : ''} - ${periodLabel}`;
+    const txs = reportType === 'full' ? monthTx : monthTx.filter(t => t.type === reportType);
+    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    doc.setFontSize(18);
+    doc.text(title, 14, 22);
+
+    doc.setFontSize(12);
+    let y = 32;
+    if (reportType !== 'expense') { doc.text(`Total Income: BDT ${income.toLocaleString()}`, 14, y); y += 6; }
+    if (reportType !== 'income') { doc.text(`Total Expense: BDT ${expense.toLocaleString()}`, 14, y); y += 6; }
+    if (reportType === 'full') { doc.text(`Net Savings: BDT ${(income - expense).toLocaleString()}`, 14, y); y += 6; }
+
+    autoTable(doc, {
+      startY: y + 2,
+      head: [['Date', 'Type', 'Category', 'Account', 'Amount (BDT)', 'Description']],
+      body: txs.map(t => [
+        t.date,
+        t.type.toUpperCase(),
+        t.categories?.name || 'Other',
+        t.accounts?.name || '-',
+        t.amount.toLocaleString(),
+        t.description || '-'
+      ]),
       theme: 'grid',
       headStyles: { fillColor: [6, 182, 212] }
     });
 
-    doc.save(`Report_${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    doc.save(`${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
   };
 
   const exportExcel = () => {
-    const title = `Financial Report - ${filterType === 'monthly' ? `${months[month - 1]} ${year}` : `${startDate} to ${endDate}`}`;
-    
+    const wb = XLSX.utils.book_new();
+
+    if (reportType === 'loans') {
+      const liabilityRows = [
+        ['Name', 'Type', 'Principal', 'Remaining', 'Due Date', 'Status'],
+        ...liabilities.map(l => [l.name, l.type.replace('_', ' '), Number(l.principal), Number(l.remaining_balance), l.due_date || '-', l.remaining_balance <= 0 ? 'PAID' : 'ACTIVE'])
+      ];
+      const repaymentRows = [
+        ['Date', 'Liability', 'Account', 'Amount', 'Notes'],
+        ...repayments.filter(r => inPeriod(r.date)).map(r => [
+          r.date,
+          liabilities.find(l => l.id === r.liability_id)?.name || 'Unknown',
+          r.accounts?.name || '-',
+          Number(r.amount),
+          r.notes || '-'
+        ])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(liabilityRows), 'Liabilities');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(repaymentRows), 'Repayments');
+      XLSX.writeFile(wb, `Loan_Due_Report_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+      return;
+    }
+
+    const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label || 'Report';
+    const title = `${typeLabel}${categoryLabel ? ` (${categoryLabel})` : ''} - ${periodLabel}`;
+    const txs = reportType === 'full' ? monthTx : monthTx.filter(t => t.type === reportType);
+    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
     const summaryData = [
-      ['Report Period', filterType === 'monthly' ? `${months[month - 1]} ${year}` : `${startDate} to ${endDate}`],
-      ['Total Income', stats.income],
-      ['Total Expense', stats.expense],
-      ['Net Savings', stats.net],
-      ['Total Transactions', stats.count],
-      [], 
-      ['Date', 'Type', 'Category', 'Amount', 'Description']
+      ['Report', title],
+      ['Total Income', income],
+      ['Total Expense', expense],
+      ['Net Savings', income - expense],
+      ['Total Transactions', txs.length],
+      [],
+      ['Date', 'Type', 'Category', 'Account', 'Amount', 'Description']
     ];
 
-    const txData = monthTx.map(t => [
+    const txData = txs.map(t => [
       t.date,
       t.type.toUpperCase(),
       t.categories?.name || 'Other',
+      t.accounts?.name || '-',
       t.amount,
       t.description || '-'
     ]);
 
-    const ws = XLSX.utils.aoa_to_sheet([...summaryData, ...txData]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Report');
-    XLSX.writeFile(wb, `Report_${title.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...summaryData, ...txData]), 'Report');
+    XLSX.writeFile(wb, `${title.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
   };
 
 
@@ -185,6 +370,16 @@ export default function Reports() {
         <div className="flex flex-col items-end gap-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex gap-2">
+              <select
+                value={reportType}
+                onChange={e => setReportType(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                title="Which report to download"
+              >
+                {REPORT_TYPES.map(r => (
+                  <option key={r.id} value={r.id} className="bg-[#12122a]">{r.label}</option>
+                ))}
+              </select>
               <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium whitespace-nowrap">
                 <FileText size={16} /> PDF
               </button>
@@ -204,17 +399,29 @@ export default function Reports() {
             </div>
           </div>
 
-          {/* Account filter */}
-          <select
-            value={accountFilter}
-            onChange={e => setAccountFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
-          >
-            <option value="all" className="bg-[#12122a]">All Accounts</option>
-            {accounts.map(a => (
-              <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name}</option>
-            ))}
-          </select>
+          {/* Account & category filters */}
+          <div className="flex gap-3">
+            <select
+              value={accountFilter}
+              onChange={e => setAccountFilter(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-[#12122a]">All Accounts</option>
+              {accounts.map(a => (
+                <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name}</option>
+              ))}
+            </select>
+            <select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-[#12122a]">All Categories</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id} className="bg-[#12122a]">{c.icon} {c.name}</option>
+              ))}
+            </select>
+          </div>
 
           {filterType === 'monthly' ? (
             <div className="flex gap-3">
@@ -279,6 +486,45 @@ export default function Reports() {
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
+
+      {/* Income vs Expense + Suggestions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="Income vs Expense" subtitle="Last 6 months">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={sixMonthComparison} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
+              <XAxis dataKey="month" tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff08' }} />
+              <Legend wrapperStyle={{ color: '#ffffff60', fontSize: 12 }} />
+              <Bar dataKey="Income" fill="#10b981" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="Expense" fill="#ef4444" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="💡 Suggestions" subtitle="How to cut your spending">
+          {insights.length > 0 ? (
+            <div className="space-y-3 pt-2">
+              {insights.map((ins, i) => (
+                <div
+                  key={i}
+                  className={`rounded-xl px-4 py-3 border text-sm leading-relaxed ${
+                    ins.tone === 'bad' ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                    : ins.tone === 'warn' ? 'bg-amber-500/10 border-amber-500/20 text-amber-200'
+                    : ins.tone === 'good' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                    : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-200'
+                  }`}
+                >
+                  {ins.text}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-60 text-white/20 text-sm">Add some transactions to get suggestions</div>
+          )}
+        </ChartCard>
+      </div>
 
       {/* Category Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

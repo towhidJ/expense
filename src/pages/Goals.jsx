@@ -61,6 +61,22 @@ export default function Goals() {
   const totalSaved = goals.reduce((s, g) => s + Number(g.saved_amount || 0), 0);
   const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount || 0), 0);
 
+  // Whole months from today until the target date (minimum 1, so a near/past
+  // deadline shows the full remaining amount as this month's requirement)
+  const monthsUntil = (dateStr) => {
+    const today = new Date();
+    const target = new Date(dateStr);
+    const months = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
+    return Math.max(1, months);
+  };
+  const monthlyNeeded = (goal) => {
+    const remaining = Math.max(0, goal.target_amount - goal.saved_amount);
+    return remaining / monthsUntil(goal.target_date);
+  };
+  const totalMonthlyNeeded = goals
+    .filter(g => g.saved_amount < g.target_amount)
+    .reduce((s, g) => s + monthlyNeeded(g), 0);
+
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
@@ -77,7 +93,7 @@ export default function Goals() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl bg-white/5 border border-white/10 p-4">
           <p className="text-xs text-white/40">Total Goals</p>
           <p className="text-xl font-bold text-white mt-1">{goals.length}</p>
@@ -89,6 +105,10 @@ export default function Goals() {
         <div className="rounded-xl bg-white/5 border border-white/10 p-4">
           <p className="text-xs text-white/40">Still Needed</p>
           <p className="text-xl font-bold text-purple-400 mt-1">৳{Math.max(0, totalTarget - totalSaved).toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-4">
+          <p className="text-xs text-cyan-400/70">Save Per Month (all goals)</p>
+          <p className="text-xl font-bold text-cyan-400 mt-1">৳{Math.ceil(totalMonthlyNeeded).toLocaleString()}</p>
         </div>
       </div>
 
@@ -129,6 +149,9 @@ export default function Goals() {
           const progress = Math.min((goal.saved_amount / goal.target_amount) * 100, 100);
           const remaining = Math.max(0, goal.target_amount - goal.saved_amount);
           const isComplete = progress >= 100;
+          const months = monthsUntil(goal.target_date);
+          const perMonth = monthlyNeeded(goal);
+          const isOverdue = !isComplete && new Date(goal.target_date) < new Date();
           return (
             <div key={goal.id} className={`border rounded-2xl p-5 hover:border-white/20 transition-all group relative overflow-hidden ${isComplete ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-[#1a1a2e] border-white/10'}`}>
               <div className="flex justify-between items-start mb-4 relative z-10">
@@ -167,6 +190,19 @@ export default function Goals() {
                     {isComplete ? '✅ Completed!' : `${progress.toFixed(1)}% — ৳${remaining.toLocaleString()} left`}
                   </span>
                 </div>
+
+                {/* Monthly saving needed to hit the target date */}
+                {!isComplete && (
+                  <div className={`mt-2 rounded-xl px-3 py-2 border ${isOverdue ? 'bg-red-500/10 border-red-500/20' : 'bg-cyan-500/10 border-cyan-500/20'}`}>
+                    {isOverdue ? (
+                      <p className="text-xs text-red-400 font-medium">⚠️ Target date passed — ৳{remaining.toLocaleString()} still needed</p>
+                    ) : (
+                      <p className="text-xs text-cyan-400">
+                        Save <strong className="text-white">৳{Math.ceil(perMonth).toLocaleString()}/month</strong> for {months} month{months > 1 ? 's' : ''} to reach this goal
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Deposit Button */}
                 {!isComplete && (

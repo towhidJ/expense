@@ -13,6 +13,7 @@ import Assets from './pages/Assets';
 import Accounts from './pages/Accounts';
 import Transfers from './pages/Transfers';
 import Goals from './pages/Goals';
+import Savings from './pages/Savings';
 import Liabilities from './pages/Liabilities';
 import Investments from './pages/Investments';
 import FamilyMembers from './pages/FamilyMembers';
@@ -48,6 +49,7 @@ function App() {
                 <Route path="recurring" element={<Recurring />} />
                 <Route path="categories" element={<Categories />} />
                 <Route path="goals" element={<Goals />} />
+                <Route path="savings" element={<Savings />} />
               </Route>
             </Routes>
           </BrowserRouter>

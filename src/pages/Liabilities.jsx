@@ -101,7 +101,7 @@ export default function Liabilities() {
       setLiabilityFiles([]);
     } catch (err) {
       console.error(err);
-      alert('Error saving liability');
+      alert('Error saving liability: ' + (err.message || JSON.stringify(err)));
     }
   };
 
@@ -205,7 +205,14 @@ export default function Liabilities() {
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => setForm({ ...form, type: t.id })}
+                    onClick={() => setForm({
+                      ...form,
+                      type: t.id,
+                      // asset/expense options only exist for money you received
+                      received_type: t.id === 'loan_given' && (form.received_type === 'asset' || form.received_type === 'expense')
+                        ? 'cash'
+                        : form.received_type
+                    })}
                     className={`flex-1 flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                       form.type === t.id
                         ? `bg-${t.color}-500/20 text-${t.color}-400 border border-${t.color}-500/30`
@@ -240,15 +247,21 @@ export default function Liabilities() {
               <label className="block text-sm text-white/60 mb-1">Due Date</label>
               <input type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
             </div>
+            {!editingLiability && (
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-2">What did you receive from this liability?</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                {[
+              <label className="block text-sm text-white/60 mb-2">
+                {form.type === 'loan_given' ? 'How did you give this money?' : 'What did you receive from this liability?'}
+              </label>
+              <div className={`grid grid-cols-2 ${form.type === 'loan_given' ? '' : 'sm:grid-cols-4'} gap-2 mb-4`}>
+                {(form.type === 'loan_given' ? [
+                  { id: 'cash', label: '💵 Paid from Account' },
+                  { id: 'none', label: '🕰️ Past / Opening Balance' }
+                ] : [
                   { id: 'cash', label: 'Cash / Bank' },
                   { id: 'asset', label: 'Physical Asset (EMI)' },
                   { id: 'expense', label: 'Expense (Baki)' },
-                  { id: 'none', label: 'Nothing / Past Loan' }
-                ].map(opt => (
+                  { id: 'none', label: 'Past / Opening Balance' }
+                ]).map(opt => (
                   <button
                     key={opt.id}
                     type="button"
@@ -266,13 +279,25 @@ export default function Liabilities() {
 
               {form.received_type === 'cash' && (
                 <div className="animate-in fade-in slide-in-from-top-2">
-                  <label className="block text-sm text-white/60 mb-1">Deposit To Account</label>
-                  <select value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className="w-full bg-[#12122a] border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+                  <label className="block text-sm text-white/60 mb-1">
+                    {form.type === 'loan_given' ? 'Pay From Account' : 'Deposit To Account'}
+                  </label>
+                  <select required value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className={`w-full bg-[#12122a] border ${form.type === 'loan_given' ? 'border-red-500/30 focus:border-red-500/50' : 'border-emerald-500/30 focus:border-emerald-500/50'} rounded-xl px-4 py-2.5 text-white focus:outline-none`}>
                     <option value="">Select an account...</option>
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
                   </select>
-                  <p className="text-xs text-white/40 mt-1">The Principal Amount will be added to this account balance.</p>
+                  <p className="text-xs text-white/40 mt-1">
+                    {form.type === 'loan_given'
+                      ? 'The Principal Amount will be deducted from this account balance.'
+                      : 'The Principal Amount will be added to this account balance.'}
+                  </p>
                 </div>
+              )}
+
+              {form.received_type === 'none' && (
+                <p className="text-xs text-white/40 animate-in fade-in slide-in-from-top-2">
+                  Opening balance entry — the liability will be tracked, but no account balance will change. Use this for loans/hawlads from before you started using the app.
+                </p>
               )}
 
               {form.received_type === 'asset' && (
@@ -306,6 +331,7 @@ export default function Liabilities() {
                 </div>
               )}
             </div>
+            )}
             <div className="sm:col-span-2">
               <label className="block text-sm text-white/60 mb-1">Notes</label>
               <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" rows={2} />

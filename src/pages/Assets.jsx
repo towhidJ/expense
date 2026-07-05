@@ -65,7 +65,11 @@ export default function Assets() {
 
   const handleDelete = async (id) => {
     if (confirm('Delete this asset? It will not delete linked expenses, but the link will be broken.')) {
-      await deleteAsset(id);
+      try {
+        await deleteAsset(id);
+      } catch (err) {
+        alert('Failed to delete asset: ' + err.message);
+      }
     }
   };
 

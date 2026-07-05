@@ -136,6 +136,7 @@ export function useLiabilities() {
     delete dbUpdates.asset_name;
     delete dbUpdates.asset_type;
     delete dbUpdates.expense_category_id;
+    if (!dbUpdates.due_date) dbUpdates.due_date = null; // '' is invalid for a DATE column
 
     const { data, error } = await supabase
       .from('liabilities')

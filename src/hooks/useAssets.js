@@ -48,6 +48,15 @@ export function useAssets() {
   };
 
   const deleteAsset = async (id) => {
+    // Unlink transactions first — the FK on transactions.asset_id blocks
+    // deleting an asset that still has linked expenses
+    const { error: unlinkError } = await supabase
+      .from('transactions')
+      .update({ asset_id: null })
+      .eq('asset_id', id)
+      .eq('user_id', user.id);
+    if (unlinkError) throw unlinkError;
+
     const { error } = await supabase
       .from('assets')
       .delete()

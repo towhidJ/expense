@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Split } from 'lucide-react';
 import { useAssets } from '../hooks/useAssets';
 import { useAccounts } from '../context/AccountContext';
 import { useAttachments } from '../hooks/useAttachments';
@@ -18,12 +18,16 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
     description: '',
     date: new Date().toISOString().split('T')[0]
   });
+  const [split, setSplit] = useState(false);
+  const [splitForm, setSplitForm] = useState({ account_id_2: '', amount_2: '' });
   const [files, setFiles] = useState([]);
   const [existing, setExisting] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setFiles([]);
+    setSplit(false);
+    setSplitForm({ account_id_2: '', amount_2: '' });
     if (editData) {
       setForm({
         type: editData.type,
@@ -62,19 +66,44 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const base = {
+      ...form,
+      amount: parseFloat(form.amount),
+      asset_id: form.type === 'expense' && form.asset_id ? form.asset_id : null
+    };
+
+    if (split && !editData) {
+      if (!splitForm.account_id_2 || !parseFloat(splitForm.amount_2)) {
+        alert('Please fill in the second account and amount.');
+        return;
+      }
+      if (splitForm.account_id_2 === form.account_id) {
+        alert('The two accounts must be different.');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      await onSubmit({
-        ...form,
-        amount: parseFloat(form.amount),
-        asset_id: form.type === 'expense' && form.asset_id ? form.asset_id : null
-      }, editData?.id, files);
+      if (split && !editData) {
+        // Two separate transactions so each account's balance updates correctly
+        await onSubmit(base, null, files);
+        await onSubmit({
+          ...base,
+          account_id: splitForm.account_id_2,
+          amount: parseFloat(splitForm.amount_2)
+        }, null, []);
+      } else {
+        await onSubmit(base, editData?.id, files);
+      }
       onClose();
     } catch (err) {
       alert(err.message);
     }
     setSubmitting(false);
   };
+
+  const splitTotal = (parseFloat(form.amount) || 0) + (parseFloat(splitForm.amount_2) || 0);
 
   if (!isOpen) return null;
 
@@ -123,7 +152,22 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
           </div>
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Account (Source/Destination)</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm text-white/50">{split ? 'Account 1' : 'Account (Source/Destination)'}</label>
+              {!editData && (
+                <button
+                  type="button"
+                  onClick={() => setSplit(s => !s)}
+                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                    split
+                      ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                      : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <Split className="w-3 h-3" /> Split into 2 accounts
+                </button>
+              )}
+            </div>
             <select
               required
               value={form.account_id}
@@ -154,7 +198,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
           )}
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Amount (৳)</label>
+            <label className="block text-sm text-white/50 mb-1.5">{split ? 'Amount 1 (৳)' : 'Amount (৳)'}</label>
             <input
               type="number"
               required
@@ -166,6 +210,42 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
             />
           </div>
+
+          {split && !editData && (
+            <>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Account 2</label>
+                <select
+                  required
+                  value={splitForm.account_id_2}
+                  onChange={e => setSplitForm(f => ({ ...f, account_id_2: e.target.value }))}
+                  className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
+                >
+                  <option value="" className="bg-[#12122a]">Select account...</option>
+                  {accounts.filter(a => a.id !== form.account_id).map(a => (
+                    <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name} ({a.currency}{a.current_balance})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Amount 2 (৳)</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={splitForm.amount_2}
+                  onChange={e => setSplitForm(f => ({ ...f, amount_2: e.target.value }))}
+                  placeholder="0.00"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
+                />
+              </div>
+              <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 px-4 py-2.5 flex items-center justify-between">
+                <span className="text-xs text-white/50">Total</span>
+                <span className="text-sm font-semibold text-cyan-400">৳{splitTotal.toLocaleString()}</span>
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-sm text-white/50 mb-1.5">Description</label>

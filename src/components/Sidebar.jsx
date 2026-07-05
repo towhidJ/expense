@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase
+  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank
 } from 'lucide-react';
 
 const navItems = [
@@ -16,6 +16,7 @@ const navItems = [
   { to: '/reports', icon: PieChart, label: 'Reports' },
   { to: '/budgets', icon: Wallet, label: 'Budgets' },
   { to: '/goals', icon: Target, label: 'Goals' },
+  { to: '/savings', icon: PiggyBank, label: 'Savings' },
   { to: '/family', icon: Users, label: 'Family' },
   { to: '/assets', icon: Bike, label: 'Assets' },
   { to: '/liabilities', icon: Shield, label: 'Liabilities' },
