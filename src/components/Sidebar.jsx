@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank
+  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound
 } from 'lucide-react';
 
 const navItems = [
@@ -24,13 +25,38 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { signOut, user } = useAuth();
+  const { signOut, user, changePassword } = useAuth();
   const { entities, currentEntity, switchEntity, addEntity } = useEntity();
   const navigate = useNavigate();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwSubmitting, setPwSubmitting] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (pwForm.next.length < 6) {
+      alert('New password must be at least 6 characters.');
+      return;
+    }
+    if (pwForm.next !== pwForm.confirm) {
+      alert('New password and confirmation do not match.');
+      return;
+    }
+    setPwSubmitting(true);
+    try {
+      await changePassword(pwForm.current, pwForm.next);
+      setShowPasswordModal(false);
+      setPwForm({ current: '', next: '', confirm: '' });
+      alert('Password changed successfully!');
+    } catch (err) {
+      alert(err.message);
+    }
+    setPwSubmitting(false);
   };
 
   const handleEntityChange = async (e) => {
@@ -128,6 +154,13 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
           </div>
           <button
+            onClick={() => { setPwForm({ current: '', next: '', confirm: '' }); setShowPasswordModal(true); }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all w-full"
+          >
+            <KeyRound className="w-5 h-5" />
+            Change Password
+          </button>
+          <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
           >
@@ -136,6 +169,66 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
       </aside>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowPasswordModal(false)}>
+          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">Change Password</h2>
+              <button onClick={() => setShowPasswordModal(false)} className="text-white/40 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={pwForm.current}
+                  onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  value={pwForm.next}
+                  onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                />
+                <p className="text-xs text-white/30 mt-1">At least 6 characters</p>
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  value={pwForm.confirm}
+                  onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={pwSubmitting}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50"
+              >
+                {pwSubmitting ? 'Updating...' : 'Update Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

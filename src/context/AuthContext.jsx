@@ -43,8 +43,20 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    // Verify the current password first — updateUser alone doesn't check it
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword
+    });
+    if (verifyError) throw new Error('Current password is incorrect');
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
