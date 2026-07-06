@@ -367,7 +367,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-white">Monthly Report</h1>
           <p className="text-white/40 text-sm mt-1">Detailed financial analysis</p>
         </div>
-        <div className="flex flex-col items-end gap-3">
+        <div className="flex flex-col items-stretch sm:items-end gap-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex gap-2">
               <select
@@ -400,11 +400,11 @@ export default function Reports() {
           </div>
 
           {/* Account & category filters */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <select
               value={accountFilter}
               onChange={e => setAccountFilter(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+              className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
             >
               <option value="all" className="bg-[#12122a]">All Accounts</option>
               {accounts.map(a => (
@@ -414,7 +414,7 @@ export default function Reports() {
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+              className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
             >
               <option value="all" className="bg-[#12122a]">All Categories</option>
               {categories.map(c => (
@@ -424,11 +424,11 @@ export default function Reports() {
           </div>
 
           {filterType === 'monthly' ? (
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <select
                 value={month}
                 onChange={e => setMonth(parseInt(e.target.value))}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
               >
                 {months.map((m, i) => (
                   <option key={i} value={i + 1} className="bg-[#12122a]">{m}</option>
@@ -437,7 +437,7 @@ export default function Reports() {
               <select
                 value={year}
                 onChange={e => setYear(parseInt(e.target.value))}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
               >
                 {[2024, 2025, 2026, 2027].map(y => (
                   <option key={y} value={y} className="bg-[#12122a]">{y}</option>
@@ -445,10 +445,10 @@ export default function Reports() {
               </select>
             </div>
           ) : (
-            <div className="flex gap-3 items-center">
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+            <div className="flex flex-wrap gap-3 items-center">
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
               <span className="text-white/40">to</span>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
             </div>
           )}
         </div>

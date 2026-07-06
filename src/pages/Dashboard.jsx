@@ -200,15 +200,16 @@ export default function Dashboard() {
 
         <ChartCard title="Spending by Category" subtitle="This month">
           {categoryExpenses.length > 0 ? (
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width="50%" height={240}>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-full sm:w-1/2 shrink-0">
+                <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
                     data={categoryExpenses}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius="55%"
+                    outerRadius="90%"
                     dataKey="value"
                     stroke="none"
                   >
@@ -217,8 +218,9 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                 </PieChart>
-              </ResponsiveContainer>
-              <div className="flex-1 space-y-2">
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 w-full min-w-0 space-y-2">
                 {categoryExpenses.slice(0, 5).map((c, i) => (
                   <div key={c.name} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />

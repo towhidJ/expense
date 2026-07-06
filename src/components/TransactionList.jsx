@@ -15,7 +15,7 @@ export default function TransactionList({ transactions, onEdit, onDelete, showAc
       {transactions.map(t => (
         <div
           key={t.id}
-          className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+          className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-white/[0.02] hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
         >
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
@@ -27,11 +27,11 @@ export default function TransactionList({ transactions, onEdit, onDelete, showAc
             <p className="text-sm text-white font-medium truncate">
               {t.description || t.categories?.name || 'Transaction'}
             </p>
-            <p className="text-xs text-white/30 mt-0.5">
+            <p className="text-xs text-white/30 mt-0.5 truncate">
               {t.categories?.name} • {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <p className={`text-sm font-bold ${
               t.type === 'income' ? 'text-emerald-400' : 'text-red-400'
             }`}>
@@ -39,7 +39,7 @@ export default function TransactionList({ transactions, onEdit, onDelete, showAc
             </p>
           </div>
           {showActions && (
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-0.5 shrink-0 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => onEdit(t)}
                 className="p-2 rounded-lg text-white/30 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
