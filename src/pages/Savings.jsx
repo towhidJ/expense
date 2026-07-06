@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSavings } from '../hooks/useSavings';
 import { useAccounts } from '../context/AccountContext';
-import { PiggyBank, Plus, X, Trash2, TrendingUp, TrendingDown, Repeat, Play } from 'lucide-react';
+import { PiggyBank, Plus, X, Trash2, TrendingUp, TrendingDown, Repeat, Play, Landmark, Pencil } from 'lucide-react';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -17,12 +17,15 @@ const savingTypeLabel = (id) => SAVING_TYPES.find(t => t.id === id)?.label || id
 
 export default function Savings() {
   const {
-    savings, recurringSavings, loading, addSaving, deleteSaving,
+    savings, recurringSavings, savingHeads, loading, addSaving, deleteSaving,
+    addSavingHead, updateSavingHead, deleteSavingHead,
     addRecurringSaving, updateRecurringSaving, deleteRecurringSaving, runDueRecurringSavings
   } = useSavings();
   const { accounts } = useAccounts();
   const [showForm, setShowForm] = useState(false);
   const [showRecurringForm, setShowRecurringForm] = useState(false);
+  const [showHeadForm, setShowHeadForm] = useState(false);
+  const [editHead, setEditHead] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [runningDue, setRunningDue] = useState(false);
   const initialForm = {
@@ -33,7 +36,8 @@ export default function Savings() {
     purpose: '',
     notes: '',
     saving_type: 'general',
-    institution: ''
+    institution: '',
+    head_id: ''
   };
   const [form, setForm] = useState(initialForm);
   const initialRecurringForm = {
@@ -43,9 +47,22 @@ export default function Savings() {
     saving_type: 'dps',
     institution: '',
     frequency: 'monthly',
-    next_run_date: new Date().toISOString().split('T')[0]
+    next_run_date: new Date().toISOString().split('T')[0],
+    head_id: ''
   };
   const [recurringForm, setRecurringForm] = useState(initialRecurringForm);
+  const initialHeadForm = { name: '', saving_type: 'dps', institution: '', account_number: '', notes: '' };
+  const [headForm, setHeadForm] = useState(initialHeadForm);
+
+  // Net balance sitting in each head (deposits - withdrawals)
+  const headBalances = useMemo(() => {
+    const map = {};
+    savings.forEach(e => {
+      if (!e.head_id) return;
+      map[e.head_id] = (map[e.head_id] || 0) + (e.type === 'deposit' ? 1 : -1) * Number(e.amount);
+    });
+    return map;
+  }, [savings]);
 
   const now = new Date();
   const stats = useMemo(() => {
@@ -81,13 +98,17 @@ export default function Savings() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // When a head is picked, its type/institution carry over to the entry
+      const head = savingHeads.find(h => h.id === form.head_id);
       await addSaving({
         ...form,
         amount: parseFloat(form.amount),
         account_id: form.account_id || null,
         purpose: form.purpose || null,
         notes: form.notes || null,
-        institution: form.institution || null
+        saving_type: head ? head.saving_type : form.saving_type,
+        institution: head ? head.institution : (form.institution || null),
+        head_id: form.head_id || null
       });
       setShowForm(false);
       setForm(initialForm);
@@ -97,15 +118,51 @@ export default function Savings() {
     setSubmitting(false);
   };
 
+  const handleHeadSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...headForm,
+        institution: headForm.institution || null,
+        account_number: headForm.account_number || null,
+        notes: headForm.notes || null
+      };
+      if (editHead) await updateSavingHead(editHead.id, payload);
+      else await addSavingHead(payload);
+      setShowHeadForm(false);
+      setEditHead(null);
+      setHeadForm(initialHeadForm);
+    } catch (err) {
+      alert('Error saving head: ' + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const openHeadForm = (head = null) => {
+    setEditHead(head);
+    setHeadForm(head ? {
+      name: head.name,
+      saving_type: head.saving_type || 'general',
+      institution: head.institution || '',
+      account_number: head.account_number || '',
+      notes: head.notes || ''
+    } : initialHeadForm);
+    setShowHeadForm(true);
+  };
+
   const handleRecurringSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const head = savingHeads.find(h => h.id === recurringForm.head_id);
       await addRecurringSaving({
         ...recurringForm,
         amount: parseFloat(recurringForm.amount),
         account_id: recurringForm.account_id || null,
-        institution: recurringForm.institution || null
+        saving_type: head ? head.saving_type : recurringForm.saving_type,
+        institution: head ? head.institution : (recurringForm.institution || null),
+        head_id: recurringForm.head_id || null
       });
       setShowRecurringForm(false);
       setRecurringForm(initialRecurringForm);
@@ -158,6 +215,12 @@ export default function Savings() {
               <Play className="w-4 h-4" /> {runningDue ? 'Running...' : `Run ${dueRecurring} Due`}
             </button>
           )}
+          <button
+            onClick={() => openHeadForm()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-semibold hover:bg-white/10 transition-all"
+          >
+            <Landmark className="w-4 h-4" /> New Head
+          </button>
           <button
             onClick={() => { setRecurringForm(initialRecurringForm); setShowRecurringForm(true); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-semibold hover:bg-white/10 transition-all"
@@ -212,6 +275,46 @@ export default function Savings() {
         </div>
       </div>
 
+      {/* Savings heads — where the money sits */}
+      {savingHeads.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] border border-white/10 p-5">
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <Landmark size={16} className="text-emerald-400" /> Savings Heads
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {savingHeads.map(h => (
+              <div key={h.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 group">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{h.name}</p>
+                    <p className="text-xs text-white/40 truncate">
+                      {savingTypeLabel(h.saving_type)}{h.institution ? ` • ${h.institution}` : ''}
+                    </p>
+                    {h.account_number && (
+                      <p className="text-xs text-white/30 mt-0.5 truncate">A/C: {h.account_number}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                    <button onClick={() => openHeadForm(h)} className="p-1.5 rounded-lg text-white/30 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all">
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Delete head "${h.name}"? Its entries stay, only the link is removed.`)) deleteSavingHead(h.id).catch(err => alert(err.message)); }}
+                      className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+                <p className={`text-lg font-bold mt-2 ${(headBalances[h.id] || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  ৳{(headBalances[h.id] || 0).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Recurring savings plans */}
       {recurringSavings.length > 0 && (
         <div className="rounded-2xl bg-[#1a1a2e] border border-white/10 p-5">
@@ -226,7 +329,8 @@ export default function Savings() {
                   <div className="flex-1 min-w-[150px]">
                     <p className="text-sm text-white font-medium truncate">{r.title}</p>
                     <p className="text-xs text-white/40 truncate">
-                      {savingTypeLabel(r.saving_type)}{r.institution ? ` • ${r.institution}` : ''}{r.accounts?.name ? ` • from ${r.accounts.name}` : ''}
+                      {r.saving_heads?.name ? `🏷️ ${r.saving_heads.name}` : savingTypeLabel(r.saving_type)}
+                      {r.institution ? ` • ${r.institution}` : ''}{r.accounts?.name ? ` • from ${r.accounts.name}` : ''}
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-emerald-400">৳{Number(r.amount).toLocaleString()}</span>
@@ -289,10 +393,21 @@ export default function Savings() {
                     </td>
                     <td className="py-3 px-5 text-white font-medium">{entry.purpose || '-'}</td>
                     <td className="py-3 px-5">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs bg-cyan-500/10 text-cyan-300">
-                        {savingTypeLabel(entry.saving_type)}
-                      </span>
-                      {entry.institution && <p className="text-xs text-white/40 mt-1">{entry.institution}</p>}
+                      {entry.saving_heads?.name ? (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-300">
+                            🏷️ {entry.saving_heads.name}
+                          </span>
+                          {entry.saving_heads.institution && <p className="text-xs text-white/40 mt-1">{entry.saving_heads.institution}</p>}
+                        </>
+                      ) : (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs bg-cyan-500/10 text-cyan-300">
+                            {savingTypeLabel(entry.saving_type)}
+                          </span>
+                          {entry.institution && <p className="text-xs text-white/40 mt-1">{entry.institution}</p>}
+                        </>
+                      )}
                     </td>
                     <td className="py-3 px-5 text-white/60">{entry.accounts?.name || '-'}</td>
                     <td className={`py-3 px-5 text-right font-semibold ${entry.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -371,24 +486,44 @@ export default function Savings() {
                     : 'The amount will be added back to this account balance.'}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
-                  <select
-                    value={form.saving_type}
-                    onChange={e => setForm(f => ({ ...f, saving_type: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
-                  >
-                    {SAVING_TYPES.map(t => (
-                      <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
-                  <input type="text" value={form.institution} onChange={e => setForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL, Islami Bank" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
-                </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Savings Head (where the money sits)</label>
+                <select
+                  value={form.head_id}
+                  onChange={e => setForm(f => ({ ...f, head_id: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                >
+                  <option value="" className="bg-[#12122a]">No head (specify manually below)</option>
+                  {savingHeads.map(h => (
+                    <option key={h.id} value={h.id} className="bg-[#12122a]">
+                      {h.name}{h.institution ? ` — ${h.institution}` : ''}
+                    </option>
+                  ))}
+                </select>
+                {savingHeads.length === 0 && (
+                  <p className="text-xs text-white/40 mt-1">Tip: create heads like "DBBL DPS" with the New Head button.</p>
+                )}
               </div>
+              {!form.head_id && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
+                    <select
+                      value={form.saving_type}
+                      onChange={e => setForm(f => ({ ...f, saving_type: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                    >
+                      {SAVING_TYPES.map(t => (
+                        <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
+                    <input type="text" value={form.institution} onChange={e => setForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL, Islami Bank" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-white/50 mb-1.5">Purpose (Optional)</label>
                 <input type="text" value={form.purpose} onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))} placeholder="e.g. Emergency Fund, Hajj Fund" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
@@ -422,24 +557,41 @@ export default function Savings() {
                 <label className="block text-sm text-white/50 mb-1.5">Title</label>
                 <input type="text" required value={recurringForm.title} onChange={e => setRecurringForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. DBBL DPS 5000" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" autoFocus />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
-                  <select
-                    value={recurringForm.saving_type}
-                    onChange={e => setRecurringForm(f => ({ ...f, saving_type: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
-                  >
-                    {SAVING_TYPES.map(t => (
-                      <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
-                  <input type="text" value={recurringForm.institution} onChange={e => setRecurringForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
-                </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Savings Head</label>
+                <select
+                  value={recurringForm.head_id}
+                  onChange={e => setRecurringForm(f => ({ ...f, head_id: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                >
+                  <option value="" className="bg-[#12122a]">No head (specify manually below)</option>
+                  {savingHeads.map(h => (
+                    <option key={h.id} value={h.id} className="bg-[#12122a]">
+                      {h.name}{h.institution ? ` — ${h.institution}` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {!recurringForm.head_id && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
+                    <select
+                      value={recurringForm.saving_type}
+                      onChange={e => setRecurringForm(f => ({ ...f, saving_type: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                    >
+                      {SAVING_TYPES.map(t => (
+                        <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
+                    <input type="text" value={recurringForm.institution} onChange={e => setRecurringForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-white/50 mb-1.5">Amount per period (৳)</label>
                 <input type="number" required min="0.01" step="0.01" value={recurringForm.amount} onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
@@ -479,6 +631,53 @@ export default function Savings() {
               </div>
               <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50">
                 {submitting ? 'Saving...' : 'Add Recurring Saving'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Savings head form modal */}
+      {showHeadForm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowHeadForm(false); setEditHead(null); }}>
+          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">{editHead ? 'Edit' : 'New'} Savings Head</h2>
+              <button onClick={() => { setShowHeadForm(false); setEditHead(null); }} className="text-white/40 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleHeadSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Head Name</label>
+                <input type="text" required value={headForm.name} onChange={e => setHeadForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. DBBL DPS, Home Cash" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" autoFocus />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
+                  <select
+                    value={headForm.saving_type}
+                    onChange={e => setHeadForm(f => ({ ...f, saving_type: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                  >
+                    {SAVING_TYPES.map(t => (
+                      <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
+                  <input type="text" value={headForm.institution} onChange={e => setHeadForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Account Number (Optional)</label>
+                <input type="text" value={headForm.account_number} onChange={e => setHeadForm(f => ({ ...f, account_number: e.target.value }))} placeholder="e.g. 123.456.789 / DPS A/C no" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Notes (Optional)</label>
+                <input type="text" value={headForm.notes} onChange={e => setHeadForm(f => ({ ...f, notes: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+              </div>
+              <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50">
+                {submitting ? 'Saving...' : editHead ? 'Update Head' : 'Create Head'}
               </button>
             </form>
           </div>

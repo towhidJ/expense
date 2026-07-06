@@ -10,24 +10,31 @@ export function useSavings() {
   const { fetchAccounts } = useAccounts();
   const [savings, setSavings] = useState([]);
   const [recurringSavings, setRecurringSavings] = useState([]);
+  const [savingHeads, setSavingHeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSavings = useCallback(async () => {
     if (!user || !currentEntity) return;
     setLoading(true);
-    const [{ data, error }, { data: recData, error: recError }] = await Promise.all([
+    const [{ data, error }, { data: recData, error: recError }, { data: headData, error: headError }] = await Promise.all([
       supabase
         .from('savings')
-        .select('*, accounts(name)')
+        .select('*, accounts(name), saving_heads(name, institution, account_number)')
         .eq('user_id', user.id)
         .eq('entity_id', currentEntity.id)
         .order('date', { ascending: false }),
       supabase
         .from('recurring_savings')
-        .select('*, accounts(name)')
+        .select('*, accounts(name), saving_heads(name)')
         .eq('user_id', user.id)
         .eq('entity_id', currentEntity.id)
-        .order('next_run_date', { ascending: true })
+        .order('next_run_date', { ascending: true }),
+      supabase
+        .from('saving_heads')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entity_id', currentEntity.id)
+        .order('created_at', { ascending: true })
     ]);
 
     if (error) {
@@ -39,6 +46,11 @@ export function useSavings() {
       console.error('Error fetching recurring savings:', recError);
     } else {
       setRecurringSavings(recData || []);
+    }
+    if (headError) {
+      console.error('Error fetching saving heads:', headError);
+    } else {
+      setSavingHeads(headData || []);
     }
     setLoading(false);
   }, [user, currentEntity]);
@@ -56,7 +68,8 @@ export function useSavings() {
         p_purpose: entry.purpose || null,
         p_notes: entry.notes || null,
         p_saving_type: entry.saving_type || 'general',
-        p_institution: entry.institution || null
+        p_institution: entry.institution || null,
+        p_head_id: entry.head_id || null
       });
       if (error) throw error;
     } else {
@@ -69,6 +82,36 @@ export function useSavings() {
       if (error) throw error;
     }
     await Promise.all([fetchSavings(), fetchAccounts()]);
+  };
+
+  const addSavingHead = async (head) => {
+    const { error } = await supabase.from('saving_heads').insert({
+      ...head,
+      user_id: user.id,
+      entity_id: currentEntity.id
+    });
+    if (error) throw error;
+    await fetchSavings();
+  };
+
+  const updateSavingHead = async (id, updates) => {
+    const { error } = await supabase
+      .from('saving_heads')
+      .update(updates)
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (error) throw error;
+    await fetchSavings();
+  };
+
+  const deleteSavingHead = async (id) => {
+    const { error } = await supabase
+      .from('saving_heads')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (error) throw error;
+    await fetchSavings();
   };
 
   const addRecurringSaving = async (entry) => {
@@ -127,7 +170,8 @@ export function useSavings() {
   }, [user, fetchSavings]);
 
   return {
-    savings, recurringSavings, loading, fetchSavings, addSaving, deleteSaving,
+    savings, recurringSavings, savingHeads, loading, fetchSavings, addSaving, deleteSaving,
+    addSavingHead, updateSavingHead, deleteSavingHead,
     addRecurringSaving, updateRecurringSaving, deleteRecurringSaving, runDueRecurringSavings
   };
 }

@@ -18,6 +18,7 @@ export default function Accounts() {
   const initialForm = {
     name: '',
     type: 'bank',
+    account_number: '',
     opening_balance: 0,
     current_balance: 0,
     currency: '৳',
@@ -119,6 +120,10 @@ export default function Accounts() {
                 ))}
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm text-white/60 mb-1">Account Number (Optional)</label>
+              <input type="text" value={form.account_number || ''} onChange={e => setForm({...form, account_number: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" placeholder="e.g. bank A/C no, bKash 01XXXXXXXXX, card number" />
+            </div>
             <div>
               <label className="block text-sm text-white/60 mb-1">Opening Balance</label>
               <input required type="number" step="0.01" value={form.opening_balance} onChange={e => setForm({...form, opening_balance: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
@@ -153,6 +158,9 @@ export default function Accounts() {
                   <div>
                     <h3 className="text-white font-medium">{acc.name}</h3>
                     <p className="text-white/40 text-xs capitalize">{acc.type.replace('_', ' ')}</p>
+                    {acc.account_number && (
+                      <p className="text-white/30 text-xs mt-0.5">A/C: {acc.account_number}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
