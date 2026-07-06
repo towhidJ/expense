@@ -164,7 +164,7 @@ export default function Goals() {
                     <p className="text-white/40 text-xs mt-0.5">Target: {new Date(goal.target_date).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => { setEditingGoal(goal); setForm(goal); setIsAdding(false); }} className="text-white/40 hover:text-purple-400 p-1.5 bg-white/5 hover:bg-purple-500/10 rounded-lg">
                     <Edit2 size={14} />
                   </button>

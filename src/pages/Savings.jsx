@@ -417,7 +417,7 @@ export default function Savings() {
                     <td className="py-3 px-5 text-right">
                       <button
                         onClick={() => handleDelete(entry.id)}
-                        className="text-white/30 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                        className="text-white/30 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                       >
                         <Trash2 size={15} />
                       </button>

@@ -177,7 +177,7 @@ export default function Categories() {
                 </div>
               </div>
               
-              <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => { setEditingCategory(category); setForm(category); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg shrink-0">
                   <Edit2 size={16} />
                 </button>

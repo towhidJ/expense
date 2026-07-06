@@ -47,7 +47,7 @@ export default function AssetCard({ asset, totalExpense, onEdit, onDelete }) {
         <p className="text-xs text-white/30">
           Purchased: {new Date(asset.purchase_date).toLocaleDateString()}
         </p>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button onClick={() => onEdit(asset)} className="p-2 rounded-lg text-white/30 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all">
             <Pencil className="w-4 h-4" />
           </button>

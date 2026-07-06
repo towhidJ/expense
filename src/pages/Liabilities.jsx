@@ -496,7 +496,7 @@ export default function Liabilities() {
                     <p className="text-white/40 text-xs capitalize">{liability.type.replace('_', ' ')}</p>
                   </div>
                 </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => { setEditingLiability(liability); setForm(liability); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={16} />
                   </button>

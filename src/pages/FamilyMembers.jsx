@@ -107,7 +107,7 @@ export default function FamilyMembers() {
           <div key={member.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white mb-3 shadow-lg shadow-pink-500/20 relative">
               <User size={28} />
-              <div className="absolute top-0 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-8">
+              <div className="absolute top-0 right-0 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => { setEditingMember(member); setForm(member); setIsAdding(false); }} className="text-white hover:text-cyan-400 p-1 bg-[#12122a] border border-white/10 rounded-lg">
                   <Edit2 size={14} />
                 </button>
