@@ -4,13 +4,24 @@ import { useTransactions } from '../hooks/useTransactions';
 import AssetCard from '../components/AssetCard';
 import { Plus, X } from 'lucide-react';
 
+// Common quantity units per asset type (e.g. gold in bhori, land in katha)
+export const UNITS_BY_TYPE = {
+  Gold: ['ভরি', 'আনা', 'গ্রাম', 'রতি'],
+  Land: ['কাঠা', 'শতক', 'বিঘা', 'একর', 'sq ft'],
+  Property: ['sq ft', 'কাঠা', 'unit'],
+  Vehicle: ['pcs'],
+  Equipment: ['pcs'],
+  Furniture: ['pcs'],
+  Other: ['pcs', 'kg', 'unit']
+};
+
 export default function Assets() {
   const { assets, loading, addAsset, updateAsset, deleteAsset } = useAssets();
   const { transactions } = useTransactions();
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
   const [form, setForm] = useState({
-    name: '', type: 'Property', purchase_value: '', current_value: '', depreciation: '', purchase_date: new Date().toISOString().split('T')[0], notes: ''
+    name: '', type: 'Property', purchase_value: '', current_value: '', depreciation: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', quantity: '', unit: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,18 +39,20 @@ export default function Assets() {
     if (asset) {
       setEditData(asset);
       setForm({
-        name: asset.name, 
-        type: asset.type || 'Other', 
+        name: asset.name,
+        type: asset.type || 'Other',
         purchase_value: asset.purchase_value?.toString() || asset.value?.toString() || '',
         current_value: asset.current_value?.toString() || asset.value?.toString() || '',
         depreciation: asset.depreciation?.toString() || '',
-        purchase_date: asset.purchase_date, 
-        notes: asset.notes || ''
+        purchase_date: asset.purchase_date,
+        notes: asset.notes || '',
+        quantity: asset.quantity?.toString() || '',
+        unit: asset.unit || ''
       });
     } else {
       setEditData(null);
       setForm({
-        name: '', type: 'Property', purchase_value: '', current_value: '', depreciation: '', purchase_date: new Date().toISOString().split('T')[0], notes: ''
+        name: '', type: 'Property', purchase_value: '', current_value: '', depreciation: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', quantity: '', unit: ''
       });
     }
     setShowForm(true);
@@ -49,12 +62,14 @@ export default function Assets() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const data = { 
-        ...form, 
+      const data = {
+        ...form,
         purchase_value: parseFloat(form.purchase_value || 0),
         current_value: parseFloat(form.current_value || 0),
         depreciation: parseFloat(form.depreciation || 0),
-        value: parseFloat(form.current_value || 0) // Keep backward compatibility with old components
+        value: parseFloat(form.current_value || 0), // Keep backward compatibility with old components
+        quantity: form.quantity ? parseFloat(form.quantity) : null,
+        unit: form.unit || null
       };
       if (editData) await updateAsset(editData.id, data);
       else await addAsset(data);
@@ -150,6 +165,28 @@ export default function Assets() {
                 <div>
                   <label className="block text-sm text-white/50 mb-1.5">Depreciation (%)</label>
                   <input type="number" min="0" step="0.01" value={form.depreciation} onChange={e => setForm(f => ({ ...f, depreciation: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Quantity (Optional)</label>
+                  <input type="number" min="0" step="0.001" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} placeholder={form.type === 'Gold' ? 'e.g. 5.5' : form.type === 'Land' ? 'e.g. 10' : 'e.g. 1'} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 placeholder:text-white/20" />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Unit</label>
+                  <input
+                    type="text"
+                    list="asset-units"
+                    value={form.unit}
+                    onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
+                    placeholder={form.type === 'Gold' ? 'ভরি' : form.type === 'Land' ? 'কাঠা' : 'pcs'}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 placeholder:text-white/20"
+                  />
+                  <datalist id="asset-units">
+                    {(UNITS_BY_TYPE[form.type] || UNITS_BY_TYPE.Other).map(u => (
+                      <option key={u} value={u} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
               <div>

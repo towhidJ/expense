@@ -20,7 +20,14 @@ export default function AssetCard({ asset, totalExpense, onEdit, onDelete }) {
           </div>
           <div>
             <p className="text-sm font-medium text-white">{asset.name}</p>
-            <p className="text-xs text-white/40">{asset.type}</p>
+            <p className="text-xs text-white/40">
+              {asset.type}
+              {asset.quantity ? (
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400">
+                  {Number(asset.quantity).toLocaleString()} {asset.unit || ''}
+                </span>
+              ) : null}
+            </p>
           </div>
         </div>
         <div className="text-right">

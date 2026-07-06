@@ -1,24 +1,51 @@
 import { useState, useMemo } from 'react';
 import { useSavings } from '../hooks/useSavings';
 import { useAccounts } from '../context/AccountContext';
-import { PiggyBank, Plus, X, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { PiggyBank, Plus, X, Trash2, TrendingUp, TrendingDown, Repeat, Play } from 'lucide-react';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+export const SAVING_TYPES = [
+  { id: 'general', label: '💰 General' },
+  { id: 'bank', label: '🏦 Bank Savings' },
+  { id: 'dps', label: '📆 DPS' },
+  { id: 'fdr', label: '📜 FDR' },
+  { id: 'cash', label: '💵 Cash' },
+  { id: 'other', label: '📦 Other' }
+];
+const savingTypeLabel = (id) => SAVING_TYPES.find(t => t.id === id)?.label || id || '💰 General';
+
 export default function Savings() {
-  const { savings, loading, addSaving, deleteSaving } = useSavings();
+  const {
+    savings, recurringSavings, loading, addSaving, deleteSaving,
+    addRecurringSaving, updateRecurringSaving, deleteRecurringSaving, runDueRecurringSavings
+  } = useSavings();
   const { accounts } = useAccounts();
   const [showForm, setShowForm] = useState(false);
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [runningDue, setRunningDue] = useState(false);
   const initialForm = {
     type: 'deposit',
     amount: '',
     account_id: '',
     date: new Date().toISOString().split('T')[0],
     purpose: '',
-    notes: ''
+    notes: '',
+    saving_type: 'general',
+    institution: ''
   };
   const [form, setForm] = useState(initialForm);
+  const initialRecurringForm = {
+    title: '',
+    amount: '',
+    account_id: '',
+    saving_type: 'dps',
+    institution: '',
+    frequency: 'monthly',
+    next_run_date: new Date().toISOString().split('T')[0]
+  };
+  const [recurringForm, setRecurringForm] = useState(initialRecurringForm);
 
   const now = new Date();
   const stats = useMemo(() => {
@@ -59,7 +86,8 @@ export default function Savings() {
         amount: parseFloat(form.amount),
         account_id: form.account_id || null,
         purpose: form.purpose || null,
-        notes: form.notes || null
+        notes: form.notes || null,
+        institution: form.institution || null
       });
       setShowForm(false);
       setForm(initialForm);
@@ -67,6 +95,38 @@ export default function Savings() {
       alert('Error saving entry: ' + err.message);
     }
     setSubmitting(false);
+  };
+
+  const handleRecurringSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addRecurringSaving({
+        ...recurringForm,
+        amount: parseFloat(recurringForm.amount),
+        account_id: recurringForm.account_id || null,
+        institution: recurringForm.institution || null
+      });
+      setShowRecurringForm(false);
+      setRecurringForm(initialRecurringForm);
+    } catch (err) {
+      alert('Error adding recurring saving: ' + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const dueRecurring = recurringSavings.filter(r => r.is_active && new Date(r.next_run_date) <= new Date()).length;
+
+  const handleRunDue = async () => {
+    if (!window.confirm(`Run all ${dueRecurring} due recurring saving(s) now? Overdue items catch up for every missed period.`)) return;
+    setRunningDue(true);
+    try {
+      const count = await runDueRecurringSavings();
+      alert(`${count} savings entry(ies) created.`);
+    } catch (err) {
+      alert('Error running due savings: ' + err.message);
+    }
+    setRunningDue(false);
   };
 
   const handleDelete = async (id) => {
@@ -88,12 +148,29 @@ export default function Savings() {
           <h1 className="text-2xl font-bold text-white">Savings</h1>
           <p className="text-white/40 text-sm mt-1">Track money you set aside, separate from your goals</p>
         </div>
-        <button
-          onClick={() => { setForm(initialForm); setShowForm(true); }}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Entry
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {dueRecurring > 0 && (
+            <button
+              onClick={handleRunDue}
+              disabled={runningDue}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-semibold hover:bg-orange-500/30 transition-all disabled:opacity-50"
+            >
+              <Play className="w-4 h-4" /> {runningDue ? 'Running...' : `Run ${dueRecurring} Due`}
+            </button>
+          )}
+          <button
+            onClick={() => { setRecurringForm(initialRecurringForm); setShowRecurringForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-semibold hover:bg-white/10 transition-all"
+          >
+            <Repeat className="w-4 h-4" /> Recurring
+          </button>
+          <button
+            onClick={() => { setForm(initialForm); setShowForm(true); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add Entry
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -135,6 +212,50 @@ export default function Savings() {
         </div>
       </div>
 
+      {/* Recurring savings plans */}
+      {recurringSavings.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] border border-white/10 p-5">
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <Repeat size={16} className="text-cyan-400" /> Recurring Savings
+          </h3>
+          <div className="space-y-2">
+            {recurringSavings.map(r => {
+              const due = r.is_active && new Date(r.next_run_date) <= new Date();
+              return (
+                <div key={r.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                  <div className="flex-1 min-w-[150px]">
+                    <p className="text-sm text-white font-medium truncate">{r.title}</p>
+                    <p className="text-xs text-white/40 truncate">
+                      {savingTypeLabel(r.saving_type)}{r.institution ? ` • ${r.institution}` : ''}{r.accounts?.name ? ` • from ${r.accounts.name}` : ''}
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-emerald-400">৳{Number(r.amount).toLocaleString()}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-lg capitalize ${due ? 'bg-orange-500/15 text-orange-400' : 'bg-white/5 text-white/40'}`}>
+                    {r.frequency} • next {new Date(r.next_run_date).toLocaleDateString()}
+                  </span>
+                  <button
+                    onClick={() => updateRecurringSaving(r.id, { is_active: !r.is_active }).catch(err => alert(err.message))}
+                    className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                      r.is_active
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-white/5 text-white/40 border-white/10'
+                    }`}
+                  >
+                    {r.is_active ? 'Active' : 'Paused'}
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Delete this recurring saving?')) deleteRecurringSaving(r.id).catch(err => alert(err.message)); }}
+                    className="text-white/30 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Entries */}
       {savings.length > 0 ? (
         <div className="rounded-2xl bg-[#1a1a2e] border border-white/10 overflow-hidden">
@@ -145,6 +266,7 @@ export default function Savings() {
                   <th className="text-left py-3 px-5 text-white/60 font-medium">Date</th>
                   <th className="text-left py-3 px-5 text-white/60 font-medium">Type</th>
                   <th className="text-left py-3 px-5 text-white/60 font-medium">Purpose</th>
+                  <th className="text-left py-3 px-5 text-white/60 font-medium">Kept At</th>
                   <th className="text-left py-3 px-5 text-white/60 font-medium">Account</th>
                   <th className="text-right py-3 px-5 text-white/60 font-medium">Amount</th>
                   <th className="text-left py-3 px-5 text-white/60 font-medium">Notes</th>
@@ -166,6 +288,12 @@ export default function Savings() {
                       </span>
                     </td>
                     <td className="py-3 px-5 text-white font-medium">{entry.purpose || '-'}</td>
+                    <td className="py-3 px-5">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs bg-cyan-500/10 text-cyan-300">
+                        {savingTypeLabel(entry.saving_type)}
+                      </span>
+                      {entry.institution && <p className="text-xs text-white/40 mt-1">{entry.institution}</p>}
+                    </td>
                     <td className="py-3 px-5 text-white/60">{entry.accounts?.name || '-'}</td>
                     <td className={`py-3 px-5 text-right font-semibold ${entry.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {entry.type === 'deposit' ? '+' : '−'}৳{Number(entry.amount).toLocaleString()}
@@ -243,9 +371,27 @@ export default function Savings() {
                     : 'The amount will be added back to this account balance.'}
                 </p>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
+                  <select
+                    value={form.saving_type}
+                    onChange={e => setForm(f => ({ ...f, saving_type: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                  >
+                    {SAVING_TYPES.map(t => (
+                      <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
+                  <input type="text" value={form.institution} onChange={e => setForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL, Islami Bank" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                </div>
+              </div>
               <div>
                 <label className="block text-sm text-white/50 mb-1.5">Purpose (Optional)</label>
-                <input type="text" value={form.purpose} onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))} placeholder="e.g. DPS, Emergency Fund, Cash at home" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                <input type="text" value={form.purpose} onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))} placeholder="e.g. Emergency Fund, Hajj Fund" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
               </div>
               <div>
                 <label className="block text-sm text-white/50 mb-1.5">Date</label>
@@ -257,6 +403,82 @@ export default function Savings() {
               </div>
               <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50">
                 {submitting ? 'Saving...' : form.type === 'deposit' ? 'Add Deposit' : 'Record Withdrawal'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Recurring saving form modal */}
+      {showRecurringForm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowRecurringForm(false)}>
+          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">New Recurring Saving</h2>
+              <button onClick={() => setShowRecurringForm(false)} className="text-white/40 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleRecurringSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Title</label>
+                <input type="text" required value={recurringForm.title} onChange={e => setRecurringForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. DBBL DPS 5000" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" autoFocus />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Saving Type</label>
+                  <select
+                    value={recurringForm.saving_type}
+                    onChange={e => setRecurringForm(f => ({ ...f, saving_type: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                  >
+                    {SAVING_TYPES.map(t => (
+                      <option key={t.id} value={t.id} className="bg-[#12122a]">{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Bank / Where</label>
+                  <input type="text" value={recurringForm.institution} onChange={e => setRecurringForm(f => ({ ...f, institution: e.target.value }))} placeholder="e.g. DBBL" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Amount per period (৳)</label>
+                <input type="number" required min="0.01" step="0.01" value={recurringForm.amount} onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+              </div>
+              <div>
+                <label className="block text-sm text-white/50 mb-1.5">Save From Account (optional)</label>
+                <select
+                  value={recurringForm.account_id}
+                  onChange={e => setRecurringForm(f => ({ ...f, account_id: e.target.value }))}
+                  className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                >
+                  <option value="" className="bg-[#12122a]">No account (tracked separately)</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name} ({a.currency}{a.current_balance})</option>
+                  ))}
+                </select>
+                <p className="text-xs text-white/40 mt-1">Each run deducts the amount from this account.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Frequency</label>
+                  <select
+                    value={recurringForm.frequency}
+                    onChange={e => setRecurringForm(f => ({ ...f, frequency: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 appearance-none"
+                  >
+                    <option value="daily" className="bg-[#12122a]">Daily</option>
+                    <option value="weekly" className="bg-[#12122a]">Weekly</option>
+                    <option value="monthly" className="bg-[#12122a]">Monthly</option>
+                    <option value="yearly" className="bg-[#12122a]">Yearly</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">First Run Date</label>
+                  <input type="date" required value={recurringForm.next_run_date} onChange={e => setRecurringForm(f => ({ ...f, next_run_date: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+                </div>
+              </div>
+              <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50">
+                {submitting ? 'Saving...' : 'Add Recurring Saving'}
               </button>
             </form>
           </div>
