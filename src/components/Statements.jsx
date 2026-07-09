@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { FileText } from 'lucide-react';
-import { downloadHtmlAsPdf, statementHtml } from '../lib/htmlPdf';
+import { FileText, Banknote, HandCoins } from 'lucide-react';
+import { downloadHtmlAsPdf, statementHtml, multiSectionHtml } from '../lib/htmlPdf';
 
 const fmt = (n) => '৳' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const pdfNum = (n) => '৳' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -309,6 +309,244 @@ export function TrialBalance({ accounts, assets, investments, savings, liabiliti
       <p className="text-white/30 text-xs mt-4">
         * Balance-sheet heads are as of today; income & expense heads cover the selected period. The balancing figure represents owner's equity.
       </p>
+    </StatementCard>
+  );
+}
+
+// ---------------- Balance Sheet ----------------
+export function BalanceSheet({ accounts, assets, investments, savings, liabilities, entityName }) {
+  const d = useMemo(() => {
+    const assetRows = [];
+    const liabRows = [];
+
+    accounts.forEach(a => {
+      const bal = Number(a.current_balance || 0);
+      if (bal >= 0) assetRows.push({ name: `${a.name} (cash & bank)`, value: bal });
+      else liabRows.push({ name: `${a.name} (overdrawn account)`, value: -bal });
+    });
+
+    const savingsBal = savings.reduce((s, e) => s + (e.type === 'deposit' ? 1 : -1) * Number(e.amount), 0);
+    if (savingsBal > 0) assetRows.push({ name: 'Savings', value: savingsBal });
+
+    const invTotal = investments.reduce((s, i) => s + (Number(i.current_value) || Number(i.invested_amount) || 0), 0);
+    if (invTotal > 0) assetRows.push({ name: 'Investments', value: invTotal });
+
+    const fixedTotal = assets.reduce((s, a) => s + (Number(a.current_value) || Number(a.value) || 0), 0);
+    if (fixedTotal > 0) assetRows.push({ name: 'Fixed & other assets', value: fixedTotal });
+
+    liabilities.filter(l => Number(l.remaining_balance) > 0).forEach(l => {
+      if (l.type === 'loan_given') assetRows.push({ name: `${l.name} (receivable)`, value: Number(l.remaining_balance) });
+      else liabRows.push({ name: `${l.name} (${l.type === 'shop_due' ? 'shop due' : l.type.replace('_', ' ')})`, value: Number(l.remaining_balance) });
+    });
+
+    const totalAssets = assetRows.reduce((s, r) => s + r.value, 0);
+    const totalLiab = liabRows.reduce((s, r) => s + r.value, 0);
+    return { assetRows, liabRows, totalAssets, totalLiab, equity: totalAssets - totalLiab };
+  }, [accounts, assets, investments, savings, liabilities]);
+
+  const exportPDF = () => {
+    const body = [];
+    const boldRows = [];
+    body.push(['ASSETS (সম্পদ)', '']);
+    d.assetRows.forEach(r => body.push(['   ' + r.name, pdfNum(r.value)]));
+    boldRows.push(body.length);
+    body.push(['Total Assets', pdfNum(d.totalAssets)]);
+    body.push(['LIABILITIES (দায়)', '']);
+    if (d.liabRows.length === 0) body.push(['   No liabilities', '—']);
+    d.liabRows.forEach(r => body.push(['   ' + r.name, pdfNum(r.value)]));
+    boldRows.push(body.length);
+    body.push(['Total Liabilities', pdfNum(d.totalLiab)]);
+    boldRows.push(body.length);
+    body.push(["OWNER'S EQUITY / NET WORTH", pdfNum(d.equity)]);
+    boldRows.push(body.length);
+    body.push(['Total Liabilities + Equity', pdfNum(d.totalLiab + d.equity)]);
+    exportStatementPDF({
+      entityName,
+      title: 'Balance Sheet',
+      subtitle: `As of ${new Date().toLocaleDateString('en-GB')} (Amounts in ৳)`,
+      sections: { head: ['Particulars', 'Amount'], body, boldRows },
+      fileName: `Balance_Sheet_${new Date().toISOString().slice(0, 10)}.pdf`
+    });
+  };
+
+  return (
+    <StatementCard entityName={entityName} title="Balance Sheet" subtitle={`As of today · ${new Date().toLocaleDateString('en-GB')}`} onExport={exportPDF}>
+      <table className="w-full text-sm">
+        <tbody>
+          <SectionRow label="Assets (সম্পদ)" />
+          {d.assetRows.map(r => <LineRow key={r.name} label={r.name} value={fmt(r.value)} />)}
+          <TotalRow label="Total Assets" value={fmt(d.totalAssets)} color="text-emerald-400" />
+
+          <SectionRow label="Liabilities (দায়)" />
+          {d.liabRows.length === 0 && <LineRow label="No liabilities" value="—" muted />}
+          {d.liabRows.map(r => <LineRow key={r.name} label={r.name} value={fmt(r.value)} />)}
+          <TotalRow label="Total Liabilities" value={fmt(d.totalLiab)} color="text-red-400" />
+
+          <NetRow label="Owner's Equity / Net Worth (নীট সম্পদ)" value={fmt(d.equity)} positive={d.equity >= 0} />
+          <TotalRow label="Total Liabilities + Equity" value={fmt(d.totalLiab + d.equity)} color="text-cyan-400" />
+        </tbody>
+      </table>
+      <p className="text-white/30 text-xs mt-4">* Total Liabilities + Equity always equals Total Assets.</p>
+    </StatementCard>
+  );
+}
+
+// ---------------- Bazar Report (shop-wise due + monthly purchases) ----------------
+export function BazarReport({ shops, purchases, payments, periodLabel, inPeriod, entityName }) {
+  const d = useMemo(() => {
+    const periodPurchases = purchases.filter(p => inPeriod(p.date));
+    const periodPayments = payments.filter(p => inPeriod(p.date));
+    const total = periodPurchases.reduce((s, p) => s + Number(p.amount), 0);
+    const cash = periodPurchases.filter(p => p.payment_type === 'cash').reduce((s, p) => s + Number(p.amount), 0);
+    const paid = periodPayments.reduce((s, p) => s + Number(p.amount), 0);
+    const totalDue = shops.reduce((s, x) => s + Number(x.remaining_balance || 0), 0);
+
+    const perShop = {};
+    periodPurchases.forEach(p => {
+      const key = p.payment_type === 'cash' ? 'Cash bazar (নগদ)' : (p.liabilities?.name || 'Deleted shop');
+      perShop[key] = (perShop[key] || 0) + Number(p.amount);
+    });
+    return { periodPurchases, total, cash, due: total - cash, paid, totalDue, perShop };
+  }, [shops, purchases, payments, inPeriod]);
+
+  const exportPDF = () => {
+    const summary = [
+      ['Total bazar this period', pdfNum(d.total)],
+      ['Bought with cash (নগদ)', pdfNum(d.cash)],
+      ['Bought on due (বাকিতে)', pdfNum(d.due)],
+      ['Paid to shops this period', pdfNum(d.paid)],
+      ['Outstanding shop due today (মোট বাকি)', pdfNum(d.totalDue)]
+    ];
+    const shopRows = shops.map(s => [
+      s.name,
+      s.phone || '-',
+      pdfNum(s.principal),
+      pdfNum(s.remaining_balance)
+    ]);
+    shopRows.push(['Total', '', pdfNum(shops.reduce((x, s) => x + Number(s.principal || 0), 0)), pdfNum(d.totalDue)]);
+    const purchaseRows = d.periodPurchases.map(p => [
+      p.date,
+      p.payment_type === 'cash' ? 'Cash' : 'Due',
+      p.payment_type === 'cash' ? (p.accounts?.name || '-') : (p.liabilities?.name || '-'),
+      p.description || '-',
+      pdfNum(p.amount)
+    ]);
+    purchaseRows.push(['Total', '', '', '', pdfNum(d.total)]);
+    downloadHtmlAsPdf(
+      multiSectionHtml({
+        entityName,
+        title: 'Bazar Report (বাজার রিপোর্ট)',
+        subtitle: `Period: ${periodLabel} (Amounts in ৳)`,
+        sections: [
+          { title: 'Summary', head: ['Particulars', 'Amount'], rows: summary, boldRows: [0] },
+          { title: 'Shop-wise Due (দোকানভিত্তিক বাকি) — as of today', head: ['Shop', 'Phone', 'Lifetime Purchases', 'Current Due'], rows: shopRows, boldRows: [shopRows.length - 1] },
+          { title: `Purchases (${periodLabel})`, head: ['Date', 'Payment', 'Source', 'Description', 'Amount'], rows: purchaseRows, boldRows: [purchaseRows.length - 1] }
+        ]
+      }),
+      `Bazar_Report_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+    );
+  };
+
+  return (
+    <StatementCard entityName={entityName} title="Bazar Report (বাজার রিপোর্ট)" subtitle={`Period: ${periodLabel}`} onExport={exportPDF}>
+      {/* Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+          <p className="text-white/40 text-xs">Total Bazar</p>
+          <p className="text-white font-semibold mt-0.5">{fmt(d.total)}</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+          <p className="text-white/40 text-xs">Cash (নগদ)</p>
+          <p className="text-emerald-400 font-semibold mt-0.5">{fmt(d.cash)}</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+          <p className="text-white/40 text-xs">On Due (বাকিতে)</p>
+          <p className="text-amber-400 font-semibold mt-0.5">{fmt(d.due)}</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+          <p className="text-white/40 text-xs">Shop Due Today</p>
+          <p className="text-red-400 font-semibold mt-0.5">{fmt(d.totalDue)}</p>
+          {d.paid > 0 && <p className="text-white/30 text-[11px]">Paid this period: {fmt(d.paid)}</p>}
+        </div>
+      </div>
+
+      {/* Shop-wise due */}
+      <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400/80 mb-2">Shop-wise Due (দোকানভিত্তিক বাকি)</p>
+      <div className="overflow-x-auto mb-5">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/10">
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Shop</th>
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Phone</th>
+              <th className="text-right py-2 px-3 text-white/40 font-medium">Lifetime Purchases</th>
+              <th className="text-right py-2 px-3 text-white/40 font-medium">Current Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shops.length === 0 ? (
+              <tr><td colSpan="4" className="text-center py-5 text-white/40">No shops yet.</td></tr>
+            ) : shops.map(s => (
+              <tr key={s.id} className="border-b border-white/5">
+                <td className="py-2 px-3 text-white/80">{s.name}</td>
+                <td className="py-2 px-3 text-white/50">{s.phone || '-'}</td>
+                <td className="py-2 px-3 text-right text-white/70">{fmt(s.principal)}</td>
+                <td className={`py-2 px-3 text-right font-semibold ${Number(s.remaining_balance) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmt(s.remaining_balance)}</td>
+              </tr>
+            ))}
+            {shops.length > 0 && (
+              <tr className="border-t border-white/15 font-semibold">
+                <td className="py-2 px-3 text-white" colSpan="3">Total Outstanding</td>
+                <td className="py-2 px-3 text-right text-red-400">{fmt(d.totalDue)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Per-source breakdown for the period */}
+      <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400/80 mb-2">This Period by Source</p>
+      <table className="w-full text-sm mb-5">
+        <tbody>
+          {Object.keys(d.perShop).length === 0 && <LineRow label="No bazar purchases in this period" value="—" muted />}
+          {Object.entries(d.perShop).sort((a, b) => b[1] - a[1]).map(([name, v]) => (
+            <LineRow key={name} label={name} value={fmt(v)} />
+          ))}
+          <TotalRow label="Total" value={fmt(d.total)} color="text-white" />
+        </tbody>
+      </table>
+
+      {/* Purchase list */}
+      <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400/80 mb-2">Purchases ({d.periodPurchases.length})</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/10">
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Date</th>
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Payment</th>
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Source</th>
+              <th className="text-right py-2 px-3 text-white/40 font-medium">Amount</th>
+              <th className="text-left py-2 px-3 text-white/40 font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {d.periodPurchases.length === 0 ? (
+              <tr><td colSpan="5" className="text-center py-5 text-white/40">No purchases in this period.</td></tr>
+            ) : d.periodPurchases.map(p => (
+              <tr key={p.id} className="border-b border-white/5">
+                <td className="py-2 px-3 text-white/70 whitespace-nowrap">{p.date}</td>
+                <td className="py-2 px-3">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${p.payment_type === 'cash' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
+                    {p.payment_type === 'cash' ? <><Banknote size={11} /> Cash</> : <><HandCoins size={11} /> Due</>}
+                  </span>
+                </td>
+                <td className="py-2 px-3 text-white/70">{p.payment_type === 'cash' ? (p.accounts?.name || '-') : (p.liabilities?.name || '-')}</td>
+                <td className="py-2 px-3 text-right font-medium text-white">{fmt(p.amount)}</td>
+                <td className="py-2 px-3 text-white/50 max-w-[220px] truncate">{p.description || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </StatementCard>
   );
 }

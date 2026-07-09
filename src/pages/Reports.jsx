@@ -10,8 +10,9 @@ import { useTransfers } from '../hooks/useTransfers';
 import { useEntity } from '../context/EntityContext';
 import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
-import { IncomeStatement, CashFlowStatement, TrialBalance } from '../components/Statements';
-import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet, LayoutGrid, Receipt, ArrowDownUp, Scale } from 'lucide-react';
+import { IncomeStatement, CashFlowStatement, TrialBalance, BalanceSheet, BazarReport } from '../components/Statements';
+import { useBazar } from '../hooks/useBazar';
+import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet, LayoutGrid, Receipt, ArrowDownUp, Scale, Landmark, ShoppingBasket } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart,
@@ -50,7 +51,9 @@ const VIEWS = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid },
   { id: 'income_statement', label: 'Income Statement', icon: Receipt },
   { id: 'cash_flow', label: 'Cash Flow', icon: ArrowDownUp },
-  { id: 'trial_balance', label: 'Trial Balance', icon: Scale }
+  { id: 'balance_sheet', label: 'Balance Sheet', icon: Landmark },
+  { id: 'trial_balance', label: 'Trial Balance', icon: Scale },
+  { id: 'bazar_report', label: 'Bazar Report', icon: ShoppingBasket }
 ];
 
 export default function Reports() {
@@ -62,6 +65,7 @@ export default function Reports() {
   const { assets } = useAssets();
   const { investments } = useInvestments();
   const { transfers } = useTransfers();
+  const { shops, purchases: bazarPurchases, payments: bazarPayments } = useBazar();
   const { currentEntity } = useEntity();
   const [view, setView] = useState('overview');
   const now = new Date();
@@ -512,6 +516,16 @@ export default function Reports() {
           inPeriod={inPeriod}
         />
       )}
+      {view === 'balance_sheet' && (
+        <BalanceSheet
+          accounts={accounts}
+          assets={assets}
+          investments={investments}
+          savings={savings}
+          liabilities={liabilities}
+          entityName={currentEntity?.name}
+        />
+      )}
       {view === 'trial_balance' && (
         <TrialBalance
           accounts={accounts}
@@ -521,6 +535,16 @@ export default function Reports() {
           liabilities={liabilities}
           periodTx={statementTx}
           periodLabel={periodLabel}
+          entityName={currentEntity?.name}
+        />
+      )}
+      {view === 'bazar_report' && (
+        <BazarReport
+          shops={shops}
+          purchases={bazarPurchases}
+          payments={bazarPayments}
+          periodLabel={periodLabel}
+          inPeriod={inPeriod}
           entityName={currentEntity?.name}
         />
       )}
