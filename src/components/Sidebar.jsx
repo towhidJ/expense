@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket
+  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck
 } from 'lucide-react';
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { entities, currentEntity, switchEntity, addEntity } = useEntity();
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -125,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {[...navItems, ...(isAdmin ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }] : [])].map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}

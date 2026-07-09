@@ -20,6 +20,7 @@ import Investments from './pages/Investments';
 import FamilyMembers from './pages/FamilyMembers';
 import Recurring from './pages/Recurring';
 import Categories from './pages/Categories';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
                 <Route path="categories" element={<Categories />} />
                 <Route path="goals" element={<Goals />} />
                 <Route path="savings" element={<Savings />} />
+                <Route path="admin" element={<Admin />} />
               </Route>
             </Routes>
           </BrowserRouter>
