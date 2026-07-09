@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import Bazar from './pages/Bazar';
 import Reports from './pages/Reports';
 import Budgets from './pages/Budgets';
 import Assets from './pages/Assets';
@@ -38,6 +39,7 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="transactions" element={<Transactions />} />
+                <Route path="bazar" element={<Bazar />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="budgets" element={<Budgets />} />
                 <Route path="assets" element={<Assets />} />

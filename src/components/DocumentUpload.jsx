@@ -13,6 +13,8 @@ function prettySize(bytes) {
  * - `files` / `onChange`: pending File objects selected but not yet uploaded.
  * - `existing` / `onRemoveExisting`: already-saved attachments (with file_url).
  */
+const MAX_SIZE_MB = 25;
+
 export default function DocumentUpload({
   files = [],
   onChange,
@@ -20,14 +22,21 @@ export default function DocumentUpload({
   onRemoveExisting,
   label = 'Documents (Optional)',
   multiple = true,
-  accept = 'image/*,application/pdf'
+  accept = 'image/*,application/pdf',
+  maxSizeMB = MAX_SIZE_MB
 }) {
   const inputRef = useRef(null);
 
   const handleSelect = (e) => {
     const picked = Array.from(e.target.files || []);
     if (picked.length === 0) return;
-    onChange(multiple ? [...files, ...picked] : picked.slice(0, 1));
+    const tooBig = picked.filter(f => f.size > maxSizeMB * 1024 * 1024);
+    if (tooBig.length > 0) {
+      alert(`File too large (max ${maxSizeMB} MB): ${tooBig.map(f => f.name).join(', ')}`);
+    }
+    const ok = picked.filter(f => f.size <= maxSizeMB * 1024 * 1024);
+    if (ok.length === 0) { e.target.value = ''; return; }
+    onChange(multiple ? [...files, ...ok] : ok.slice(0, 1));
     e.target.value = ''; // allow re-selecting the same file
   };
 

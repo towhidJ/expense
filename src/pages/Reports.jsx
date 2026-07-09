@@ -3,9 +3,15 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import { useAccounts } from '../context/AccountContext';
 import { useLiabilities } from '../hooks/useLiabilities';
+import { useSavings } from '../hooks/useSavings';
+import { useAssets } from '../hooks/useAssets';
+import { useInvestments } from '../hooks/useInvestments';
+import { useTransfers } from '../hooks/useTransfers';
+import { useEntity } from '../context/EntityContext';
 import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
-import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet } from 'lucide-react';
+import { IncomeStatement, CashFlowStatement, TrialBalance } from '../components/Statements';
+import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet, LayoutGrid, Receipt, ArrowDownUp, Scale } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart,
@@ -40,11 +46,24 @@ const REPORT_TYPES = [
   { id: 'loans', label: 'Loan & Due Report' }
 ];
 
+const VIEWS = [
+  { id: 'overview', label: 'Overview', icon: LayoutGrid },
+  { id: 'income_statement', label: 'Income Statement', icon: Receipt },
+  { id: 'cash_flow', label: 'Cash Flow', icon: ArrowDownUp },
+  { id: 'trial_balance', label: 'Trial Balance', icon: Scale }
+];
+
 export default function Reports() {
   const { transactions } = useTransactions();
   const { categories } = useCategories();
   const { accounts } = useAccounts();
   const { liabilities, repayments } = useLiabilities();
+  const { savings } = useSavings();
+  const { assets } = useAssets();
+  const { investments } = useInvestments();
+  const { transfers } = useTransfers();
+  const { currentEntity } = useEntity();
+  const [view, setView] = useState('overview');
   const now = new Date();
   const [filterType, setFilterType] = useState('monthly'); // 'monthly' or 'custom'
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -79,6 +98,10 @@ export default function Reports() {
       return true;
     });
   }, [transactions, month, year, filterType, startDate, endDate, accountFilter, categoryFilter]);
+
+  // All transactions in the period, ignoring account/category filters — used by the financial statements
+  const statementTx = useMemo(() => transactions.filter(t => inPeriod(t.date)),
+    [transactions, filterType, month, year, startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => {
     const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -364,29 +387,31 @@ export default function Reports() {
     <div className="space-y-6 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Monthly Report</h1>
+          <h1 className="text-2xl font-bold text-white">Reports & Statements</h1>
           <p className="text-white/40 text-sm mt-1">Detailed financial analysis</p>
         </div>
         <div className="flex flex-col items-stretch sm:items-end gap-3">
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex gap-2">
-              <select
-                value={reportType}
-                onChange={e => setReportType(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
-                title="Which report to download"
-              >
-                {REPORT_TYPES.map(r => (
-                  <option key={r.id} value={r.id} className="bg-[#12122a]">{r.label}</option>
-                ))}
-              </select>
-              <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium whitespace-nowrap">
-                <FileText size={16} /> PDF
-              </button>
-              <button onClick={exportExcel} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium whitespace-nowrap">
-                <FileSpreadsheet size={16} /> Excel
-              </button>
-            </div>
+            {view === 'overview' && (
+              <div className="flex gap-2">
+                <select
+                  value={reportType}
+                  onChange={e => setReportType(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                  title="Which report to download"
+                >
+                  {REPORT_TYPES.map(r => (
+                    <option key={r.id} value={r.id} className="bg-[#12122a]">{r.label}</option>
+                  ))}
+                </select>
+                <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium whitespace-nowrap">
+                  <FileText size={16} /> PDF
+                </button>
+                <button onClick={exportExcel} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium whitespace-nowrap">
+                  <FileSpreadsheet size={16} /> Excel
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 bg-white/5 p-1 rounded-xl">
               <button
                 onClick={() => setFilterType('monthly')}
@@ -400,6 +425,7 @@ export default function Reports() {
           </div>
 
           {/* Account & category filters */}
+          {view === 'overview' && (
           <div className="flex flex-wrap gap-3">
             <select
               value={accountFilter}
@@ -422,6 +448,7 @@ export default function Reports() {
               ))}
             </select>
           </div>
+          )}
 
           {filterType === 'monthly' ? (
             <div className="flex flex-wrap gap-3">
@@ -454,6 +481,51 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* View tabs */}
+      <div className="grid grid-cols-2 sm:flex gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
+        {VIEWS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setView(id)}
+            className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+              view === id ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-cyan-400 border border-cyan-500/20' : 'text-white/40 hover:text-white border border-transparent'
+            }`}
+          >
+            <Icon size={15} /> {label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'income_statement' && (
+        <IncomeStatement periodTx={statementTx} periodLabel={periodLabel} entityName={currentEntity?.name} />
+      )}
+      {view === 'cash_flow' && (
+        <CashFlowStatement
+          periodTx={statementTx}
+          savings={savings}
+          repayments={repayments}
+          liabilities={liabilities}
+          transfers={transfers}
+          accounts={accounts}
+          periodLabel={periodLabel}
+          entityName={currentEntity?.name}
+          inPeriod={inPeriod}
+        />
+      )}
+      {view === 'trial_balance' && (
+        <TrialBalance
+          accounts={accounts}
+          assets={assets}
+          investments={investments}
+          savings={savings}
+          liabilities={liabilities}
+          periodTx={statementTx}
+          periodLabel={periodLabel}
+          entityName={currentEntity?.name}
+        />
+      )}
+
+      {view === 'overview' && (<>
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Income" value={`৳${stats.income.toLocaleString()}`} icon={TrendingUp} gradient={['#10b981', '#06b6d4']} iconBg="bg-emerald-500/10" />
@@ -620,6 +692,7 @@ export default function Reports() {
           </table>
         </div>
       </ChartCard>
+      </>)}
     </div>
   );
 }

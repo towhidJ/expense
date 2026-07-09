@@ -4,6 +4,8 @@ import { useCategories } from '../hooks/useCategories';
 import { useAttachments } from '../hooks/useAttachments';
 import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
+import VoucherModal from '../components/VoucherModal';
+import { useEntity } from '../context/EntityContext';
 import { Plus, Search, CalendarDays } from 'lucide-react';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -12,8 +14,10 @@ export default function Transactions() {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
   const { uploadMany } = useAttachments();
+  const { currentEntity } = useEntity();
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [voucherTx, setVoucherTx] = useState(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -193,7 +197,7 @@ export default function Transactions() {
             <div className="w-8 h-8 border-3 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
           </div>
         ) : (
-          <TransactionList transactions={filtered} onEdit={handleEdit} onDelete={handleDelete} />
+          <TransactionList transactions={filtered} onEdit={handleEdit} onDelete={handleDelete} onVoucher={setVoucherTx} />
         )}
       </div>
 
@@ -204,6 +208,14 @@ export default function Transactions() {
         categories={categories}
         editData={editData}
       />
+
+      {voucherTx && (
+        <VoucherModal
+          transaction={voucherTx}
+          entityName={currentEntity?.name ? `${currentEntity.name} — ExpenseTracker` : 'ExpenseTracker'}
+          onClose={() => setVoucherTx(null)}
+        />
+      )}
     </div>
   );
 }

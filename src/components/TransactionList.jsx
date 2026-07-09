@@ -1,6 +1,6 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Printer } from 'lucide-react';
 
-export default function TransactionList({ transactions, onEdit, onDelete, showActions = true }) {
+export default function TransactionList({ transactions, onEdit, onDelete, onVoucher, showActions = true }) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12 text-white/30">
@@ -40,6 +40,15 @@ export default function TransactionList({ transactions, onEdit, onDelete, showAc
           </div>
           {showActions && (
             <div className="flex gap-0.5 shrink-0 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              {onVoucher && (
+                <button
+                  onClick={() => onVoucher(t)}
+                  title="Voucher"
+                  className="p-2 rounded-lg text-white/30 hover:text-purple-400 hover:bg-purple-500/10 transition-all"
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(t)}
                 className="p-2 rounded-lg text-white/30 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"

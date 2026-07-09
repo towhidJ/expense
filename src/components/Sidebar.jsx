@@ -4,13 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound
+  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket
 } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/accounts', icon: Landmark, label: 'Accounts' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
+  { to: '/bazar', icon: ShoppingBasket, label: 'Bazar' },
   { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/categories', icon: Tags, label: 'Categories' },
   { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
