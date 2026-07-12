@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useBazar } from '../hooks/useBazar';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
 import { useAttachments } from '../hooks/useAttachments';
 import DocumentUpload from '../components/DocumentUpload';
-import { ShoppingBasket, Plus, Store, Banknote, HandCoins, Edit2, Trash2, X, Phone, Paperclip, FileText } from 'lucide-react';
+import ItemListEditor from '../components/ItemListEditor';
+import { ShoppingBasket, Plus, Store, Banknote, HandCoins, Edit2, Trash2, X, Phone, Paperclip, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 const inputCls = "w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50";
 const labelCls = "block text-sm text-white/60 mb-1";
@@ -34,6 +35,8 @@ export default function Bazar() {
     description: ''
   };
   const [purchaseForm, setPurchaseForm] = useState(initialPurchase);
+  const [purchaseItems, setPurchaseItems] = useState([]);
+  const [expandedItems, setExpandedItems] = useState({});
 
   // Shop add/edit form
   const [shopModal, setShopModal] = useState(null); // null | 'new' | shop object
@@ -60,7 +63,10 @@ export default function Bazar() {
   const handlePurchaseSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { transactionId } = await addPurchase({ ...purchaseForm, amount: parseFloat(purchaseForm.amount) });
+      const cleanItems = purchaseItems
+        .filter(it => it.name && it.name.trim())
+        .map(it => ({ name: it.name.trim(), amount: it.amount === '' || it.amount == null ? null : Number(it.amount) }));
+      const { transactionId } = await addPurchase({ ...purchaseForm, amount: parseFloat(purchaseForm.amount), items: cleanItems });
       if (invoiceFiles.length && transactionId) {
         try {
           await uploadMany(invoiceFiles, { transactionId });
@@ -71,6 +77,7 @@ export default function Bazar() {
       }
       setIsAdding(false);
       setInvoiceFiles([]);
+      setPurchaseItems([]);
       setPurchaseForm({ ...initialPurchase, category_id: purchaseForm.category_id });
       await fetchAccounts();
     } catch (err) {
@@ -259,8 +266,12 @@ export default function Bazar() {
               <input required type="date" value={purchaseForm.date} onChange={e => setPurchaseForm({ ...purchaseForm, date: e.target.value })} className={inputCls} />
             </div>
             <div className="sm:col-span-2">
-              <label className={labelCls}>Description (items bought)</label>
-              <textarea value={purchaseForm.description} onChange={e => setPurchaseForm({ ...purchaseForm, description: e.target.value })} rows={2} className={inputCls} placeholder="e.g. Rice 5kg, fish, vegetables" />
+              <label className={labelCls}>Items bought (list আকারে)</label>
+              <ItemListEditor items={purchaseItems} onChange={setPurchaseItems} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Description (optional)</label>
+              <textarea value={purchaseForm.description} onChange={e => setPurchaseForm({ ...purchaseForm, description: e.target.value })} rows={2} className={inputCls} placeholder="extra notes" />
             </div>
             <div className="sm:col-span-2">
               <DocumentUpload files={invoiceFiles} onChange={setInvoiceFiles} label="Invoice / Receipt (Optional, max 25 MB)" />
@@ -357,8 +368,12 @@ export default function Bazar() {
               <tbody>
                 {purchases.length === 0 ? (
                   <tr><td colSpan="6" className="text-center py-8 text-white/40">No bazar purchases yet.</td></tr>
-                ) : purchases.map(p => (
-                  <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                ) : purchases.map(p => {
+                  const pItems = Array.isArray(p.items) ? p.items : [];
+                  const isOpen = expandedItems[p.id];
+                  return (
+                  <Fragment key={p.id}>
+                  <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     <td className="py-3 px-4 text-white/70 whitespace-nowrap">{p.date}</td>
                     <td className="py-3 px-4">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -369,7 +384,20 @@ export default function Bazar() {
                     </td>
                     <td className="py-3 px-4 text-white/70">{p.payment_type === 'cash' ? (p.accounts?.name || '-') : (p.liabilities?.name || 'Deleted shop')}</td>
                     <td className="py-3 px-4 text-right font-medium text-white">৳{Number(p.amount).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-white/50 max-w-[240px] truncate">{p.description || '-'}</td>
+                    <td className="py-3 px-4 text-white/50 max-w-[240px]">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{p.description || (pItems.length ? pItems.map(it => it.name).join(', ') : '-')}</span>
+                        {pItems.length > 0 && (
+                          <button
+                            onClick={() => setExpandedItems(x => ({ ...x, [p.id]: !x[p.id] }))}
+                            className="flex items-center gap-0.5 shrink-0 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/50 hover:text-cyan-400 text-xs"
+                            title="Items list"
+                          >
+                            {pItems.length} {isOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <button onClick={() => handleViewInvoice(p)} className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors" title="View invoice">
                         <Paperclip size={14} />
@@ -379,7 +407,23 @@ export default function Bazar() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  {isOpen && pItems.length > 0 && (
+                    <tr className="border-b border-white/5 bg-white/[0.02]">
+                      <td colSpan="6" className="py-2 px-4">
+                        <div className="bg-[#12122a] border border-white/10 rounded-xl px-4 py-2 divide-y divide-white/5 max-w-md ml-auto mr-0 sm:ml-24">
+                          {pItems.map((it, i) => (
+                            <div key={i} className="flex justify-between py-1.5 text-sm">
+                              <span className="text-white/70">{it.name}</span>
+                              <span className="text-white/50">{it.amount != null && it.amount !== '' ? `৳${Number(it.amount).toLocaleString()}` : ''}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           ) : (

@@ -12,6 +12,7 @@ import 'family_screen.dart';
 import 'goals_screen.dart';
 import 'investments_screen.dart';
 import 'liabilities_screen.dart';
+import 'meals_screen.dart';
 import 'recurring_screen.dart';
 import 'reports_screen.dart';
 import 'savings_screen.dart';
@@ -164,6 +165,7 @@ class _MoreScreenState extends State<MoreScreen> {
     final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
 
     final features = <(IconData, String, Color, Widget Function())>[
+      (Icons.restaurant, 'Meals', kEmerald, () => MealsScreen(state: state)),
       (Icons.pie_chart_outline, 'Reports', kPurple, () => ReportsScreen(state: state)),
       (Icons.account_balance_wallet_outlined, 'Budgets', kCyan, () => BudgetsScreen(state: state)),
       (Icons.flag_outlined, 'Goals', kEmerald, () => GoalsScreen(state: state)),

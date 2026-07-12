@@ -689,7 +689,8 @@ class AppState extends ChangeNotifier {
     }).eq('id', id).eq('user_id', _uid);
   }
 
-  Future<void> addBazarPurchase({
+  /// Returns the created expense transaction's id (for attaching invoices).
+  Future<String?> addBazarPurchase({
     required String categoryId,
     required double amount,
     required DateTime date,
@@ -697,8 +698,9 @@ class AppState extends ChangeNotifier {
     String? accountId,
     String? shopId,
     String description = '',
+    List<PurchaseItem> items = const [],
   }) async {
-    await supabase.rpc('process_bazar_purchase', params: {
+    final purchaseId = await supabase.rpc('process_bazar_purchase', params: {
       'p_user_id': _uid,
       'p_entity_id': currentEntity!.id,
       'p_category_id': categoryId,
@@ -708,8 +710,95 @@ class AppState extends ChangeNotifier {
       'p_payment_type': paymentType,
       'p_account_id': paymentType == 'cash' ? accountId : null,
       'p_liability_id': paymentType == 'due' ? shopId : null,
+      'p_items': items.map((i) => i.toMap()).toList(),
     });
     await refreshAccounts();
+    final row = await supabase
+        .from('bazar_purchases')
+        .select('transaction_id')
+        .eq('id', purchaseId as String)
+        .maybeSingle();
+    return row?['transaction_id'] as String?;
+  }
+
+  /// Edit a bazar purchase: the balance-safe RPC reverses/reapplies account
+  /// and shop-due effects and syncs the bazar_purchases row; items are synced
+  /// separately (the RPC predates them). Payment type cannot change.
+  Future<void> updateBazarPurchase({
+    required BazarPurchase purchase,
+    required double amount,
+    required DateTime date,
+    String description = '',
+    List<PurchaseItem> items = const [],
+    String? accountId, // cash purchases may move to another account
+  }) async {
+    if (purchase.transactionId == null) {
+      throw Exception('This purchase has no linked transaction');
+    }
+    final txn = await supabase
+        .from('transactions')
+        .select('category_id, asset_id, account_id')
+        .eq('id', purchase.transactionId!)
+        .single();
+    await supabase.rpc('update_transaction_with_balance', params: {
+      'p_user_id': _uid,
+      'p_transaction_id': purchase.transactionId,
+      'p_account_id': purchase.paymentType == 'cash'
+          ? (accountId ?? txn['account_id'])
+          : null,
+      'p_category_id': txn['category_id'],
+      'p_asset_id': txn['asset_id'],
+      'p_type': 'expense',
+      'p_amount': amount,
+      'p_date': _d(date),
+      'p_description': description.isEmpty ? null : description,
+    });
+    final patch = <String, dynamic>{
+      'items': items.map((i) => i.toMap()).toList(),
+    };
+    if (purchase.paymentType == 'cash' && accountId != null) {
+      patch['account_id'] = accountId;
+    }
+    await supabase.from('bazar_purchases').update(patch).eq('id', purchase.id);
+    await refreshAccounts();
+  }
+
+  // ---- Attachments (invoices/receipts on transactions) ----
+
+  /// Upload a file to the documents bucket and record it in the attachments
+  /// table, linked to a transaction — same flow as the web's useAttachments.
+  Future<void> uploadTransactionAttachment({
+    required String transactionId,
+    required List<int> bytes,
+    required String filename,
+    String contentType = 'image/jpeg',
+  }) async {
+    final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final path = '$_uid/${DateTime.now().millisecondsSinceEpoch}_$safe';
+    await supabase.storage.from('documents').uploadBinary(
+        path, Uint8List.fromList(bytes),
+        fileOptions: FileOptions(cacheControl: '3600', contentType: contentType));
+    final url = supabase.storage.from('documents').getPublicUrl(path);
+    await supabase.from('attachments').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity?.id,
+      'transaction_id': transactionId,
+      'file_name': filename,
+      'file_url': url,
+      'storage_path': path,
+      'file_size': bytes.length,
+      'content_type': contentType,
+    });
+  }
+
+  Future<List<AttachmentInfo>> fetchTransactionAttachments(String transactionId) async {
+    final rows = await supabase
+        .from('attachments')
+        .select()
+        .eq('user_id', _uid)
+        .eq('transaction_id', transactionId)
+        .order('created_at', ascending: false);
+    return rows.map<AttachmentInfo>(AttachmentInfo.fromMap).toList();
   }
 
   Future<void> deleteBazarPurchase(String id) async {
@@ -733,6 +822,416 @@ class AppState extends ChangeNotifier {
   Future<void> deleteAccount(String id) async {
     await supabase.from('accounts').delete().eq('id', id).eq('user_id', _uid);
     await refreshAccounts();
+  }
+
+  // ---- Meals (mess) ----
+  // Shared across users and NOT entity-scoped: the meal group itself is the
+  // scope. Membership rules are enforced by RLS + RPCs (migration v16).
+
+  String get uid => _uid;
+
+  Future<List<MealGroupMember>> fetchMyMealMemberships() async {
+    final rows = await supabase
+        .from('meal_group_members')
+        .select('*, meal_groups(*)')
+        .eq('user_id', _uid)
+        .inFilter('status', ['pending', 'approved'])
+        .order('created_at', ascending: true);
+    return rows.map<MealGroupMember>(MealGroupMember.fromMap).toList();
+  }
+
+  Future<String> createMealGroup(String name, {String? displayName}) async {
+    final id = await supabase.rpc('create_meal_group', params: {
+      'p_name': name,
+      'p_display_name': displayName,
+    });
+    return id as String;
+  }
+
+  Future<String> joinMealGroup(String code, {String? displayName}) async {
+    final id = await supabase.rpc('join_meal_group', params: {
+      'p_code': code,
+      'p_display_name': displayName,
+    });
+    return id as String;
+  }
+
+  Future<void> respondMealJoinRequest(String memberId, bool approve) async {
+    await supabase.rpc('respond_meal_join_request', params: {
+      'p_member_id': memberId,
+      'p_approve': approve,
+    });
+  }
+
+  Future<void> removeMealMember(String memberId) async {
+    await supabase.rpc('remove_meal_member', params: {'p_member_id': memberId});
+  }
+
+  Future<void> leaveMealGroup(String groupId) async {
+    await supabase.rpc('leave_meal_group', params: {'p_group_id': groupId});
+  }
+
+  Future<void> setMealMemberRole(String memberId, String role) async {
+    await supabase.rpc('set_meal_member_role', params: {
+      'p_member_id': memberId,
+      'p_role': role,
+    });
+  }
+
+  Future<String> regenerateMealInviteCode(String groupId) async {
+    final code = await supabase
+        .rpc('regenerate_meal_invite_code', params: {'p_group_id': groupId});
+    return code as String;
+  }
+
+  Future<MealGroup?> fetchMealGroup(String groupId) async {
+    final row = await supabase
+        .from('meal_groups')
+        .select()
+        .eq('id', groupId)
+        .maybeSingle();
+    return row == null ? null : MealGroup.fromMap(row);
+  }
+
+  Future<void> updateMealGroupSettings(
+    String groupId, {
+    required String name,
+    required bool hasMaid,
+    required double breakfastValue,
+    required double lunchValue,
+    required double dinnerValue,
+  }) async {
+    await supabase.from('meal_groups').update({
+      'name': name,
+      'has_maid': hasMaid,
+      'breakfast_value': breakfastValue,
+      'lunch_value': lunchValue,
+      'dinner_value': dinnerValue,
+    }).eq('id', groupId);
+  }
+
+  Future<List<MealGroupMember>> fetchMealMembers(String groupId) async {
+    final rows = await supabase
+        .from('meal_group_members')
+        .select()
+        .eq('group_id', groupId)
+        .order('created_at', ascending: true);
+    return rows.map<MealGroupMember>(MealGroupMember.fromMap).toList();
+  }
+
+  Future<List<MealEntry>> fetchMealEntries(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_entries')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end));
+    return rows.map<MealEntry>(MealEntry.fromMap).toList();
+  }
+
+  Future<void> upsertMealEntry({
+    required String groupId,
+    required String memberId,
+    required DateTime date,
+    double breakfast = 0,
+    double lunch = 0,
+    double dinner = 0,
+    double guestBreakfast = 0,
+    double guestLunch = 0,
+    double guestDinner = 0,
+  }) async {
+    await supabase.rpc('upsert_meal_entry', params: {
+      'p_group_id': groupId,
+      'p_member_id': memberId,
+      'p_date': _d(date),
+      'p_breakfast': breakfast,
+      'p_lunch': lunch,
+      'p_dinner': dinner,
+      'p_guest_breakfast': guestBreakfast,
+      'p_guest_lunch': guestLunch,
+      'p_guest_dinner': guestDinner,
+    });
+  }
+
+  Future<List<MealDeposit>> fetchMealDeposits(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_deposits')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end))
+        .order('date', ascending: false);
+    return rows.map<MealDeposit>(MealDeposit.fromMap).toList();
+  }
+
+  Future<void> addMealDeposit({
+    required String groupId,
+    required String memberId,
+    required double amount,
+    required DateTime date,
+    String note = '',
+  }) async {
+    await supabase.from('meal_deposits').insert({
+      'group_id': groupId,
+      'member_id': memberId,
+      'amount': amount,
+      'date': _d(date),
+      'note': note.isEmpty ? null : note,
+      'added_by': _uid,
+    });
+  }
+
+  Future<void> updateMealDeposit(
+    String id, {
+    required String memberId,
+    required double amount,
+    required DateTime date,
+    String note = '',
+  }) async {
+    await supabase.from('meal_deposits').update({
+      'member_id': memberId,
+      'amount': amount,
+      'date': _d(date),
+      'note': note.isEmpty ? null : note,
+    }).eq('id', id);
+  }
+
+  Future<void> deleteMealDeposit(String id) async {
+    await supabase.from('meal_deposits').delete().eq('id', id);
+  }
+
+  Future<List<MealExpense>> fetchMealExpenses(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_expenses')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end))
+        .order('date', ascending: false);
+    return rows.map<MealExpense>(MealExpense.fromMap).toList();
+  }
+
+  Future<void> addMealExpense({
+    required String groupId,
+    required String expenseType,
+    required double amount,
+    required DateTime date,
+    String note = '',
+    String? spentBy,
+    List<PurchaseItem> items = const [],
+    String? attachmentUrl,
+    String? attachmentPath,
+  }) async {
+    await supabase.from('meal_expenses').insert({
+      'group_id': groupId,
+      'expense_type': expenseType,
+      'amount': amount,
+      'date': _d(date),
+      'note': note.isEmpty ? null : note,
+      'spent_by': spentBy,
+      'added_by': _uid,
+      'items': items.map((i) => i.toMap()).toList(),
+      'attachment_url': attachmentUrl,
+      'attachment_path': attachmentPath,
+    });
+  }
+
+  Future<void> updateMealExpense(
+    String id, {
+    required String expenseType,
+    required double amount,
+    required DateTime date,
+    String note = '',
+    String? spentBy,
+    List<PurchaseItem> items = const [],
+    String? attachmentUrl,
+    String? attachmentPath,
+    bool keepAttachment = true,
+  }) async {
+    final patch = <String, dynamic>{
+      'expense_type': expenseType,
+      'amount': amount,
+      'date': _d(date),
+      'note': note.isEmpty ? null : note,
+      'spent_by': spentBy,
+      'items': items.map((i) => i.toMap()).toList(),
+    };
+    if (!keepAttachment || attachmentUrl != null) {
+      patch['attachment_url'] = attachmentUrl;
+      patch['attachment_path'] = attachmentPath;
+    }
+    await supabase.from('meal_expenses').update(patch).eq('id', id);
+  }
+
+  /// Upload a receipt photo to the public documents bucket under the group's
+  /// folder; returns (url, path) to store on the expense row.
+  Future<(String, String)> uploadMealReceipt(
+      String groupId, List<int> bytes, String filename) async {
+    final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final path = 'meal/$groupId/${DateTime.now().millisecondsSinceEpoch}_$safe';
+    await supabase.storage.from('documents').uploadBinary(
+        path, Uint8List.fromList(bytes),
+        fileOptions: const FileOptions(cacheControl: '3600'));
+    final url = supabase.storage.from('documents').getPublicUrl(path);
+    return (url, path);
+  }
+
+  // Advances (জামানত) — lifetime, manager-only writes (RLS enforced)
+
+  Future<List<MealAdvance>> fetchMealAdvances(String groupId) async {
+    final rows = await supabase
+        .from('meal_advances')
+        .select()
+        .eq('group_id', groupId)
+        .order('date', ascending: false)
+        .order('created_at', ascending: false);
+    return rows.map<MealAdvance>(MealAdvance.fromMap).toList();
+  }
+
+  Future<void> addMealAdvance({
+    required String groupId,
+    required String memberId,
+    required String type, // taken | returned
+    required double amount,
+    required DateTime date,
+    String note = '',
+  }) async {
+    await supabase.from('meal_advances').insert({
+      'group_id': groupId,
+      'member_id': memberId,
+      'type': type,
+      'amount': amount,
+      'date': _d(date),
+      'note': note.isEmpty ? null : note,
+      'added_by': _uid,
+    });
+  }
+
+  /// Pay a member's dues from their advance: advance down, deposit up.
+  Future<void> adjustMealAdvance({
+    required String memberId,
+    required double amount,
+    required DateTime date,
+    String note = '',
+  }) async {
+    await supabase.rpc('adjust_meal_advance', params: {
+      'p_member_id': memberId,
+      'p_amount': amount,
+      'p_date': _d(date),
+      'p_note': note.isEmpty ? null : note,
+    });
+  }
+
+  Future<void> deleteMealAdvance(String id) async {
+    await supabase.from('meal_advances').delete().eq('id', id);
+  }
+
+  // Meal holidays / feast days
+
+  Future<List<MealHoliday>> fetchMealHolidays(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_holidays')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end))
+        .order('date', ascending: true);
+    return rows.map<MealHoliday>(MealHoliday.fromMap).toList();
+  }
+
+  Future<void> upsertMealHoliday({
+    required String groupId,
+    required DateTime date,
+    required String title,
+    String menu = '',
+  }) async {
+    await supabase.from('meal_holidays').upsert({
+      'group_id': groupId,
+      'date': _d(date),
+      'title': title.isEmpty ? 'Meal Holiday' : title,
+      'menu': menu.isEmpty ? null : menu,
+    }, onConflict: 'group_id,date');
+  }
+
+  Future<void> deleteMealHoliday(String id) async {
+    await supabase.from('meal_holidays').delete().eq('id', id);
+  }
+
+  Future<void> deleteMealExpense(String id) async {
+    await supabase.from('meal_expenses').delete().eq('id', id);
+  }
+
+  Future<List<MealDutyType>> fetchMealDutyTypes(String groupId) async {
+    final rows = await supabase
+        .from('meal_duty_types')
+        .select()
+        .eq('group_id', groupId)
+        .order('sort_order', ascending: true);
+    return rows.map<MealDutyType>(MealDutyType.fromMap).toList();
+  }
+
+  Future<void> addMealDutyType(String groupId, String name, int sortOrder) async {
+    await supabase.from('meal_duty_types').insert({
+      'group_id': groupId,
+      'name': name,
+      'is_builtin': false,
+      'sort_order': sortOrder,
+    });
+  }
+
+  Future<void> updateMealDutyType(String id, {bool? isActive, String? name}) async {
+    final patch = <String, dynamic>{};
+    if (isActive != null) patch['is_active'] = isActive;
+    if (name != null) patch['name'] = name;
+    if (patch.isEmpty) return;
+    await supabase.from('meal_duty_types').update(patch).eq('id', id);
+  }
+
+  Future<void> deleteMealDutyType(String id) async {
+    await supabase.from('meal_duty_types').delete().eq('id', id);
+  }
+
+  Future<List<MealDutyAssignment>> fetchMealDutyAssignments(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_duty_assignments')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end));
+    return rows.map<MealDutyAssignment>(MealDutyAssignment.fromMap).toList();
+  }
+
+  Future<void> assignMealDuty({
+    required String groupId,
+    required String dutyTypeId,
+    required String memberId,
+    required DateTime date,
+  }) async {
+    await supabase.from('meal_duty_assignments').insert({
+      'group_id': groupId,
+      'duty_type_id': dutyTypeId,
+      'member_id': memberId,
+      'date': _d(date),
+    });
+  }
+
+  Future<void> removeMealDutyAssignment(String id) async {
+    await supabase.from('meal_duty_assignments').delete().eq('id', id);
+  }
+
+  Future<MealMonthSummary> fetchMealMonthSummary(
+      String groupId, int year, int month) async {
+    final data = await supabase.rpc('get_meal_month_summary', params: {
+      'p_group_id': groupId,
+      'p_year': year,
+      'p_month': month,
+    });
+    return MealMonthSummary.fromMap(Map<String, dynamic>.from(data));
   }
 
   static String _d(DateTime d) =>

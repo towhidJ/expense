@@ -8,6 +8,12 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Bazar from './pages/Bazar';
+import { MealProvider } from './context/MealContext';
+import MealLayout from './components/meals/MealLayout';
+import {
+  MealSummaryPage, MealDailyPage, MealDepositsPage, MealExpensesPage,
+  MealDutyPage, MealMembersPage, MealSettingsPage, MealGroupsPage
+} from './pages/meals/MealPages';
 import Reports from './pages/Reports';
 import Budgets from './pages/Budgets';
 import Assets from './pages/Assets';
@@ -54,6 +60,26 @@ function App() {
                 <Route path="goals" element={<Goals />} />
                 <Route path="savings" element={<Savings />} />
                 <Route path="admin" element={<Admin />} />
+              </Route>
+              {/* Meal workspace: its own layout + sidebar, separate from the expense tracker */}
+              <Route
+                path="/meals"
+                element={
+                  <ProtectedRoute>
+                    <MealProvider>
+                      <MealLayout />
+                    </MealProvider>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<MealSummaryPage />} />
+                <Route path="daily" element={<MealDailyPage />} />
+                <Route path="deposits" element={<MealDepositsPage />} />
+                <Route path="expenses" element={<MealExpensesPage />} />
+                <Route path="duty" element={<MealDutyPage />} />
+                <Route path="members" element={<MealMembersPage />} />
+                <Route path="settings" element={<MealSettingsPage />} />
+                <Route path="groups" element={<MealGroupsPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

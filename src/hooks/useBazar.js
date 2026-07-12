@@ -103,7 +103,7 @@ export function useBazar() {
     setShops(prev => prev.filter(s => s.id !== id));
   };
 
-  const addPurchase = async ({ payment_type, account_id, shop_id, category_id, amount, date, description }) => {
+  const addPurchase = async ({ payment_type, account_id, shop_id, category_id, amount, date, description, items }) => {
     const { data: purchaseId, error } = await supabase.rpc('process_bazar_purchase', {
       p_user_id: user.id,
       p_entity_id: currentEntity.id,
@@ -113,7 +113,8 @@ export function useBazar() {
       p_description: description || null,
       p_payment_type: payment_type,
       p_account_id: payment_type === 'cash' ? account_id : null,
-      p_liability_id: payment_type === 'due' ? shop_id : null
+      p_liability_id: payment_type === 'due' ? shop_id : null,
+      p_items: items && items.length ? items : []
     });
     if (error) throw error;
     // The RPC returns the purchase id; look up the expense transaction it

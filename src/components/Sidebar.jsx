@@ -5,7 +5,7 @@ import { useEntity } from '../context/EntityContext';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck
+  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed
 } from 'lucide-react';
 
 const navItems = [
@@ -147,6 +147,16 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         <div className="p-4 border-t border-white/10">
+          {/* Meal workspace: a separate section of the app with its own layout */}
+          <NavLink
+            to="/meals"
+            onClick={onClose}
+            className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500/15 to-cyan-600/15 border border-emerald-500/20 text-emerald-300 hover:from-emerald-500/25 hover:to-cyan-600/25 transition-all"
+          >
+            <UtensilsCrossed className="w-5 h-5" />
+            <span className="flex-1">Meal Manager</span>
+            <span className="text-[10px] uppercase tracking-wider text-emerald-400/60">Workspace</span>
+          </NavLink>
           <div className="flex items-center gap-3 px-4 py-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
               {user?.email?.[0]?.toUpperCase() || 'U'}

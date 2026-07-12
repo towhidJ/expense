@@ -262,6 +262,7 @@ class BazarPurchase {
         amount = (m['amount'] as num?)?.toDouble() ?? 0,
         date = DateTime.parse(m['date']),
         description = m['description'] ?? '',
+        items = PurchaseItem.listFrom(m['items']),
         shopName = m['liabilities']?['name'] ?? '',
         accountName = m['accounts']?['name'] ?? '';
   final String id;
@@ -272,6 +273,7 @@ class BazarPurchase {
   final double amount;
   final DateTime date;
   final String description;
+  final List<PurchaseItem> items;
   final String shopName;
   final String accountName;
 }
@@ -336,4 +338,246 @@ class Transfer {
   final String notes;
   final String fromName;
   final String toName;
+}
+
+/// A file in the attachments table (invoice/receipt linked to a transaction).
+class AttachmentInfo {
+  AttachmentInfo.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        fileName = m['file_name'] ?? '',
+        fileUrl = m['file_url'] ?? '',
+        contentType = m['content_type'] ?? '';
+  final String id;
+  final String fileName;
+  final String fileUrl;
+  final String contentType;
+
+  bool get isImage => contentType.startsWith('image/');
+}
+
+// ---- Meals (mess) — see migration v16 ----
+
+class MealGroup {
+  MealGroup.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        inviteCode = m['invite_code'] ?? '',
+        createdBy = m['created_by'] ?? '',
+        hasMaid = m['has_maid'] ?? false,
+        breakfastValue = (m['breakfast_value'] as num?)?.toDouble() ?? 0.5,
+        lunchValue = (m['lunch_value'] as num?)?.toDouble() ?? 1,
+        dinnerValue = (m['dinner_value'] as num?)?.toDouble() ?? 1;
+  final String id;
+  final String name;
+  final String inviteCode;
+  final String createdBy;
+  final bool hasMaid; // when true, cooking duty is hidden from the roster
+  final double breakfastValue;
+  final double lunchValue;
+  final double dinnerValue;
+}
+
+class MealGroupMember {
+  MealGroupMember.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        groupId = m['group_id'],
+        userId = m['user_id'],
+        displayName = m['display_name'] ?? '',
+        role = m['role'] ?? 'member',
+        status = m['status'] ?? 'pending',
+        group = m['meal_groups'] != null ? MealGroup.fromMap(m['meal_groups']) : null;
+  final String id;
+  final String groupId;
+  final String userId;
+  final String displayName;
+  final String role; // manager | member
+  final String status; // pending | approved | rejected | left | removed
+  final MealGroup? group; // joined meal_groups row, when selected
+}
+
+class MealEntry {
+  MealEntry.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        memberId = m['member_id'],
+        date = DateTime.parse(m['date']),
+        breakfast = (m['breakfast'] as num?)?.toDouble() ?? 0,
+        lunch = (m['lunch'] as num?)?.toDouble() ?? 0,
+        dinner = (m['dinner'] as num?)?.toDouble() ?? 0,
+        guestBreakfast = (m['guest_breakfast'] as num?)?.toDouble() ?? 0,
+        guestLunch = (m['guest_lunch'] as num?)?.toDouble() ?? 0,
+        guestDinner = (m['guest_dinner'] as num?)?.toDouble() ?? 0;
+  final String id;
+  final String memberId;
+  final DateTime date;
+  final double breakfast;
+  final double lunch;
+  final double dinner;
+  final double guestBreakfast;
+  final double guestLunch;
+  final double guestDinner;
+}
+
+class MealDeposit {
+  MealDeposit.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        memberId = m['member_id'],
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        date = DateTime.parse(m['date']),
+        note = m['note'] ?? '';
+  final String id;
+  final String memberId;
+  final double amount;
+  final DateTime date;
+  final String note;
+}
+
+/// One "ki ki kinlam" line: name + optional amount.
+class PurchaseItem {
+  PurchaseItem({required this.name, this.amount});
+  PurchaseItem.fromMap(Map<String, dynamic> m)
+      : name = m['name'] ?? '',
+        amount = (m['amount'] as num?)?.toDouble();
+  final String name;
+  final double? amount;
+
+  Map<String, dynamic> toMap() => {'name': name, 'amount': amount};
+
+  static List<PurchaseItem> listFrom(dynamic raw) => ((raw ?? []) as List)
+      .map((e) => PurchaseItem.fromMap(Map<String, dynamic>.from(e)))
+      .toList();
+}
+
+class MealExpense {
+  MealExpense.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        expenseType = m['expense_type'] ?? 'bazar',
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        date = DateTime.parse(m['date']),
+        note = m['note'] ?? '',
+        spentBy = m['spent_by'],
+        addedBy = m['added_by'] ?? '',
+        items = PurchaseItem.listFrom(m['items']),
+        attachmentUrl = m['attachment_url'];
+  final String id;
+  final String expenseType; // bazar | utility | maid | feast | other
+  final double amount;
+  final DateTime date;
+  final String note;
+  final String? spentBy; // member who did the bazar
+  final String addedBy; // auth user who recorded it
+  final List<PurchaseItem> items;
+  final String? attachmentUrl; // receipt photo in the documents bucket
+}
+
+class MealAdvance {
+  MealAdvance.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        memberId = m['member_id'],
+        type = m['type'] ?? 'taken',
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        date = DateTime.parse(m['date']),
+        note = m['note'] ?? '';
+  final String id;
+  final String memberId;
+  final String type; // taken | returned | adjusted
+  final double amount;
+  final DateTime date;
+  final String note;
+
+  /// Signed effect on the advance balance the mess is holding.
+  double get signed => type == 'taken' ? amount : -amount;
+}
+
+class MealHoliday {
+  MealHoliday.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        date = DateTime.parse(m['date']),
+        title = m['title'] ?? 'Meal Holiday',
+        menu = m['menu'] ?? '';
+  final String id;
+  final DateTime date;
+  final String title;
+  final String menu; // special khabar / nasta plan
+}
+
+class MealDutyType {
+  MealDutyType.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        isBuiltin = m['is_builtin'] ?? false,
+        excludedWhenMaid = m['excluded_when_maid'] ?? false,
+        isActive = m['is_active'] ?? true,
+        sortOrder = m['sort_order'] ?? 0;
+  final String id;
+  final String name;
+  final bool isBuiltin;
+  final bool excludedWhenMaid; // true for Cooking
+  final bool isActive;
+  final int sortOrder;
+}
+
+class MealDutyAssignment {
+  MealDutyAssignment.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        dutyTypeId = m['duty_type_id'],
+        memberId = m['member_id'],
+        date = DateTime.parse(m['date']),
+        note = m['note'] ?? '';
+  final String id;
+  final String dutyTypeId;
+  final String memberId;
+  final DateTime date;
+  final String note;
+}
+
+class MealMemberSummary {
+  MealMemberSummary.fromMap(Map<String, dynamic> m)
+      : memberId = m['member_id'],
+        userId = m['user_id'],
+        displayName = m['display_name'] ?? '',
+        status = m['status'] ?? 'approved',
+        role = m['role'] ?? 'member',
+        meals = (m['meals'] as num?)?.toDouble() ?? 0,
+        deposits = (m['deposits'] as num?)?.toDouble() ?? 0,
+        advance = (m['advance'] as num?)?.toDouble() ?? 0,
+        mealCost = (m['meal_cost'] as num?)?.toDouble() ?? 0,
+        fixedShare = (m['fixed_share'] as num?)?.toDouble() ?? 0,
+        totalCost = (m['total_cost'] as num?)?.toDouble() ?? 0,
+        balance = (m['balance'] as num?)?.toDouble() ?? 0;
+  final String memberId;
+  final String userId;
+  final String displayName;
+  final String status;
+  final String role;
+  final double meals;
+  final double deposits;
+  final double advance; // জামানত held by the mess (lifetime)
+  final double mealCost;
+  final double fixedShare;
+  final double totalCost;
+  final double balance; // negative = owes money
+}
+
+class MealMonthSummary {
+  MealMonthSummary.fromMap(Map<String, dynamic> m)
+      : year = m['year'] ?? 0,
+        month = m['month'] ?? 0,
+        totalMeals = (m['total_meals'] as num?)?.toDouble() ?? 0,
+        totalBazar = (m['total_bazar'] as num?)?.toDouble() ?? 0,
+        totalFixed = (m['total_fixed'] as num?)?.toDouble() ?? 0,
+        totalDeposits = (m['total_deposits'] as num?)?.toDouble() ?? 0,
+        totalAdvance = (m['total_advance'] as num?)?.toDouble() ?? 0,
+        mealRate = (m['meal_rate'] as num?)?.toDouble() ?? 0,
+        members = ((m['members'] ?? []) as List)
+            .map((e) => MealMemberSummary.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+  final int year;
+  final int month;
+  final double totalMeals;
+  final double totalBazar;
+  final double totalFixed;
+  final double totalDeposits;
+  final double totalAdvance; // জামানত the mess is holding (lifetime)
+  final double mealRate;
+  final List<MealMemberSummary> members;
 }
