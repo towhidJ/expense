@@ -60,14 +60,43 @@ export function EntityProvider({ children }) {
       .insert({ ...entity, user_id: user.id })
       .select()
       .single();
-    
+
     if (error) throw error;
     setEntities([...entities, data]);
     return data;
   };
 
+  const updateEntity = async (id, patch) => {
+    const { data, error } = await supabase
+      .from('entities')
+      .update(patch)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+    if (error) throw error;
+    setEntities(prev => prev.map(e => (e.id === id ? data : e)));
+    setCurrentEntity(prev => (prev?.id === id ? data : prev));
+    return data;
+  };
+
+  // Wipes the workspace and everything in it via the delete_entity RPC
+  // (child tables have no ON DELETE CASCADE). Refuses to delete the last one.
+  const deleteEntity = async (id) => {
+    const { error } = await supabase.rpc('delete_entity', { p_entity_id: id });
+    if (error) throw error;
+    const remaining = entities.filter(e => e.id !== id);
+    setEntities(remaining);
+    setCurrentEntity(prev => {
+      if (prev?.id !== id) return prev;
+      const next = remaining[0] || null;
+      if (next) localStorage.setItem('currentEntityId', next.id);
+      return next;
+    });
+  };
+
   return (
-    <EntityContext.Provider value={{ entities, currentEntity, loading, switchEntity, addEntity }}>
+    <EntityContext.Provider value={{ entities, currentEntity, loading, switchEntity, addEntity, updateEntity, deleteEntity }}>
       {children}
     </EntityContext.Provider>
   );

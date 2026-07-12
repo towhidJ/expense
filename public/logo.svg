@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="hkg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06b6d4"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- brand tile -->
+  <rect width="1024" height="1024" rx="224" fill="url(#hkg)"/>
+  <!-- the khata (ledger notebook) page -->
+  <rect x="252" y="200" width="520" height="624" rx="56" fill="#ffffff" opacity="0.16"/>
+  <!-- spine binding -->
+  <circle cx="252" cy="330" r="22" fill="#ffffff" opacity="0.55"/>
+  <circle cx="252" cy="512" r="22" fill="#ffffff" opacity="0.55"/>
+  <circle cx="252" cy="694" r="22" fill="#ffffff" opacity="0.55"/>
+  <!-- ledger lines -->
+  <rect x="340" y="690" width="344" height="18" rx="9" fill="#ffffff" opacity="0.35"/>
+  <rect x="340" y="742" width="240" height="18" rx="9" fill="#ffffff" opacity="0.25"/>
+  <!-- taka mark -->
+  <text x="524" y="600" font-size="420" font-weight="700" fill="#ffffff"
+    text-anchor="middle" dominant-baseline="middle"
+    font-family="'Noto Sans Bengali','Nirmala UI','Vrinda',sans-serif">&#2547;</text>
+</svg>
