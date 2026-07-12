@@ -900,6 +900,7 @@ class AppState extends ChangeNotifier {
     required double breakfastValue,
     required double lunchValue,
     required double dinnerValue,
+    String? cutoffTime, // 'HH:MM' or null = no request deadline
   }) async {
     await supabase.from('meal_groups').update({
       'name': name,
@@ -907,6 +908,7 @@ class AppState extends ChangeNotifier {
       'breakfast_value': breakfastValue,
       'lunch_value': lunchValue,
       'dinner_value': dinnerValue,
+      'cutoff_time': (cutoffTime == null || cutoffTime.isEmpty) ? null : cutoffTime,
     }).eq('id', groupId);
   }
 
@@ -1232,6 +1234,250 @@ class AppState extends ChangeNotifier {
       'p_month': month,
     });
     return MealMonthSummary.fromMap(Map<String, dynamic>.from(data));
+  }
+
+  // ---- Meals v18: month close + carry-forward ----
+
+  Future<void> closeMealMonth(String groupId, int year, int month) async {
+    await supabase.rpc('close_meal_month', params: {
+      'p_group_id': groupId,
+      'p_year': year,
+      'p_month': month,
+    });
+  }
+
+  Future<void> reopenMealMonth(String groupId, int year, int month) async {
+    await supabase.rpc('reopen_meal_month', params: {
+      'p_group_id': groupId,
+      'p_year': year,
+      'p_month': month,
+    });
+  }
+
+  // ---- Meals v18: meal off / guest requests ----
+
+  Future<List<MealRequest>> fetchMealRequests(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_requests')
+        .select()
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end))
+        .order('date', ascending: false)
+        .order('created_at', ascending: false);
+    return rows.map<MealRequest>(MealRequest.fromMap).toList();
+  }
+
+  Future<void> submitMealRequest({
+    required String groupId,
+    required DateTime date,
+    required String type, // off | guest
+    double breakfast = 0,
+    double lunch = 0,
+    double dinner = 0,
+    String? note,
+  }) async {
+    await supabase.rpc('submit_meal_request', params: {
+      'p_group_id': groupId,
+      'p_date': _d(date),
+      'p_type': type,
+      'p_breakfast': breakfast,
+      'p_lunch': lunch,
+      'p_dinner': dinner,
+      'p_note': note,
+    });
+  }
+
+  Future<void> cancelMealRequest(String requestId) async {
+    await supabase
+        .rpc('cancel_meal_request', params: {'p_request_id': requestId});
+  }
+
+  /// Approving writes the meal entry (off → slots 0, guest → counts added).
+  Future<void> respondMealRequest(String requestId, bool approve) async {
+    await supabase.rpc('respond_meal_request', params: {
+      'p_request_id': requestId,
+      'p_approve': approve,
+    });
+  }
+
+  // ---- Meals v18: notice board ----
+
+  Future<List<MealNotice>> fetchMealNotices(String groupId) async {
+    final rows = await supabase
+        .from('meal_notices')
+        .select()
+        .eq('group_id', groupId)
+        .order('pinned', ascending: false)
+        .order('created_at', ascending: false);
+    return rows.map<MealNotice>(MealNotice.fromMap).toList();
+  }
+
+  Future<void> addMealNotice(String groupId,
+      {required String title, String? body, bool pinned = false}) async {
+    await supabase.from('meal_notices').insert({
+      'group_id': groupId,
+      'title': title,
+      'body': (body == null || body.isEmpty) ? null : body,
+      'pinned': pinned,
+      'created_by': _uid,
+    });
+  }
+
+  Future<void> updateMealNotice(String id,
+      {required String title, String? body, required bool pinned}) async {
+    await supabase.from('meal_notices').update({
+      'title': title,
+      'body': (body == null || body.isEmpty) ? null : body,
+      'pinned': pinned,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', id);
+  }
+
+  Future<void> deleteMealNotice(String id) async {
+    await supabase.from('meal_notices').delete().eq('id', id);
+  }
+
+  // ---- Meals v19: shopping list ----
+
+  /// Active list only — rows already converted into an expense are hidden.
+  Future<List<MealShoppingItem>> fetchMealShoppingItems(String groupId) async {
+    final rows = await supabase
+        .from('meal_shopping_items')
+        .select()
+        .eq('group_id', groupId)
+        .isFilter('expense_id', null)
+        .order('created_at', ascending: true);
+    return rows.map<MealShoppingItem>(MealShoppingItem.fromMap).toList();
+  }
+
+  Future<void> addMealShoppingItem(String groupId,
+      {required String name, String? qty}) async {
+    await supabase.from('meal_shopping_items').insert({
+      'group_id': groupId,
+      'name': name,
+      'qty': (qty == null || qty.isEmpty) ? null : qty,
+      'added_by': _uid,
+    });
+  }
+
+  Future<void> toggleMealShoppingItem(String id, bool bought) async {
+    await supabase.from('meal_shopping_items').update({
+      'is_bought': bought,
+      'bought_by': bought ? _uid : null,
+      'bought_at': bought ? DateTime.now().toIso8601String() : null,
+    }).eq('id', id);
+  }
+
+  Future<void> deleteMealShoppingItem(String id) async {
+    await supabase.from('meal_shopping_items').delete().eq('id', id);
+  }
+
+  /// Turn ticked-off items into one itemized bazar expense, then archive them
+  /// from the active list by stamping expense_id.
+  Future<void> convertMealShoppingToExpense({
+    required String groupId,
+    required List<MealShoppingItem> items,
+    required double amount,
+    required DateTime date,
+    String? note,
+  }) async {
+    final expense = await supabase
+        .from('meal_expenses')
+        .insert({
+          'group_id': groupId,
+          'expense_type': 'bazar',
+          'amount': amount,
+          'date': _d(date),
+          'note': (note == null || note.isEmpty) ? 'From shopping list' : note,
+          'added_by': _uid,
+          'items': items
+              .map((it) => {
+                    'name': it.qty.isEmpty ? it.name : '${it.name} (${it.qty})',
+                    'amount': null,
+                  })
+              .toList(),
+        })
+        .select('id')
+        .single();
+    await supabase
+        .from('meal_shopping_items')
+        .update({'expense_id': expense['id']}).inFilter(
+            'id', items.map((it) => it.id).toList());
+  }
+
+  // ---- Meals v19: shared bills (rent/wifi/gas splitter) ----
+
+  Future<List<MealSharedExpense>> fetchMealSharedExpenses(
+      String groupId, DateTime start, DateTime end) async {
+    final rows = await supabase
+        .from('meal_shared_expenses')
+        .select('*, meal_shared_expense_shares(*)')
+        .eq('group_id', groupId)
+        .gte('date', _d(start))
+        .lt('date', _d(end))
+        .order('date', ascending: false)
+        .order('created_at', ascending: false);
+    return rows.map<MealSharedExpense>(MealSharedExpense.fromMap).toList();
+  }
+
+  /// shares: [{'member_id': ..., 'amount': ...}] — must sum to [amount] (±1).
+  Future<void> createMealSharedExpense({
+    required String groupId,
+    required String title,
+    required double amount,
+    required DateTime date,
+    required String splitType, // equal | custom
+    required List<Map<String, dynamic>> shares,
+    String? note,
+  }) async {
+    await supabase.rpc('create_shared_expense', params: {
+      'p_group_id': groupId,
+      'p_title': title,
+      'p_amount': amount,
+      'p_date': _d(date),
+      'p_split_type': splitType,
+      'p_shares': shares,
+      'p_note': note,
+    });
+  }
+
+  Future<void> toggleMealSharePaid(String shareId, bool paid) async {
+    await supabase.from('meal_shared_expense_shares').update({
+      'paid': paid,
+      'paid_at': paid ? DateTime.now().toIso8601String() : null,
+    }).eq('id', shareId);
+  }
+
+  Future<void> deleteMealSharedExpense(String id) async {
+    await supabase.from('meal_shared_expenses').delete().eq('id', id);
+  }
+
+  // ---- Meals v19: in-app notifications ----
+
+  Future<List<MealNotification>> fetchMealNotifications(String groupId) async {
+    final rows = await supabase
+        .from('meal_notifications')
+        .select()
+        .eq('group_id', groupId)
+        .eq('user_id', _uid)
+        .order('created_at', ascending: false)
+        .limit(50);
+    return rows.map<MealNotification>(MealNotification.fromMap).toList();
+  }
+
+  Future<void> markMealNotificationsRead(String groupId) async {
+    await supabase
+        .from('meal_notifications')
+        .update({'is_read': true})
+        .eq('group_id', groupId)
+        .eq('user_id', _uid)
+        .eq('is_read', false);
+  }
+
+  Future<void> deleteMealNotification(String id) async {
+    await supabase.from('meal_notifications').delete().eq('id', id);
   }
 
   static String _d(DateTime d) =>

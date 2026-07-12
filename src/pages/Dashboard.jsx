@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useEntity } from '../context/EntityContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
@@ -8,12 +8,15 @@ import { useAssets } from '../hooks/useAssets';
 import { useInvestments } from '../hooks/useInvestments';
 import { useLiabilities } from '../hooks/useLiabilities';
 import { useRecurring } from '../hooks/useRecurring';
+import { useSavings } from '../hooks/useSavings';
+import { useNetWorthSnapshots } from '../hooks/useNetWorthSnapshots';
 import StatCard from '../components/StatCard';
 import ChartCard from '../components/ChartCard';
 import TransactionList from '../components/TransactionList';
 import BudgetCard from '../components/BudgetCard';
-import { Shield, Bike, Landmark, Target, CalendarClock } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import UpcomingPanel from '../components/UpcomingPanel';
+import { Shield, Bike, Landmark, Target } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const CHART_COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#6366f1', '#f97316'];
 
@@ -44,17 +47,8 @@ export default function Dashboard() {
   const { investments } = useInvestments();
   const { liabilities } = useLiabilities();
   const { recurring } = useRecurring();
-
-  // Upcoming recurring in next 30 days
-  const upcomingRecurring = useMemo(() => {
-    const today = new Date();
-    const in30 = new Date();
-    in30.setDate(today.getDate() + 30);
-    return recurring
-      .filter(r => r.is_active && new Date(r.next_run_date) <= in30)
-      .sort((a, b) => new Date(a.next_run_date) - new Date(b.next_run_date))
-      .slice(0, 5);
-  }, [recurring]);
+  const { recurringSavings } = useSavings();
+  const { snapshots, recordSnapshot } = useNetWorthSnapshots();
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -70,6 +64,27 @@ export default function Dashboard() {
   const totalLiabilities = activeLiabilities.filter(l => l.type !== 'loan_given').reduce((sum, l) => sum + Number(l.remaining_balance || 0), 0);
 
   const netWorth = totalCash + totalAssetsValue + totalInvestmentsValue + totalReceivables - totalLiabilities;
+
+  // Refresh this month's net-worth snapshot whenever the numbers settle; past
+  // months stay frozen, so a monthly timeline builds up with no cron job.
+  useEffect(() => {
+    if (netWorth === 0 && totalCash === 0 && totalAssetsValue === 0 && totalLiabilities === 0) return;
+    recordSnapshot({
+      cash: totalCash,
+      assets: totalAssetsValue,
+      investments: totalInvestmentsValue,
+      receivables: totalReceivables,
+      liabilities: totalLiabilities,
+      netWorth
+    });
+  }, [netWorth, totalCash, totalAssetsValue, totalInvestmentsValue, totalReceivables, totalLiabilities, recordSnapshot]);
+
+  const netWorthTrend = useMemo(() => (
+    snapshots.map(s => ({
+      name: `${new Date(s.year, s.month - 1, 1).toLocaleString('default', { month: 'short' })} ${String(s.year).slice(2)}`,
+      'Net Worth': Number(s.net_worth || 0)
+    }))
+  ), [snapshots]);
 
   const stats = useMemo(() => {
     const monthTx = transactions.filter(t => {
@@ -167,6 +182,14 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Reminders: overdue + upcoming payments + budget alerts */}
+      <UpcomingPanel
+        recurring={recurring}
+        recurringSavings={recurringSavings}
+        liabilities={liabilities}
+        budgetData={budgetData}
+      />
+
       {/* Income/Expense Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-card border border-border rounded-2xl p-5">
@@ -236,6 +259,34 @@ export default function Dashboard() {
         </ChartCard>
       </div>
 
+      {/* Net Worth Trend */}
+      {netWorthTrend.length >= 2 ? (
+        <ChartCard title="Net Worth Trend" subtitle="Monthly snapshots — how your wealth is moving">
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={netWorthTrend}>
+              <defs>
+                <linearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
+              <XAxis dataKey="name" tick={{ fill: '#ffffff40', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#ffffff40', fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="Net Worth" stroke="#06b6d4" strokeWidth={2}
+                fill="url(#netWorthFill)" dot={{ r: 3, fill: '#06b6d4', strokeWidth: 0 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      ) : netWorthTrend.length === 1 && (
+        <ChartCard title="Net Worth Trend" subtitle="Monthly snapshots">
+          <p className="text-muted-foreground text-sm py-4">
+            First snapshot recorded (৳{netWorthTrend[0]['Net Worth'].toLocaleString()}). The trend chart appears from next month — a new point is saved automatically each month you open the dashboard.
+          </p>
+        </ChartCard>
+      )}
+
       {/* Budget Progress */}
       {budgetData.length > 0 && (
         <ChartCard title="Budget Progress" subtitle="This month">
@@ -288,35 +339,6 @@ export default function Dashboard() {
         </ChartCard>
       </div>
 
-      {/* Upcoming Recurring */}
-      {upcomingRecurring.length > 0 && (
-        <ChartCard title="Upcoming Payments" subtitle="Recurring in next 30 days">
-          <div className="space-y-3">
-            {upcomingRecurring.map(item => {
-              const isExpense = item.type === 'expense';
-              const isOverdue = new Date(item.next_run_date) < new Date();
-              return (
-                <div key={item.id} className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isExpense ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
-                      {item.categories?.icon || <CalendarClock size={14} className={isExpense ? 'text-red-400' : 'text-emerald-400'} />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{item.title}</p>
-                      <p className={`text-xs ${isOverdue ? 'text-orange-400 font-medium' : 'text-white/40'}`}>
-                        {isOverdue ? '⚠️ Overdue · ' : ''}{new Date(item.next_run_date).toLocaleDateString()} · {item.frequency}
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-semibold ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {isExpense ? '-' : '+'}৳{item.amount.toLocaleString()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </ChartCard>
-      )}
     </div>
   );
 }

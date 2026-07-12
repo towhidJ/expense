@@ -9,6 +9,12 @@ import 'meal_duty_screen.dart';
 import 'meal_members_screen.dart';
 import 'meal_report_screen.dart';
 import 'meal_settings_screen.dart';
+import 'meal_requests_screen.dart';
+import 'meal_notices_screen.dart';
+import 'meal_shopping_screen.dart';
+import 'meal_shared_bills_screen.dart';
+import 'meal_calendar_screen.dart';
+import 'meal_notifications_screen.dart';
 
 const kMonthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -34,6 +40,8 @@ class _MealsScreenState extends State<MealsScreen> {
   int _tab = 0;
   MealMonthSummary? _summary;
   List<MealGroupMember> _members = [];
+  List<MealNotice> _notices = [];
+  int _unreadNotifications = 0;
   late int _year;
   late int _month;
 
@@ -88,11 +96,16 @@ class _MealsScreenState extends State<MealsScreen> {
       final results = await Future.wait([
         state.fetchMealMonthSummary(active.groupId, _year, _month),
         state.fetchMealMembers(active.groupId),
+        state.fetchMealNotices(active.groupId),
+        state.fetchMealNotifications(active.groupId),
       ]);
       if (!mounted) return;
       setState(() {
         _summary = results[0] as MealMonthSummary;
         _members = results[1] as List<MealGroupMember>;
+        _notices = results[2] as List<MealNotice>;
+        _unreadNotifications =
+            (results[3] as List<MealNotification>).where((n) => !n.isRead).length;
       });
     } catch (e) {
       if (mounted) {
@@ -214,6 +227,58 @@ class _MealsScreenState extends State<MealsScreen> {
   Future<void> _push(Widget screen) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     await _load(); // refresh after returning (approvals, settings...)
+  }
+
+  // ---- Month close / reopen (v18) ----
+
+  Future<void> _closeMonth(MealGroupMember active) async {
+    final label = '${kMonthNames[_month - 1]} $_year';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(
+            'Close $label? Member balances carry forward to the next month and this month becomes read-only. You can reopen later if needed.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Close Month', style: TextStyle(color: kEmerald))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await state.closeMealMonth(active.groupId, _year, _month);
+      await _loadGroupData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _reopenMonth(MealGroupMember active) async {
+    final label = '${kMonthNames[_month - 1]} $_year';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(
+            'Reopen $label? Its carry-forward is removed from the next month until you close it again.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Reopen', style: TextStyle(color: kOrange))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await state.reopenMealMonth(active.groupId, _year, _month);
+      await _loadGroupData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 
   @override
@@ -394,6 +459,19 @@ class _MealsScreenState extends State<MealsScreen> {
                 IconButton(onPressed: () => _shiftMonth(1), icon: Icon(Icons.chevron_right, color: kFg54)),
               ],
             ),
+            // Pinned notices (v18)
+            for (final n in _notices.where((n) => n.pinned))
+              Card(
+                color: kOrange.withValues(alpha: 0.08),
+                child: ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.push_pin, size: 18, color: kOrange),
+                  title: Text(n.title, style: const TextStyle(fontSize: 13, color: kOrange)),
+                  subtitle: n.body.isNotEmpty
+                      ? Text(n.body, style: TextStyle(fontSize: 11, color: kFg54))
+                      : null,
+                ),
+              ),
             summary == null
                 ? const Padding(
                     padding: EdgeInsets.all(32),
@@ -401,6 +479,42 @@ class _MealsScreenState extends State<MealsScreen> {
                   )
                 : Column(
                     children: [
+                      // Month close / carry-forward (v18)
+                      if (summary.isClosed)
+                        Card(
+                          color: kEmerald.withValues(alpha: 0.08),
+                          child: ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.lock, size: 18, color: kEmerald),
+                            title: Text('${kMonthNames[_month - 1]} is closed',
+                                style: const TextStyle(fontSize: 13, color: kEmerald)),
+                            subtitle: Text('Balances carried forward. Entries are locked.',
+                                style: TextStyle(fontSize: 11, color: kFg38)),
+                            trailing: _isManager
+                                ? TextButton(
+                                    onPressed: () => _reopenMonth(active),
+                                    child: const Text('Reopen',
+                                        style: TextStyle(fontSize: 12, color: kOrange)),
+                                  )
+                                : null,
+                          ),
+                        )
+                      else if (_isManager)
+                        Card(
+                          child: ListTile(
+                            dense: true,
+                            leading: Icon(Icons.lock_open, size: 18, color: kFg54),
+                            title: const Text('Close this month', style: TextStyle(fontSize: 13)),
+                            subtitle: Text('Carries every balance into the next month.',
+                                style: TextStyle(fontSize: 11, color: kFg38)),
+                            trailing: TextButton(
+                              onPressed: () => _closeMonth(active),
+                              child: const Text('Close',
+                                  style: TextStyle(fontSize: 12, color: kEmerald, fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                        ),
+                      if (summary.isClosed || _isManager) const SizedBox(height: 10),
                       Row(
                         children: [
                           _statCard('Total Bazar', taka(summary.totalBazar), Icons.shopping_basket_outlined, kCyan),
@@ -441,7 +555,7 @@ class _MealsScreenState extends State<MealsScreen> {
                                     style: const TextStyle(fontSize: 13.5),
                                   ),
                                   subtitle: Text(
-                                    '${m.meals % 1 == 0 ? m.meals.toStringAsFixed(0) : m.meals.toStringAsFixed(1)} meals · deposit ${taka(m.deposits)}${m.advance > 0 ? ' · জামানত ${taka(m.advance)}' : ''}',
+                                    '${m.meals % 1 == 0 ? m.meals.toStringAsFixed(0) : m.meals.toStringAsFixed(1)} meals · deposit ${taka(m.deposits)}${m.openingBalance != 0 ? ' · carry ${taka(m.openingBalance)}' : ''}${m.advance > 0 ? ' · জামানত ${taka(m.advance)}' : ''}',
                                     style: TextStyle(fontSize: 11, color: kFg38),
                                   ),
                                   trailing: Text(
@@ -481,6 +595,33 @@ class _MealsScreenState extends State<MealsScreen> {
           Card(
             child: Column(
               children: [
+                _moreTile(Icons.pending_actions, 'Meal Requests', 'Meal off / guest requests with cutoff', kCyan,
+                    () => _push(MealRequestsScreen(state: state, membership: active, isManager: _isManager))),
+                _divider(),
+                _moreTile(Icons.checklist, 'Shopping List', 'Ki ki lagbe — tick off at the bazar', kEmerald,
+                    () => _push(MealShoppingScreen(state: state, membership: active, isManager: _isManager))),
+                _divider(),
+                _moreTile(Icons.receipt_long_outlined, 'Shared Bills', 'Rent, wifi, gas — split & paid ticks', kPurple,
+                    () => _push(MealSharedBillsScreen(state: state, membership: active, isManager: _isManager))),
+                _divider(),
+                _moreTile(Icons.calendar_month_outlined, 'Meal Calendar', 'The whole month at a glance', kOrange,
+                    () => _push(MealCalendarScreen(state: state, membership: active, year: _year, month: _month))),
+                _divider(),
+                _moreTile(Icons.campaign_outlined, 'Notice Board', 'Announcements for the mess', kCyan,
+                    () => _push(MealNoticesScreen(state: state, membership: active, isManager: _isManager))),
+                _divider(),
+                _moreTile(Icons.notifications_outlined, 'Notifications',
+                    _unreadNotifications > 0 ? '$_unreadNotifications unread' : 'Requests, notices, join alerts',
+                    kEmerald,
+                    () => _push(MealNotificationsScreen(state: state, membership: active)),
+                    badge: _unreadNotifications > 0 ? _unreadNotifications : null),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Column(
+              children: [
                 _moreTile(Icons.group_outlined, 'Members',
                     pendingCount > 0 ? '$pendingCount pending request${pendingCount > 1 ? 's' : ''}' : 'Approve, roles, invite code',
                     kPurple,
@@ -490,7 +631,7 @@ class _MealsScreenState extends State<MealsScreen> {
                 _moreTile(Icons.print_outlined, 'Monthly Report', 'Printable meal report / voucher', kCyan,
                     () => _push(MealReportScreen(state: state, membership: active, year: _year, month: _month))),
                 _divider(),
-                _moreTile(Icons.settings_outlined, 'Settings', 'Meal values, maid, invite code', kFg54,
+                _moreTile(Icons.settings_outlined, 'Settings', 'Meal values, maid, cutoff, invite code', kFg54,
                     () => _push(MealSettingsScreen(state: state, membership: active, isManager: _isManager))),
               ],
             ),

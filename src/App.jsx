@@ -12,7 +12,9 @@ import { MealProvider } from './context/MealContext';
 import MealLayout from './components/meals/MealLayout';
 import {
   MealSummaryPage, MealDailyPage, MealDepositsPage, MealExpensesPage,
-  MealDutyPage, MealMembersPage, MealSettingsPage, MealGroupsPage
+  MealDutyPage, MealMembersPage, MealSettingsPage, MealGroupsPage,
+  MealRequestsPage, MealNoticesPage, MealShoppingPage, MealSharedBillsPage,
+  MealCalendarPage, MealNotificationsPage
 } from './pages/meals/MealPages';
 import Reports from './pages/Reports';
 import Budgets from './pages/Budgets';
@@ -74,8 +76,14 @@ function App() {
               >
                 <Route index element={<MealSummaryPage />} />
                 <Route path="daily" element={<MealDailyPage />} />
+                <Route path="calendar" element={<MealCalendarPage />} />
                 <Route path="deposits" element={<MealDepositsPage />} />
                 <Route path="expenses" element={<MealExpensesPage />} />
+                <Route path="shopping" element={<MealShoppingPage />} />
+                <Route path="bills" element={<MealSharedBillsPage />} />
+                <Route path="requests" element={<MealRequestsPage />} />
+                <Route path="notices" element={<MealNoticesPage />} />
+                <Route path="notifications" element={<MealNotificationsPage />} />
                 <Route path="duty" element={<MealDutyPage />} />
                 <Route path="members" element={<MealMembersPage />} />
                 <Route path="settings" element={<MealSettingsPage />} />

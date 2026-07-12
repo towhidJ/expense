@@ -366,7 +366,8 @@ class MealGroup {
         hasMaid = m['has_maid'] ?? false,
         breakfastValue = (m['breakfast_value'] as num?)?.toDouble() ?? 0.5,
         lunchValue = (m['lunch_value'] as num?)?.toDouble() ?? 1,
-        dinnerValue = (m['dinner_value'] as num?)?.toDouble() ?? 1;
+        dinnerValue = (m['dinner_value'] as num?)?.toDouble() ?? 1,
+        cutoffTime = m['cutoff_time'];
   final String id;
   final String name;
   final String inviteCode;
@@ -375,6 +376,10 @@ class MealGroup {
   final double breakfastValue;
   final double lunchValue;
   final double dinnerValue;
+  final String? cutoffTime; // 'HH:MM:SS' — meal request deadline, null = none
+
+  /// 'HH:MM' for display / time inputs.
+  String? get cutoffHHmm => cutoffTime?.substring(0, 5);
 }
 
 class MealGroupMember {
@@ -540,6 +545,7 @@ class MealMemberSummary {
         meals = (m['meals'] as num?)?.toDouble() ?? 0,
         deposits = (m['deposits'] as num?)?.toDouble() ?? 0,
         advance = (m['advance'] as num?)?.toDouble() ?? 0,
+        openingBalance = (m['opening_balance'] as num?)?.toDouble() ?? 0,
         mealCost = (m['meal_cost'] as num?)?.toDouble() ?? 0,
         fixedShare = (m['fixed_share'] as num?)?.toDouble() ?? 0,
         totalCost = (m['total_cost'] as num?)?.toDouble() ?? 0,
@@ -552,10 +558,11 @@ class MealMemberSummary {
   final double meals;
   final double deposits;
   final double advance; // জামানত held by the mess (lifetime)
+  final double openingBalance; // carry from the previous closed month (v18)
   final double mealCost;
   final double fixedShare;
   final double totalCost;
-  final double balance; // negative = owes money
+  final double balance; // negative = owes money (includes openingBalance)
 }
 
 class MealMonthSummary {
@@ -567,7 +574,11 @@ class MealMonthSummary {
         totalFixed = (m['total_fixed'] as num?)?.toDouble() ?? 0,
         totalDeposits = (m['total_deposits'] as num?)?.toDouble() ?? 0,
         totalAdvance = (m['total_advance'] as num?)?.toDouble() ?? 0,
+        totalOpening = (m['total_opening'] as num?)?.toDouble() ?? 0,
         mealRate = (m['meal_rate'] as num?)?.toDouble() ?? 0,
+        isClosed = m['is_closed'] ?? false,
+        closedAt = m['closed_at'] != null ? DateTime.tryParse(m['closed_at']) : null,
+        prevMonthClosed = m['prev_month_closed'] ?? false,
         members = ((m['members'] ?? []) as List)
             .map((e) => MealMemberSummary.fromMap(Map<String, dynamic>.from(e)))
             .toList();
@@ -578,6 +589,117 @@ class MealMonthSummary {
   final double totalFixed;
   final double totalDeposits;
   final double totalAdvance; // জামানত the mess is holding (lifetime)
+  final double totalOpening; // carry-forward total from the last closed month
   final double mealRate;
+  final bool isClosed; // month closed → read-only until reopened (v18)
+  final DateTime? closedAt;
+  final bool prevMonthClosed;
   final List<MealMemberSummary> members;
+}
+
+// ---- Meals v18/v19 additions ----
+
+class MealRequest {
+  MealRequest.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        memberId = m['member_id'],
+        date = DateTime.parse(m['date']),
+        type = m['type'] ?? 'off',
+        breakfast = (m['breakfast'] as num?)?.toDouble() ?? 0,
+        lunch = (m['lunch'] as num?)?.toDouble() ?? 0,
+        dinner = (m['dinner'] as num?)?.toDouble() ?? 0,
+        note = m['note'] ?? '',
+        status = m['status'] ?? 'pending';
+  final String id;
+  final String memberId;
+  final DateTime date;
+  final String type; // off | guest
+  final double breakfast; // off: 1 = that slot off; guest: guest count
+  final double lunch;
+  final double dinner;
+  final String note;
+  final String status; // pending | approved | rejected | cancelled
+}
+
+class MealNotice {
+  MealNotice.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        title = m['title'] ?? '',
+        body = m['body'] ?? '',
+        pinned = m['pinned'] ?? false,
+        createdBy = m['created_by'] ?? '',
+        createdAt = DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now();
+  final String id;
+  final String title;
+  final String body;
+  final bool pinned; // pinned notices banner on the summary
+  final String createdBy;
+  final DateTime createdAt;
+}
+
+class MealShoppingItem {
+  MealShoppingItem.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        qty = m['qty'] ?? '',
+        isBought = m['is_bought'] ?? false,
+        boughtBy = m['bought_by'],
+        addedBy = m['added_by'] ?? '';
+  final String id;
+  final String name;
+  final String qty; // free text: "2 kg"
+  final bool isBought;
+  final String? boughtBy; // auth user who ticked it
+  final String addedBy;
+}
+
+class MealSharedExpenseShare {
+  MealSharedExpenseShare.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        memberId = m['member_id'],
+        shareAmount = (m['share_amount'] as num?)?.toDouble() ?? 0,
+        paid = m['paid'] ?? false;
+  final String id;
+  final String memberId;
+  final double shareAmount;
+  final bool paid;
+}
+
+class MealSharedExpense {
+  MealSharedExpense.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        title = m['title'] ?? '',
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        date = DateTime.parse(m['date']),
+        splitType = m['split_type'] ?? 'equal',
+        note = m['note'] ?? '',
+        shares = ((m['meal_shared_expense_shares'] ?? []) as List)
+            .map((e) =>
+                MealSharedExpenseShare.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+  final String id;
+  final String title; // "Basha bhara July", "Wifi bill"
+  final double amount;
+  final DateTime date;
+  final String splitType; // equal | custom
+  final String note;
+  final List<MealSharedExpenseShare> shares;
+}
+
+class MealNotification {
+  MealNotification.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        type = m['type'] ?? '',
+        title = m['title'] ?? '',
+        body = m['body'] ?? '',
+        link = m['link'] ?? '',
+        isRead = m['is_read'] ?? false,
+        createdAt = DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now();
+  final String id;
+  final String type; // request_new | request_response | notice | join_request
+  final String title;
+  final String body;
+  final String link; // web route hint, unused on mobile
+  final bool isRead;
+  final DateTime createdAt;
 }

@@ -4,7 +4,8 @@ import { Copy, RefreshCw, Save } from 'lucide-react';
 export default function GroupSettings({ group, isManager, updateGroup, regenerateCode }) {
   const [form, setForm] = useState({
     name: '', has_maid: false,
-    breakfast_value: 0.5, lunch_value: 1, dinner_value: 1
+    breakfast_value: 0.5, lunch_value: 1, dinner_value: 1,
+    cutoff_time: ''
   });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -16,7 +17,8 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
         has_maid: group.has_maid,
         breakfast_value: group.breakfast_value,
         lunch_value: group.lunch_value,
-        dinner_value: group.dinner_value
+        dinner_value: group.dinner_value,
+        cutoff_time: group.cutoff_time ? group.cutoff_time.slice(0, 5) : ''
       });
     }
   }, [group]);
@@ -42,7 +44,8 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
         has_maid: form.has_maid,
         breakfast_value: Number(form.breakfast_value),
         lunch_value: Number(form.lunch_value),
-        dinner_value: Number(form.dinner_value)
+        dinner_value: Number(form.dinner_value),
+        cutoff_time: form.cutoff_time || null
       });
     } catch (err) {
       console.error(err);
@@ -94,6 +97,18 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
             </div>
             <p className="text-white/30 text-xs mt-2">E.g. breakfast 0.5 means two breakfasts count as one full meal in the rate calculation.</p>
           </div>
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Meal request cutoff time</label>
+            <div className="flex items-center gap-3">
+              <input type="time" value={form.cutoff_time} onChange={e => setForm({ ...form, cutoff_time: e.target.value })} className="bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              {form.cutoff_time && (
+                <button type="button" onClick={() => setForm({ ...form, cutoff_time: '' })} className="text-white/40 hover:text-white text-xs underline">
+                  No cutoff
+                </button>
+              )}
+            </div>
+            <p className="text-white/30 text-xs mt-2">E.g. 21:00 means a meal off/guest request for tomorrow must be in by 9pm tonight. Empty = no deadline.</p>
+          </div>
           <label className="flex items-center gap-3 bg-[#12122a] border border-white/10 rounded-xl px-4 py-3 cursor-pointer">
             <input type="checkbox" checked={form.has_maid} onChange={e => setForm({ ...form, has_maid: e.target.checked })} className="accent-purple-500 w-4 h-4" />
             <span className="text-white text-sm">We have a maid (kajer bua) who cooks</span>
@@ -110,6 +125,7 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
           <h3 className="text-white font-semibold mb-3">Group Settings</h3>
           <p>Meal values — Breakfast: <span className="text-white">{group.breakfast_value}</span>, Lunch: <span className="text-white">{group.lunch_value}</span>, Dinner: <span className="text-white">{group.dinner_value}</span></p>
           <p>Maid (kajer bua): <span className="text-white">{group.has_maid ? 'Yes — maid cooks' : 'No'}</span></p>
+          <p>Meal request cutoff: <span className="text-white">{group.cutoff_time ? `${group.cutoff_time.slice(0, 5)} (the day before)` : 'None'}</span></p>
           <p className="text-white/30 text-xs mt-2">Only the manager can change these.</p>
         </div>
       )}

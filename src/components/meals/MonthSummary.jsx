@@ -7,6 +7,8 @@ export default function MonthSummary({ summary, currentUserId }) {
 
   const members = summary.members || [];
   const me = members.find(m => m.user_id === currentUserId);
+  // Carry column only appears once a previous month has been closed
+  const hasCarry = members.some(m => Number(m.opening_balance || 0) !== 0);
 
   const cards = [
     { label: 'Total Bazar', value: fmt(summary.total_bazar), icon: ShoppingBasket, color: 'text-cyan-400' },
@@ -49,6 +51,7 @@ export default function MonthSummary({ summary, currentUserId }) {
               <tr className="border-b border-white/10 text-white/40 text-left">
                 <th className="px-4 py-3 font-medium">Member</th>
                 <th className="px-4 py-3 font-medium text-right">Meals</th>
+                {hasCarry && <th className="px-4 py-3 font-medium text-right">Carry</th>}
                 <th className="px-4 py-3 font-medium text-right">Deposit</th>
                 <th className="px-4 py-3 font-medium text-right">Advance</th>
                 <th className="px-4 py-3 font-medium text-right">Meal Cost</th>
@@ -66,6 +69,11 @@ export default function MonthSummary({ summary, currentUserId }) {
                     {m.status !== 'approved' && <span className="text-white/30 text-xs ml-1">({m.status})</span>}
                   </td>
                   <td className="px-4 py-3 text-right text-white/80">{Number(m.meals || 0).toLocaleString()}</td>
+                  {hasCarry && (
+                    <td className={`px-4 py-3 text-right ${Number(m.opening_balance) < 0 ? 'text-red-400/80' : 'text-white/60'}`}>
+                      {fmt(m.opening_balance)}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-right text-white/80">{fmt(m.deposits)}</td>
                   <td className="px-4 py-3 text-right text-white/60">{fmt(m.advance)}</td>
                   <td className="px-4 py-3 text-right text-white/80">{fmt(m.meal_cost)}</td>
@@ -77,14 +85,15 @@ export default function MonthSummary({ summary, currentUserId }) {
                 </tr>
               ))}
               {members.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-white/40">No members yet.</td></tr>
+                <tr><td colSpan={hasCarry ? 9 : 8} className="px-4 py-8 text-center text-white/40">No members yet.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
       <p className="text-white/30 text-xs">
-        Balance = deposits − (meals × meal rate + fixed share). Negative (red) means the member owes money.
+        Balance = {hasCarry ? 'carry + ' : ''}deposits − (meals × meal rate + fixed share). Negative (red) means the member owes money.
+        {hasCarry && ' Carry is the balance carried forward from the previous closed month.'}
         Advance (জামানত) is held separately{Number(summary.total_advance) > 0 ? ` — mess is holding ৳${Number(summary.total_advance).toLocaleString()} in total` : ''}; it is returned when a member leaves or adjusted against their dues.
       </p>
     </div>

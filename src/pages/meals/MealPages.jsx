@@ -1,5 +1,13 @@
 import { useMeal } from '../../context/MealContext';
+import { Pin } from 'lucide-react';
 import MonthSummary from '../../components/meals/MonthSummary';
+import MonthCloseCard from '../../components/meals/MonthCloseCard';
+import RequestsTab from '../../components/meals/RequestsTab';
+import NoticeBoard from '../../components/meals/NoticeBoard';
+import ShoppingListTab from '../../components/meals/ShoppingListTab';
+import SharedBillsTab from '../../components/meals/SharedBillsTab';
+import MealCalendar from '../../components/meals/MealCalendar';
+import NotificationsList from '../../components/meals/NotificationsList';
 import MealEntryGrid from '../../components/meals/MealEntryGrid';
 import DepositsTab from '../../components/meals/DepositsTab';
 import AdvancesSection from '../../components/meals/AdvancesSection';
@@ -25,12 +33,30 @@ function Loading() {
   return <div className="text-white/50 p-6">Loading...</div>;
 }
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
 export function MealSummaryPage() {
-  const { data, currentUserId } = useMeal();
+  const { data, currentUserId, isManager, year, month } = useMeal();
   if (data.loading && !data.summary) return <Loading />;
+  const pinned = (data.notices || []).filter(n => n.pinned);
   return (
-    <div className="animate-in">
+    <div className="animate-in space-y-4">
       <PageHeader title="Summary" subtitle="This month's meal rate, costs and member balances." />
+      {pinned.map(n => (
+        <div key={n.id} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
+          <Pin size={16} className="text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-amber-400 text-sm font-medium">{n.title}</p>
+            {n.body && <p className="text-white/60 text-xs mt-0.5 whitespace-pre-wrap">{n.body}</p>}
+          </div>
+        </div>
+      ))}
+      <MonthCloseCard
+        summary={data.summary} isManager={isManager}
+        closeMonth={data.closeMonth} reopenMonth={data.reopenMonth}
+        monthLabel={`${MONTHS[month - 1]} ${year}`}
+      />
       <MonthSummary summary={data.summary} currentUserId={currentUserId} />
     </div>
   );
@@ -125,6 +151,97 @@ export function MealSettingsPage() {
       <GroupSettings
         group={data.group} isManager={isManager}
         updateGroup={data.updateGroup} regenerateCode={data.regenerateCode}
+      />
+    </div>
+  );
+}
+
+export function MealRequestsPage() {
+  const { data, isManager, currentUserId } = useMeal();
+  if (data.loading && data.members.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Meal Requests" subtitle="Request a meal off or a guest meal — the manager approves it." />
+      <RequestsTab
+        group={data.group} requests={data.requests} members={data.members}
+        isManager={isManager} currentUserId={currentUserId}
+        submitRequest={data.submitRequest} cancelRequest={data.cancelRequest}
+        respondRequest={data.respondRequest}
+      />
+    </div>
+  );
+}
+
+export function MealNoticesPage() {
+  const { data, isManager } = useMeal();
+  if (data.loading && data.notices.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Notice Board" subtitle="Announcements for everyone in the mess." />
+      <NoticeBoard
+        notices={data.notices} isManager={isManager}
+        addNotice={data.addNotice} updateNotice={data.updateNotice} deleteNotice={data.deleteNotice}
+      />
+    </div>
+  );
+}
+
+export function MealShoppingPage() {
+  const { data, isManager, currentUserId } = useMeal();
+  if (data.loading && data.members.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Shopping List" subtitle="What the mess needs before the next bazar — tick off what you buy." />
+      <ShoppingListTab
+        items={data.shoppingItems} members={data.members}
+        isManager={isManager} currentUserId={currentUserId}
+        addShoppingItem={data.addShoppingItem} toggleShoppingItem={data.toggleShoppingItem}
+        deleteShoppingItem={data.deleteShoppingItem} convertShoppingToExpense={data.convertShoppingToExpense}
+      />
+    </div>
+  );
+}
+
+export function MealSharedBillsPage() {
+  const { data, isManager, currentUserId } = useMeal();
+  if (data.loading && data.members.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Shared Bills" subtitle="Rent, wifi, gas — split equally or custom, with paid ticks." />
+      <SharedBillsTab
+        sharedExpenses={data.sharedExpenses} members={data.members}
+        isManager={isManager} currentUserId={currentUserId}
+        createSharedExpense={data.createSharedExpense}
+        toggleSharePaid={data.toggleSharePaid} deleteSharedExpense={data.deleteSharedExpense}
+      />
+    </div>
+  );
+}
+
+export function MealCalendarPage() {
+  const { data, currentUserId, year, month } = useMeal();
+  if (data.loading && data.members.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Meal Calendar" subtitle="The whole month at a glance — who ate how much on which day." />
+      <MealCalendar
+        members={data.members} entries={data.entries} holidays={data.holidays}
+        year={year} month={month} currentUserId={currentUserId}
+      />
+    </div>
+  );
+}
+
+export function MealNotificationsPage() {
+  const { data } = useMeal();
+  if (data.loading && data.notifications.length === 0) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Notifications" subtitle="Requests, notices and join alerts for this mess." />
+      <NotificationsList
+        notifications={data.notifications}
+        markNotificationsRead={data.markNotificationsRead}
+        deleteNotification={data.deleteNotification}
       />
     </div>
   );

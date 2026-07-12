@@ -17,6 +17,11 @@ export function useMealData(groupId, year, month) {
   const [dutyAssignments, setDutyAssignments] = useState([]);
   const [advances, setAdvances] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [shoppingItems, setShoppingItems] = useState([]);
+  const [sharedExpenses, setSharedExpenses] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -131,6 +136,73 @@ export function useMealData(groupId, year, month) {
     setHolidays(data || []);
   }, [groupId, start, end]);
 
+  const fetchRequests = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_requests')
+      .select('*')
+      .eq('group_id', groupId)
+      .gte('date', start)
+      .lt('date', end)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) console.error('Error fetching meal requests:', error);
+    setRequests(data || []);
+  }, [groupId, start, end]);
+
+  // Notices are group-wide, not month-scoped
+  const fetchNotices = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_notices')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) console.error('Error fetching meal notices:', error);
+    setNotices(data || []);
+  }, [groupId]);
+
+  // Active shopping list = rows not yet converted into an expense
+  const fetchShopping = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_shopping_items')
+      .select('*')
+      .eq('group_id', groupId)
+      .is('expense_id', null)
+      .order('created_at', { ascending: true });
+    if (error) console.error('Error fetching shopping items:', error);
+    setShoppingItems(data || []);
+  }, [groupId]);
+
+  const fetchShared = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_shared_expenses')
+      .select('*, meal_shared_expense_shares(*)')
+      .eq('group_id', groupId)
+      .gte('date', start)
+      .lt('date', end)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) console.error('Error fetching shared expenses:', error);
+    setSharedExpenses(data || []);
+  }, [groupId, start, end]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!groupId || !user) return;
+    const { data, error } = await supabase
+      .from('meal_notifications')
+      .select('*')
+      .eq('group_id', groupId)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) console.error('Error fetching notifications:', error);
+    setNotifications(data || []);
+  }, [groupId, user]);
+
   const fetchSummary = useCallback(async () => {
     if (!groupId) return;
     const { data, error } = await supabase.rpc('get_meal_month_summary', {
@@ -147,11 +219,14 @@ export function useMealData(groupId, year, month) {
     await Promise.all([
       fetchGroup(), fetchMembers(), fetchEntries(), fetchDeposits(),
       fetchExpenses(), fetchDutyTypes(), fetchDutyAssignments(),
-      fetchAdvances(), fetchHolidays(), fetchSummary()
+      fetchAdvances(), fetchHolidays(), fetchRequests(), fetchNotices(),
+      fetchShopping(), fetchShared(), fetchNotifications(), fetchSummary()
     ]);
     setLoading(false);
   }, [fetchGroup, fetchMembers, fetchEntries, fetchDeposits, fetchExpenses,
-      fetchDutyTypes, fetchDutyAssignments, fetchAdvances, fetchHolidays, fetchSummary]);
+      fetchDutyTypes, fetchDutyAssignments, fetchAdvances, fetchHolidays,
+      fetchRequests, fetchNotices, fetchShopping, fetchShared,
+      fetchNotifications, fetchSummary]);
 
   useEffect(() => {
     fetchAll();
@@ -291,6 +366,168 @@ export function useMealData(groupId, year, month) {
     await fetchHolidays();
   };
 
+  // ---- Month close / carry-forward (manager only, enforced by RPC) ----
+
+  const closeMonth = async (note) => {
+    const { error } = await supabase.rpc('close_meal_month', {
+      p_group_id: groupId, p_year: year, p_month: month, p_note: note || null
+    });
+    if (error) throw error;
+    await fetchSummary();
+  };
+
+  const reopenMonth = async () => {
+    const { error } = await supabase.rpc('reopen_meal_month', {
+      p_group_id: groupId, p_year: year, p_month: month
+    });
+    if (error) throw error;
+    await fetchSummary();
+  };
+
+  // ---- Meal off / guest requests (RPCs enforce cutoff + roles) ----
+
+  const submitRequest = async ({ date, type, breakfast, lunch, dinner, note }) => {
+    const { error } = await supabase.rpc('submit_meal_request', {
+      p_group_id: groupId, p_date: date, p_type: type,
+      p_breakfast: breakfast ?? 0, p_lunch: lunch ?? 0, p_dinner: dinner ?? 0,
+      p_note: note || null
+    });
+    if (error) throw error;
+    await fetchRequests();
+  };
+
+  const cancelRequest = async (id) => {
+    const { error } = await supabase.rpc('cancel_meal_request', { p_request_id: id });
+    if (error) throw error;
+    await fetchRequests();
+  };
+
+  // Approving writes the meal entry (off → slots 0, guest → counts added)
+  const respondRequest = async (id, approve) => {
+    const { error } = await supabase.rpc('respond_meal_request', {
+      p_request_id: id, p_approve: approve
+    });
+    if (error) throw error;
+    await Promise.all([fetchRequests(), fetchEntries(), fetchSummary()]);
+  };
+
+  // ---- Notice board (manager only, enforced by RLS) ----
+
+  const addNotice = async ({ title, body, pinned }) => {
+    const { error } = await supabase.from('meal_notices').insert({
+      group_id: groupId, title, body: body || null,
+      pinned: !!pinned, created_by: user.id
+    });
+    if (error) throw error;
+    await fetchNotices();
+  };
+
+  const updateNotice = async (id, { title, body, pinned }) => {
+    const { error } = await supabase.from('meal_notices')
+      .update({ title, body: body || null, pinned: !!pinned, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+    await fetchNotices();
+  };
+
+  const deleteNotice = async (id) => {
+    const { error } = await supabase.from('meal_notices').delete().eq('id', id);
+    if (error) throw error;
+    await fetchNotices();
+  };
+
+  // ---- Shopping list (any member; delete = author or manager via RLS) ----
+
+  const addShoppingItem = async ({ name, qty }) => {
+    const { error } = await supabase.from('meal_shopping_items').insert({
+      group_id: groupId, name, qty: qty || null, added_by: user.id
+    });
+    if (error) throw error;
+    await fetchShopping();
+  };
+
+  const toggleShoppingItem = async (id, bought) => {
+    const { error } = await supabase.from('meal_shopping_items')
+      .update({
+        is_bought: bought,
+        bought_by: bought ? user.id : null,
+        bought_at: bought ? new Date().toISOString() : null
+      })
+      .eq('id', id);
+    if (error) throw error;
+    await fetchShopping();
+  };
+
+  const deleteShoppingItem = async (id) => {
+    const { error } = await supabase.from('meal_shopping_items').delete().eq('id', id);
+    if (error) throw error;
+    await fetchShopping();
+  };
+
+  // Turn the ticked-off items into one itemized bazar expense, then archive
+  // them from the active list by stamping expense_id.
+  const convertShoppingToExpense = async ({ itemIds, amount, date, note }) => {
+    const items = shoppingItems
+      .filter(it => itemIds.includes(it.id))
+      .map(it => ({ name: it.qty ? `${it.name} (${it.qty})` : it.name, amount: null }));
+    const { data: expense, error } = await supabase.from('meal_expenses')
+      .insert({
+        group_id: groupId, expense_type: 'bazar', amount, date,
+        note: note || 'From shopping list', added_by: user.id, items
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    const { error: linkError } = await supabase.from('meal_shopping_items')
+      .update({ expense_id: expense.id })
+      .in('id', itemIds);
+    if (linkError) throw linkError;
+    await Promise.all([fetchShopping(), fetchExpenses(), fetchSummary()]);
+  };
+
+  // ---- Shared bills (rent/wifi/gas — separate from the meal ledger) ----
+
+  const createSharedExpense = async ({ title, amount, date, split_type, shares, note }) => {
+    const { error } = await supabase.rpc('create_shared_expense', {
+      p_group_id: groupId, p_title: title, p_amount: amount, p_date: date,
+      p_split_type: split_type, p_shares: shares, p_note: note || null
+    });
+    if (error) throw error;
+    await fetchShared();
+  };
+
+  const toggleSharePaid = async (shareId, paid) => {
+    const { error } = await supabase.from('meal_shared_expense_shares')
+      .update({ paid, paid_at: paid ? new Date().toISOString() : null })
+      .eq('id', shareId);
+    if (error) throw error;
+    await fetchShared();
+  };
+
+  const deleteSharedExpense = async (id) => {
+    const { error } = await supabase.from('meal_shared_expenses').delete().eq('id', id);
+    if (error) throw error;
+    await fetchShared();
+  };
+
+  // ---- Notifications (own rows only, enforced by RLS) ----
+
+  const markNotificationsRead = async () => {
+    const unread = notifications.filter(n => !n.is_read);
+    if (unread.length === 0) return;
+    const { error } = await supabase.from('meal_notifications')
+      .update({ is_read: true })
+      .in('id', unread.map(n => n.id));
+    if (error) throw error;
+    await fetchNotifications();
+  };
+
+  const deleteNotification = async (id) => {
+    const { error } = await supabase.from('meal_notifications').delete().eq('id', id);
+    if (error) throw error;
+    await fetchNotifications();
+  };
+
   // ---- Duty roster (manager only, enforced by RLS) ----
 
   const addDutyType = async (name) => {
@@ -371,13 +608,20 @@ export function useMealData(groupId, year, month) {
 
   return {
     group, members, entries, deposits, expenses,
-    dutyTypes, dutyAssignments, advances, holidays, summary, loading,
+    dutyTypes, dutyAssignments, advances, holidays, requests, notices,
+    shoppingItems, sharedExpenses, notifications, summary, loading,
     fetchAll,
     upsertEntry,
     addDeposit, updateDeposit, deleteDeposit,
     addExpense, updateExpense, deleteExpense, uploadReceipt,
     addAdvance, adjustAdvance, deleteAdvance,
     upsertHoliday, deleteHoliday,
+    closeMonth, reopenMonth,
+    submitRequest, cancelRequest, respondRequest,
+    addNotice, updateNotice, deleteNotice,
+    addShoppingItem, toggleShoppingItem, deleteShoppingItem, convertShoppingToExpense,
+    createSharedExpense, toggleSharePaid, deleteSharedExpense,
+    markNotificationsRead, deleteNotification,
     addDutyType, updateDutyType, deleteDutyType,
     assignDuty, removeDutyAssignment,
     respondJoinRequest, removeMember, setMemberRole,

@@ -2,7 +2,8 @@ import { NavLink, useNavigate } from 'react-router';
 import { useMeal } from '../../context/MealContext';
 import {
   UtensilsCrossed, LayoutDashboard, CalendarDays, PiggyBank, ShoppingBasket,
-  ClipboardList, Users, Settings, ChevronLeft, ChevronRight, X, ArrowLeftRight
+  ClipboardList, Users, Settings, ChevronLeft, ChevronRight, X, ArrowLeftRight,
+  CalendarClock, Megaphone, ListTodo, Receipt, CalendarRange, Bell
 } from 'lucide-react';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -11,8 +12,14 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
 const navItems = [
   { to: '/meals', end: true, icon: LayoutDashboard, label: 'Summary' },
   { to: '/meals/daily', icon: CalendarDays, label: 'Daily Meals' },
-  { to: '/meals/deposits', icon: PiggyBank, label: 'Deposits & Advance' },
+  { to: '/meals/calendar', icon: CalendarRange, label: 'Meal Calendar' },
+  { to: '/meals/requests', icon: CalendarClock, label: 'Meal Requests' },
+  { to: '/meals/shopping', icon: ListTodo, label: 'Shopping List' },
   { to: '/meals/expenses', icon: ShoppingBasket, label: 'Expenses' },
+  { to: '/meals/bills', icon: Receipt, label: 'Shared Bills' },
+  { to: '/meals/deposits', icon: PiggyBank, label: 'Deposits & Advance' },
+  { to: '/meals/notices', icon: Megaphone, label: 'Notice Board' },
+  { to: '/meals/notifications', icon: Bell, label: 'Notifications' },
   { to: '/meals/duty', icon: ClipboardList, label: 'Duty Roster' },
   { to: '/meals/members', icon: Users, label: 'Members' },
   { to: '/meals/settings', icon: Settings, label: 'Settings' }
@@ -24,6 +31,8 @@ export default function MealSidebar({ isOpen, onClose }) {
   const { approved, activeMembership, switchGroup, year, month, shiftMonth, data, isManager } = useMeal();
   const navigate = useNavigate();
   const pendingCount = data.members.filter(m => m.status === 'pending').length;
+  const pendingRequests = (data.requests || []).filter(r => r.status === 'pending').length;
+  const unreadNotifications = (data.notifications || []).filter(n => !n.is_read).length;
   const group = data.group || activeMembership?.meal_groups;
 
   const handleGroupChange = (e) => {
@@ -112,6 +121,16 @@ export default function MealSidebar({ isOpen, onClose }) {
               {label === 'Members' && isManager && pendingCount > 0 && (
                 <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] flex items-center justify-center">
                   {pendingCount}
+                </span>
+              )}
+              {label === 'Meal Requests' && isManager && pendingRequests > 0 && (
+                <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] flex items-center justify-center">
+                  {pendingRequests}
+                </span>
+              )}
+              {label === 'Notifications' && unreadNotifications > 0 && (
+                <span className="w-5 h-5 rounded-full bg-cyan-500 text-white text-[11px] flex items-center justify-center">
+                  {unreadNotifications}
                 </span>
               )}
             </NavLink>

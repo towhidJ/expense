@@ -31,6 +31,7 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
   final _lunch = TextEditingController();
   final _dinner = TextEditingController();
   bool _hasMaid = false;
+  TimeOfDay? _cutoff; // meal request deadline, null = none
   bool _busy = false;
 
   @override
@@ -50,6 +51,12 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
         _lunch.text = g.lunchValue.toString();
         _dinner.text = g.dinnerValue.toString();
         _hasMaid = g.hasMaid;
+        final hhmm = g.cutoffHHmm;
+        _cutoff = hhmm == null
+            ? null
+            : TimeOfDay(
+                hour: int.parse(hhmm.split(':')[0]),
+                minute: int.parse(hhmm.split(':')[1]));
       });
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -74,6 +81,9 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
         breakfastValue: b,
         lunchValue: l,
         dinnerValue: d,
+        cutoffTime: _cutoff == null
+            ? null
+            : '${_cutoff!.hour.toString().padLeft(2, '0')}:${_cutoff!.minute.toString().padLeft(2, '0')}',
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved.')));
@@ -200,6 +210,40 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
                             activeThumbColor: kCyan,
                             onChanged: (v) => setState(() => _hasMaid = v),
                           ),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.schedule, size: 20, color: kOrange),
+                            title: const Text('Meal request cutoff time',
+                                style: TextStyle(fontSize: 13.5)),
+                            subtitle: Text(
+                              _cutoff == null
+                                  ? 'No deadline — members can request any time'
+                                  : 'Requests for tomorrow must be in by ${_cutoff!.format(context)} tonight',
+                              style: TextStyle(fontSize: 11, color: kFg38),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_cutoff != null)
+                                  IconButton(
+                                    tooltip: 'Remove cutoff',
+                                    icon: Icon(Icons.close, size: 16, color: kFg38),
+                                    onPressed: () => setState(() => _cutoff = null),
+                                  ),
+                                TextButton(
+                                  onPressed: () async {
+                                    final picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: _cutoff ?? const TimeOfDay(hour: 21, minute: 0),
+                                    );
+                                    if (picked != null) setState(() => _cutoff = picked);
+                                  },
+                                  child: Text(_cutoff == null ? 'Set' : _cutoff!.format(context),
+                                      style: const TextStyle(fontSize: 12, color: kCyan)),
+                                ),
+                              ],
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           GradientButton(label: 'Save Settings', busy: _busy, onPressed: _save),
                         ],
@@ -223,6 +267,14 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
                           Text('Maid (kajer bua)', style: TextStyle(fontSize: 12, color: kFg54)),
                           const SizedBox(height: 6),
                           Text(group.hasMaid ? 'Yes — maid cooks' : 'No',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 12),
+                          Text('Meal request cutoff', style: TextStyle(fontSize: 12, color: kFg54)),
+                          const SizedBox(height: 6),
+                          Text(
+                              group.cutoffHHmm == null
+                                  ? 'None'
+                                  : '${group.cutoffHHmm} (the day before)',
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 12),
                           Text('Only the manager can change these.',
