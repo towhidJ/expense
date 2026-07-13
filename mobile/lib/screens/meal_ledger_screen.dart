@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../app_state.dart';
 import '../item_editor.dart';
 import '../models.dart';
@@ -53,6 +54,7 @@ class _MealLedgerScreenState extends State<MealLedgerScreen> {
   List<MealExpense>? _expenses;
   List<MealAdvance>? _advances;
   List<MealGroupMember> _members = [];
+  MealPaymentInfo? _paymentInfo;
   final Set<String> _expandedItems = {};
 
   DateTime get _start => DateTime(_year, _month, 1);
@@ -72,12 +74,14 @@ class _MealLedgerScreenState extends State<MealLedgerScreen> {
         state.fetchMealMembers(groupId),
         state.fetchMealAdvances(groupId),
       ]);
+      final payInfo = await state.fetchMealPaymentInfo(groupId);
       if (!mounted) return;
       setState(() {
         _deposits = results[0] as List<MealDeposit>;
         _expenses = results[1] as List<MealExpense>;
         _members = results[2] as List<MealGroupMember>;
         _advances = results[3] as List<MealAdvance>;
+        _paymentInfo = payInfo;
       });
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -676,12 +680,68 @@ class _MealLedgerScreenState extends State<MealLedgerScreen> {
     );
   }
 
+  void _showPaymentQR(String method, String number) {
+    // Plain-text payload, not a bkash:// deep link — bKash/Nagad don't
+    // publish a stable public URI scheme, so plain text stays readable by
+    // any generic QR reader.
+    final payload = 'Send money to $method $number (Send Money)';
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$method Send Money'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(number, style: TextStyle(fontSize: 12, color: kFg54)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Colors.white,
+              child: QrImageView(data: payload, size: 200),
+            ),
+            const SizedBox(height: 12),
+            Text("Scan and send manually — this isn't an automatic payment link.",
+                style: TextStyle(fontSize: 11, color: kFg38), textAlign: TextAlign.center),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close'))],
+      ),
+    );
+  }
+
   Widget _buildDeposits(List<MealDeposit>? deposits) {
     if (deposits == null) return const Center(child: CircularProgressIndicator(color: kCyan));
+    final bkash = _paymentInfo?.bkashNumber;
+    final nagad = _paymentInfo?.nagadNumber;
+    final payButtons = (bkash == null && nagad == null)
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Wrap(spacing: 8, children: [
+              if (bkash != null)
+                OutlinedButton.icon(
+                  onPressed: () => _showPaymentQR('bKash', bkash),
+                  icon: const Icon(Icons.qr_code, size: 16),
+                  label: const Text('bKash QR', style: TextStyle(fontSize: 12)),
+                ),
+              if (nagad != null)
+                OutlinedButton.icon(
+                  onPressed: () => _showPaymentQR('Nagad', nagad),
+                  icon: const Icon(Icons.qr_code, size: 16),
+                  label: const Text('Nagad QR', style: TextStyle(fontSize: 12)),
+                ),
+            ]),
+          );
     if (deposits.isEmpty) {
-      return Center(child: Text('💰  No deposits this month', style: TextStyle(color: kFg38)));
+      return Column(children: [
+        ?payButtons,
+        Expanded(child: Center(child: Text('💰  No deposits this month', style: TextStyle(color: kFg38)))),
+      ]);
     }
-    return ListView.separated(
+    return Column(children: [
+      ?payButtons,
+      Expanded(
+        child: ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
       itemCount: deposits.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -737,7 +797,9 @@ class _MealLedgerScreenState extends State<MealLedgerScreen> {
           ),
         );
       },
-    );
+        ),
+      ),
+    ]);
   }
 
   Widget _buildExpenses(List<MealExpense>? expenses) {

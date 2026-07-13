@@ -1,13 +1,31 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFamily } from '../hooks/useFamily';
+import { useTransactions } from '../hooks/useTransactions';
 import { useEntity } from '../context/EntityContext';
-import { Users, Plus, Edit2, Trash2, User } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, User, Wallet } from 'lucide-react';
+
+const fmt = (n) => `৳${Number(n || 0).toLocaleString()}`;
 
 export default function FamilyMembers() {
   const { members, loading, addMember, updateMember, deleteMember } = useFamily();
+  const { transactions } = useTransactions();
   const { currentEntity } = useEntity();
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  // This month's expense spend attributed to each member (transactions.family_member_id, v30)
+  const now = new Date();
+  const memberSpend = useMemo(() => {
+    const totals = {};
+    transactions.forEach(t => {
+      if (t.type !== 'expense' || !t.family_member_id) return;
+      const d = new Date(t.date);
+      if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
+      totals[t.family_member_id] = (totals[t.family_member_id] || 0) + Number(t.amount);
+    });
+    return totals;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions]);
 
   const initialForm = {
     name: '',
@@ -120,6 +138,12 @@ export default function FamilyMembers() {
             <p className="text-pink-400 text-sm font-medium capitalize mt-0.5">{member.relationship}</p>
             {member.date_of_birth && (
               <p className="text-white/40 text-xs mt-2">{calculateAge(member.date_of_birth)} years old</p>
+            )}
+            {memberSpend[member.id] > 0 && (
+              <div className="flex items-center gap-1.5 text-white/50 text-xs mt-3 bg-white/5 rounded-lg px-3 py-1.5">
+                <Wallet size={12} />
+                {fmt(memberSpend[member.id])} this month
+              </div>
             )}
           </div>
         ))}

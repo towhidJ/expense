@@ -21,6 +21,7 @@ class InvestmentsScreen extends StatefulWidget {
 
 class _InvestmentsScreenState extends State<InvestmentsScreen> {
   List<Investment>? _investments;
+  final Map<String, List<InvestmentContribution>> _contributions = {};
 
   @override
   void initState() {
@@ -33,11 +34,130 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
     if (mounted) setState(() => _investments = inv);
   }
 
+  double? _xirrFor(Investment inv) {
+    final rows = _contributions[inv.id];
+    if (rows == null || rows.length < 2) return null;
+    return calculateXIRR(inv.currentValue, rows);
+  }
+
+  Future<void> _openHistory(Investment inv) async {
+    var rows = _contributions[inv.id] ?? await widget.state.fetchInvestmentContributions(inv.id);
+    _contributions[inv.id] = rows;
+    if (!mounted) return;
+    setState(() {});
+
+    final amount = TextEditingController();
+    var type = 'contribution';
+    var pickedDate = DateTime.now();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${inv.name} — Contribution History', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('At least 2 entries give an accurate XIRR; until then the CAGR estimate is used.',
+                    style: TextStyle(fontSize: 11, color: kFg38)),
+                const SizedBox(height: 12),
+                ...rows.map((c) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text('${c.date.day}/${c.date.month}/${c.date.year}', style: const TextStyle(fontSize: 13)),
+                      subtitle: Text(c.type, style: TextStyle(fontSize: 11, color: kFg38)),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(
+                          '${c.type == 'withdrawal' ? '−' : '+'}${taka(c.amount)}',
+                          style: TextStyle(color: c.type == 'withdrawal' ? kOrange : kEmerald, fontWeight: FontWeight.w600),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, size: 15, color: kFg24),
+                          onPressed: () async {
+                            await widget.state.deleteInvestmentContribution(c.id);
+                            rows = await widget.state.fetchInvestmentContributions(inv.id);
+                            _contributions[inv.id] = rows;
+                            setSheet(() {});
+                            if (mounted) setState(() {});
+                          },
+                        ),
+                      ]),
+                    )),
+                if (rows.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text('No contributions logged yet.', style: TextStyle(fontSize: 12, color: kFg38))),
+                const Divider(),
+                Row(children: [
+                  Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text('${pickedDate.day}/${pickedDate.month}/${pickedDate.year}', style: const TextStyle(fontSize: 13)),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: sheetContext, initialDate: pickedDate,
+                          firstDate: DateTime(2000), lastDate: DateTime.now(),
+                        );
+                        if (picked != null) setSheet(() => pickedDate = picked);
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 110,
+                    child: TextField(
+                      controller: amount,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(labelText: 'Amount'),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: type,
+                      dropdownColor: kCard,
+                      items: const [
+                        DropdownMenuItem(value: 'contribution', child: Text('Contribution')),
+                        DropdownMenuItem(value: 'withdrawal', child: Text('Withdrawal')),
+                      ],
+                      onChanged: (v) => setSheet(() => type = v ?? 'contribution'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    style: FilledButton.styleFrom(backgroundColor: kCyan),
+                    onPressed: () async {
+                      final amt = double.tryParse(amount.text.trim());
+                      if (amt == null || amt <= 0) return;
+                      await widget.state.addInvestmentContribution(inv.id, date: pickedDate, amount: amt, type: type);
+                      amount.clear();
+                      rows = await widget.state.fetchInvestmentContributions(inv.id);
+                      _contributions[inv.id] = rows;
+                      setSheet(() {});
+                      if (mounted) setState(() {});
+                    },
+                    child: const Text('Add'),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openForm({Investment? edit}) async {
     final name = TextEditingController(text: edit?.name ?? '');
     final invested = TextEditingController(text: edit == null ? '' : edit.investedAmount.toString());
     final current = TextEditingController(text: edit == null ? '' : edit.currentValue.toString());
     String type = edit?.type ?? 'stocks';
+    DateTime purchaseDate = edit?.purchaseDate ?? DateTime.now();
 
     final ok = await showModalBottomSheet<bool>(
       context: context,
@@ -75,7 +195,24 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Current Value (৳)'),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today, size: 18, color: kCyan),
+                  title: const Text('Purchase Date', style: TextStyle(fontSize: 13.5)),
+                  subtitle: Text('${purchaseDate.day}/${purchaseDate.month}/${purchaseDate.year}',
+                      style: TextStyle(fontSize: 12, color: kFg38)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: sheetContext,
+                      initialDate: purchaseDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) setSheet(() => purchaseDate = picked);
+                  },
+                ),
+                const SizedBox(height: 8),
                 GradientButton(
                   label: edit == null ? 'Add Investment' : 'Save',
                   onPressed: () {
@@ -101,6 +238,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
         type: type,
         investedAmount: double.parse(invested.text.trim()),
         currentValue: double.parse(current.text.trim()),
+        purchaseDate: purchaseDate,
       );
       _load();
     } catch (e) {
@@ -181,7 +319,22 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
                                           fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
                                   Text('${up ? '+' : ''}${taka(inv.profitLoss)} (${inv.roi}%)',
                                       style: TextStyle(fontSize: 11, color: up ? kEmerald : kRed)),
+                                  Builder(builder: (_) {
+                                    final xirr = _xirrFor(inv);
+                                    final ret = xirr ?? inv.cagr;
+                                    if (ret == null) return const SizedBox.shrink();
+                                    return Text(
+                                      '${xirr != null ? 'XIRR' : 'CAGR'} ${ret >= 0 ? '+' : ''}${ret.toStringAsFixed(1)}%'
+                                      '${xirr == null && inv.type == 'dps' ? ' ~' : ''}',
+                                      style: TextStyle(fontSize: 10, color: kFg38),
+                                    );
+                                  }),
                                 ],
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.history, size: 18, color: kFg38),
+                                tooltip: 'Contribution history',
+                                onPressed: () => _openHistory(inv),
                               ),
                               PopupMenuButton<String>(
                                 color: kCard,

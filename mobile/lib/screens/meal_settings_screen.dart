@@ -34,6 +34,10 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
   TimeOfDay? _cutoff; // meal request deadline, null = none
   bool _busy = false;
 
+  final _bkash = TextEditingController();
+  final _nagad = TextEditingController();
+  bool _busyPay = false;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +64,34 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
       });
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+    try {
+      final info = await state.fetchMealPaymentInfo(groupId);
+      if (!mounted) return;
+      setState(() {
+        _bkash.text = info?.bkashNumber ?? '';
+        _nagad.text = info?.nagadNumber ?? '';
+      });
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _savePayment() async {
+    setState(() => _busyPay = true);
+    try {
+      await state.updateMealPaymentInfo(
+        groupId,
+        bkashNumber: _bkash.text.trim().isEmpty ? null : _bkash.text.trim(),
+        nagadNumber: _nagad.text.trim().isEmpty ? null : _nagad.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment info saved.')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _busyPay = false);
     }
   }
 
@@ -246,6 +278,39 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
                           ),
                           const SizedBox(height: 8),
                           GradientButton(label: 'Save Settings', busy: _busy, onPressed: _save),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            const Icon(Icons.qr_code, size: 18, color: kCyan),
+                            const SizedBox(width: 8),
+                            const Text('bKash / Nagad Payment', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold)),
+                          ]),
+                          const SizedBox(height: 4),
+                          Text('Members see a QR to scan when paying a deposit — just a number, no payment gateway.',
+                              style: TextStyle(fontSize: 11, color: kFg38)),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _bkash,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(labelText: 'bKash number'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _nagad,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(labelText: 'Nagad number'),
+                          ),
+                          const SizedBox(height: 12),
+                          GradientButton(label: 'Save Payment Info', busy: _busyPay, onPressed: _savePayment),
                         ],
                       ),
                     ),

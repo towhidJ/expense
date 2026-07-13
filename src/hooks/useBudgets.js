@@ -16,7 +16,7 @@ export function useBudgets() {
     const y = year || new Date().getFullYear();
     const { data, error } = await supabase
       .from('budgets')
-      .select('*, categories(name, icon, color)')
+      .select('*, categories(name, icon, color), family_members(name)')
       .eq('user_id', user.id)
       .eq('entity_id', currentEntity.id)
       .eq('month', m)

@@ -14,7 +14,7 @@ import {
   MealSummaryPage, MealDailyPage, MealDepositsPage, MealExpensesPage,
   MealDutyPage, MealMembersPage, MealSettingsPage, MealGroupsPage,
   MealRequestsPage, MealNoticesPage, MealShoppingPage, MealSharedBillsPage,
-  MealCalendarPage, MealNotificationsPage
+  MealCalendarPage, MealNotificationsPage, MealReportsPage, MealStockPage
 } from './pages/meals/MealPages';
 import Reports from './pages/Reports';
 import Budgets from './pages/Budgets';
@@ -29,6 +29,8 @@ import FamilyMembers from './pages/FamilyMembers';
 import Recurring from './pages/Recurring';
 import Categories from './pages/Categories';
 import Admin from './pages/Admin';
+import Alerts from './pages/Alerts';
+import ImportTransactions from './pages/ImportTransactions';
 
 function App() {
   return (
@@ -48,6 +50,7 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="transactions" element={<Transactions />} />
+                <Route path="import" element={<ImportTransactions />} />
                 <Route path="bazar" element={<Bazar />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="budgets" element={<Budgets />} />
@@ -61,6 +64,7 @@ function App() {
                 <Route path="categories" element={<Categories />} />
                 <Route path="goals" element={<Goals />} />
                 <Route path="savings" element={<Savings />} />
+                <Route path="alerts" element={<Alerts />} />
                 <Route path="admin" element={<Admin />} />
               </Route>
               {/* Meal workspace: its own layout + sidebar, separate from the expense tracker */}
@@ -85,6 +89,8 @@ function App() {
                 <Route path="notices" element={<MealNoticesPage />} />
                 <Route path="notifications" element={<MealNotificationsPage />} />
                 <Route path="duty" element={<MealDutyPage />} />
+                <Route path="stock" element={<MealStockPage />} />
+                <Route path="reports" element={<MealReportsPage />} />
                 <Route path="members" element={<MealMembersPage />} />
                 <Route path="settings" element={<MealSettingsPage />} />
                 <Route path="groups" element={<MealGroupsPage />} />

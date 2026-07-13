@@ -46,7 +46,8 @@ export function useTransactions() {
         p_type: transaction.type,
         p_amount: transaction.amount,
         p_date: transaction.date,
-        p_description: transaction.description || ''
+        p_description: transaction.description || '',
+        p_family_member_id: transaction.family_member_id || null
       });
       if (error) throw error;
       newId = data; // process_transaction returns the new transaction id
@@ -74,7 +75,8 @@ export function useTransactions() {
       p_type: updates.type,
       p_amount: updates.amount,
       p_date: updates.date,
-      p_description: updates.description || ''
+      p_description: updates.description || '',
+      p_family_member_id: updates.family_member_id || null
     });
     if (error) throw error;
     await Promise.all([fetchTransactions(), fetchAccounts()]);
@@ -90,9 +92,24 @@ export function useTransactions() {
     await Promise.all([fetchTransactions(), fetchAccounts()]);
   };
 
+  // Bank statement CSV import (v31) — one call, one DB transaction; rows is
+  // [{account_id, category_id, asset_id, type, amount, date, description}].
+  const importTransactionsBulk = async (rows) => {
+    const { data, error } = await supabase.rpc('process_transactions_bulk', {
+      p_entity_id: currentEntity.id,
+      p_rows: rows
+    });
+    if (error) throw error;
+    await Promise.all([fetchTransactions(), fetchAccounts()]);
+    return data || [];
+  };
+
   useEffect(() => {
     if (user) fetchTransactions();
   }, [user, fetchTransactions]);
 
-  return { transactions, loading, fetchTransactions, addTransaction, updateTransaction, deleteTransaction };
+  return {
+    transactions, loading, fetchTransactions, addTransaction, updateTransaction, deleteTransaction,
+    importTransactionsBulk
+  };
 }

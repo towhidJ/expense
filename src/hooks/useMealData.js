@@ -23,6 +23,9 @@ export function useMealData(groupId, year, month) {
   const [sharedExpenses, setSharedExpenses] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [stockItems, setStockItems] = useState([]);
+  const [rotationOrders, setRotationOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const start = `${year}-${pad(month)}-01`;
@@ -214,19 +217,52 @@ export function useMealData(groupId, year, month) {
     setSummary(data || null);
   }, [groupId, year, month]);
 
+  // bKash/Nagad payment info (v23) — one row per group, may not exist yet
+  const fetchPaymentInfo = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_group_payment_info').select('*').eq('group_id', groupId).maybeSingle();
+    if (error) console.error('Error fetching payment info:', error);
+    setPaymentInfo(data || null);
+  }, [groupId]);
+
+  // Stock/inventory tracker (v27)
+  const fetchStockItems = useCallback(async () => {
+    if (!groupId) return;
+    const { data, error } = await supabase
+      .from('meal_stock_items').select('*').eq('group_id', groupId).order('name', { ascending: true });
+    if (error) console.error('Error fetching stock items:', error);
+    setStockItems(data || []);
+  }, [groupId]);
+
+  // Duty rotation order (v26)
+  const fetchRotationOrders = useCallback(async () => {
+    if (!groupId || dutyTypes.length === 0) { setRotationOrders([]); return; }
+    const { data, error } = await supabase
+      .from('meal_duty_rotation_order')
+      .select('*')
+      .in('duty_type_id', dutyTypes.map(t => t.id))
+      .order('sort_order', { ascending: true });
+    if (error) console.error('Error fetching rotation order:', error);
+    setRotationOrders(data || []);
+  }, [groupId, dutyTypes]);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     await Promise.all([
       fetchGroup(), fetchMembers(), fetchEntries(), fetchDeposits(),
       fetchExpenses(), fetchDutyTypes(), fetchDutyAssignments(),
       fetchAdvances(), fetchHolidays(), fetchRequests(), fetchNotices(),
-      fetchShopping(), fetchShared(), fetchNotifications(), fetchSummary()
+      fetchShopping(), fetchShared(), fetchNotifications(), fetchSummary(),
+      fetchPaymentInfo(), fetchStockItems()
     ]);
     setLoading(false);
   }, [fetchGroup, fetchMembers, fetchEntries, fetchDeposits, fetchExpenses,
       fetchDutyTypes, fetchDutyAssignments, fetchAdvances, fetchHolidays,
       fetchRequests, fetchNotices, fetchShopping, fetchShared,
-      fetchNotifications, fetchSummary]);
+      fetchNotifications, fetchSummary, fetchPaymentInfo, fetchStockItems]);
+
+  useEffect(() => { fetchRotationOrders(); }, [fetchRotationOrders]);
 
   useEffect(() => {
     fetchAll();
@@ -565,6 +601,25 @@ export function useMealData(groupId, year, month) {
     await fetchDutyAssignments();
   };
 
+  // ---- Auto duty rotation (manager only, enforced by RPC — v26) ----
+
+  const setRotationOrder = async (dutyTypeId, memberIds) => {
+    const { error } = await supabase.rpc('set_duty_rotation_order', {
+      p_duty_type_id: dutyTypeId, p_member_ids: memberIds
+    });
+    if (error) throw error;
+    await fetchRotationOrders();
+  };
+
+  const generateDutyRotation = async (dutyTypeId, startDate, days) => {
+    const { data, error } = await supabase.rpc('generate_duty_rotation', {
+      p_duty_type_id: dutyTypeId, p_start_date: startDate, p_days: days
+    });
+    if (error) throw error;
+    await fetchDutyAssignments();
+    return data || [];
+  };
+
   // ---- Members ----
 
   const respondJoinRequest = async (memberId, approve) => {
@@ -606,10 +661,75 @@ export function useMealData(groupId, year, month) {
     return data;
   };
 
+  // ---- bKash/Nagad payment info (manager only, enforced by RLS — v23) ----
+
+  const updatePaymentInfo = async ({ bkash_number, nagad_number }) => {
+    const { error } = await supabase.from('meal_group_payment_info').upsert(
+      { group_id: groupId, bkash_number: bkash_number || null, nagad_number: nagad_number || null, updated_at: new Date().toISOString() },
+      { onConflict: 'group_id' }
+    );
+    if (error) throw error;
+    await fetchPaymentInfo();
+  };
+
+  // ---- Trend charts + item price history (read-only RPCs — v24, v25) ----
+
+  const fetchTrend = async (monthsBack = 6) => {
+    const { data, error } = await supabase.rpc('get_meal_trend', {
+      p_group_id: groupId, p_months_back: monthsBack
+    });
+    if (error) throw error;
+    return data || [];
+  };
+
+  const fetchItemNames = async () => {
+    const { data, error } = await supabase.rpc('get_meal_item_names', { p_group_id: groupId });
+    if (error) throw error;
+    return (data || []).map(r => r.name);
+  };
+
+  const fetchItemPriceHistory = async (itemName) => {
+    const { data, error } = await supabase.rpc('get_meal_item_price_history', {
+      p_group_id: groupId, p_item_name: itemName
+    });
+    if (error) throw error;
+    return data || [];
+  };
+
+  // ---- Stock/inventory tracker (any member; delete = manager — v27) ----
+
+  const addStockItem = async ({ name, quantity, unit, low_stock_threshold }) => {
+    const { error } = await supabase.from('meal_stock_items').insert({
+      group_id: groupId, name, quantity: Number(quantity) || 0,
+      unit: unit || null, low_stock_threshold: low_stock_threshold === '' || low_stock_threshold == null ? null : Number(low_stock_threshold)
+    });
+    if (error) throw error;
+    await fetchStockItems();
+  };
+
+  const adjustStock = async (id, delta) => {
+    const { error } = await supabase.rpc('adjust_meal_stock', { p_stock_id: id, p_delta: delta });
+    if (error) throw error;
+    await fetchStockItems();
+  };
+
+  const updateStockItem = async (id, patch) => {
+    const { error } = await supabase.from('meal_stock_items').update(patch).eq('id', id);
+    if (error) throw error;
+    await fetchStockItems();
+  };
+
+  const deleteStockItem = async (id) => {
+    const { error } = await supabase.from('meal_stock_items').delete().eq('id', id);
+    if (error) throw error;
+    await fetchStockItems();
+  };
+
   return {
     group, members, entries, deposits, expenses,
     dutyTypes, dutyAssignments, advances, holidays, requests, notices,
     shoppingItems, sharedExpenses, notifications, summary, loading,
+    paymentInfo, stockItems, rotationOrders,
     fetchAll,
     upsertEntry,
     addDeposit, updateDeposit, deleteDeposit,
@@ -623,8 +743,10 @@ export function useMealData(groupId, year, month) {
     createSharedExpense, toggleSharePaid, deleteSharedExpense,
     markNotificationsRead, deleteNotification,
     addDutyType, updateDutyType, deleteDutyType,
-    assignDuty, removeDutyAssignment,
+    assignDuty, removeDutyAssignment, setRotationOrder, generateDutyRotation,
     respondJoinRequest, removeMember, setMemberRole,
-    updateGroup, regenerateCode
+    updateGroup, regenerateCode,
+    updatePaymentInfo, fetchTrend, fetchItemNames, fetchItemPriceHistory,
+    addStockItem, adjustStock, updateStockItem, deleteStockItem
   };
 }

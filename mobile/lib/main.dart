@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_state.dart';
 import 'config.dart';
+import 'push_notifications.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
 import 'theme.dart';
@@ -11,6 +12,7 @@ import 'theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  await initFirebase();
   await loadThemeMode();
   runApp(const ExpenseApp());
 }
@@ -45,6 +47,7 @@ class _AuthGateState extends State<AuthGate> {
   final AppState _state = AppState();
   bool? _lockEnabled; // null = still reading prefs
   bool _unlocked = false;
+  bool _pushRegistered = false;
 
   @override
   void initState() {
@@ -60,7 +63,16 @@ class _AuthGateState extends State<AuthGate> {
       stream: supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
         final session = supabase.auth.currentSession;
-        if (session == null) return const LoginScreen();
+        if (session == null) {
+          _pushRegistered = false;
+          return const LoginScreen();
+        }
+        if (!_pushRegistered) {
+          _pushRegistered = true;
+          // Fire-and-forget: registerPushToken already swallows its own
+          // errors, so a denied/unavailable permission never blocks login.
+          registerPushToken();
+        }
         if (_lockEnabled == null) {
           return Scaffold(body: Center(child: CircularProgressIndicator(color: kCyan)));
         }

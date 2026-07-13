@@ -3,7 +3,7 @@ import { useMeal } from '../../context/MealContext';
 import {
   UtensilsCrossed, LayoutDashboard, CalendarDays, PiggyBank, ShoppingBasket,
   ClipboardList, Users, Settings, ChevronLeft, ChevronRight, X, ArrowLeftRight,
-  CalendarClock, Megaphone, ListTodo, Receipt, CalendarRange, Bell
+  CalendarClock, Megaphone, ListTodo, Receipt, CalendarRange, Bell, TrendingUp, Package
 } from 'lucide-react';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -21,6 +21,8 @@ const navItems = [
   { to: '/meals/notices', icon: Megaphone, label: 'Notice Board' },
   { to: '/meals/notifications', icon: Bell, label: 'Notifications' },
   { to: '/meals/duty', icon: ClipboardList, label: 'Duty Roster' },
+  { to: '/meals/stock', icon: Package, label: 'Stock' },
+  { to: '/meals/reports', icon: TrendingUp, label: 'Reports' },
   { to: '/meals/members', icon: Users, label: 'Members' },
   { to: '/meals/settings', icon: Settings, label: 'Settings' }
 ];

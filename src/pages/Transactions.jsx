@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import { useAttachments } from '../hooks/useAttachments';
@@ -6,11 +7,12 @@ import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
 import VoucherModal from '../components/VoucherModal';
 import { useEntity } from '../context/EntityContext';
-import { Plus, Search, CalendarDays } from 'lucide-react';
+import { Plus, Search, CalendarDays, Upload } from 'lucide-react';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function Transactions() {
+  const navigate = useNavigate();
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
   const { uploadMany } = useAttachments();
@@ -76,12 +78,20 @@ export default function Transactions() {
           <h1 className="text-2xl font-bold text-white">Transactions</h1>
           <p className="text-white/40 text-sm mt-1">Manage your income and expenses</p>
         </div>
-        <button
-          onClick={() => { setEditData(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Transaction
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/import')}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white text-sm font-medium transition-all"
+          >
+            <Upload className="w-4 h-4" /> Import CSV
+          </button>
+          <button
+            onClick={() => { setEditData(null); setShowForm(true); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add Transaction
+          </button>
+        </div>
       </div>
 
       {/* Summary */}

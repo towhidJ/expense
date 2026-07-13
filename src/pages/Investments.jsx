@@ -1,11 +1,31 @@
-import { useState } from 'react';
-import { useInvestments } from '../hooks/useInvestments';
-import { TrendingUp, Plus, Edit2, Trash2, LineChart, Bitcoin, Building2, Briefcase } from 'lucide-react';
+import { useState, Fragment } from 'react';
+import { useInvestments, calculateCAGR, calculateXIRR } from '../hooks/useInvestments';
+import ContributionHistory from '../components/ContributionHistory';
+import { TrendingUp, Plus, Edit2, Trash2, LineChart, Bitcoin, Building2, Briefcase, Info, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Investments() {
-  const { investments, loading, addInvestment, updateInvestment, deleteInvestment } = useInvestments();
+  const {
+    investments, loading, addInvestment, updateInvestment, deleteInvestment,
+    fetchContributions, addContribution, deleteContribution
+  } = useInvestments();
   const [isAdding, setIsAdding] = useState(false);
   const [editingInvestment, setEditingInvestment] = useState(null);
+  const [expanded, setExpanded] = useState(null); // investment id, or null
+  const [contributions, setContributions] = useState({}); // { [investmentId]: rows }
+
+  const toggleExpand = async (inv) => {
+    if (expanded === inv.id) { setExpanded(null); return; }
+    setExpanded(inv.id);
+    if (!contributions[inv.id]) {
+      const rows = await fetchContributions(inv.id);
+      setContributions(c => ({ ...c, [inv.id]: rows }));
+    }
+  };
+
+  const refreshContributions = async (investmentId) => {
+    const rows = await fetchContributions(investmentId);
+    setContributions(c => ({ ...c, [investmentId]: rows }));
+  };
 
   const initialForm = {
     name: '',
@@ -154,21 +174,28 @@ export default function Investments() {
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Current Value</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Profit/Loss</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">ROI</th>
+                <th className="text-right py-4 px-5 text-white/60 font-medium">CAGR</th>
                 <th className="text-right py-4 px-5 text-white/60 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {investments.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-12 text-white/40">
+                  <td colSpan="8" className="text-center py-12 text-white/40">
                     <TrendingUp className="mx-auto mb-3 opacity-20" size={32} />
                     No investments found. Start building your portfolio!
                   </td>
                 </tr>
               ) : investments.map(inv => {
                 const isProfitable = inv.profit_loss >= 0;
+                const cagr = calculateCAGR(inv);
+                const rows = contributions[inv.id];
+                const xirr = rows && rows.length >= 2 ? calculateXIRR(inv, rows) : null;
+                const returnPct = xirr != null ? xirr : cagr;
+                const isFullXirr = xirr != null;
                 return (
-                  <tr key={inv.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <Fragment key={inv.id}>
+                  <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#12122a] flex items-center justify-center">
@@ -193,7 +220,24 @@ export default function Investments() {
                       {isProfitable ? '+' : ''}{inv.roi}%
                     </td>
                     <td className="py-4 px-5 text-right">
+                      {returnPct == null ? (
+                        <button onClick={() => toggleExpand(inv)} className="text-white/30 hover:text-cyan-400 text-xs underline">Add history</button>
+                      ) : (
+                        <button onClick={() => toggleExpand(inv)} className={`inline-flex items-center gap-1 font-medium hover:underline ${returnPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {returnPct >= 0 ? '+' : ''}{returnPct.toFixed(2)}%
+                          {!isFullXirr && inv.type === 'dps' && (
+                            <span title="Approximate — DPS is a recurring contribution, not a lump sum, so this treats the whole balance as invested on the purchase date. Add contribution history below for a full XIRR.">
+                              <Info size={12} className="text-white/30" />
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    </td>
+                    <td className="py-4 px-5 text-right">
                       <div className="flex justify-end gap-2">
+                        <button onClick={() => toggleExpand(inv)} className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/5" title="Contribution history">
+                          {expanded === inv.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
                         <button onClick={() => { setEditingInvestment(inv); setForm({...inv, purchase_date: inv.purchase_date || '', notes: inv.notes || ''}); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 rounded-lg hover:bg-cyan-500/10">
                           <Edit2 size={16} />
                         </button>
@@ -203,6 +247,18 @@ export default function Investments() {
                       </div>
                     </td>
                   </tr>
+                  {expanded === inv.id && (
+                    <tr className="border-b border-white/5 bg-white/[0.015]">
+                      <td colSpan="8" className="py-4 px-5">
+                        <ContributionHistory
+                          contributions={rows || []}
+                          onAdd={async (payload) => { await addContribution(inv.id, payload); await refreshContributions(inv.id); }}
+                          onDelete={async (id) => { await deleteContribution(id); await refreshContributions(inv.id); }}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>

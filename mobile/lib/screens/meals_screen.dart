@@ -15,6 +15,8 @@ import 'meal_shopping_screen.dart';
 import 'meal_shared_bills_screen.dart';
 import 'meal_calendar_screen.dart';
 import 'meal_notifications_screen.dart';
+import 'meal_stock_screen.dart';
+import 'meal_trends_screen.dart';
 
 const kMonthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -606,6 +608,12 @@ class _MealsScreenState extends State<MealsScreen> {
                 _divider(),
                 _moreTile(Icons.calendar_month_outlined, 'Meal Calendar', 'The whole month at a glance', kOrange,
                     () => _push(MealCalendarScreen(state: state, membership: active, year: _year, month: _month))),
+                _divider(),
+                _moreTile(Icons.inventory_2_outlined, 'Stock', "What's in the pantry", kEmerald,
+                    () => _push(MealStockScreen(state: state, membership: active, isManager: _isManager))),
+                _divider(),
+                _moreTile(Icons.trending_up, 'Reports', 'Trends and item price history', kCyan,
+                    () => _push(MealTrendsScreen(state: state, membership: active))),
                 _divider(),
                 _moreTile(Icons.campaign_outlined, 'Notice Board', 'Announcements for the mess', kCyan,
                     () => _push(MealNoticesScreen(state: state, membership: active, isManager: _isManager))),

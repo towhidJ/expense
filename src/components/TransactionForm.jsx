@@ -3,17 +3,20 @@ import { X, Split } from 'lucide-react';
 import { useAssets } from '../hooks/useAssets';
 import { useAccounts } from '../context/AccountContext';
 import { useAttachments } from '../hooks/useAttachments';
+import { useFamily } from '../hooks/useFamily';
 import DocumentUpload from './DocumentUpload';
 
 export default function TransactionForm({ isOpen, onClose, onSubmit, categories, editData }) {
   const { assets } = useAssets();
   const { accounts } = useAccounts();
   const { fetchAttachments, deleteAttachment } = useAttachments();
+  const { members: familyMembers } = useFamily();
   const [form, setForm] = useState({
     type: 'expense',
     category_id: '',
     account_id: '',
     asset_id: '',
+    family_member_id: '',
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0]
@@ -34,6 +37,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
         category_id: editData.category_id,
         account_id: editData.account_id || '',
         asset_id: editData.asset_id || '',
+        family_member_id: editData.family_member_id || '',
         amount: editData.amount.toString(),
         description: editData.description || '',
         date: editData.date
@@ -46,6 +50,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
         category_id: '',
         account_id: '',
         asset_id: '',
+        family_member_id: '',
         amount: '',
         description: '',
         date: new Date().toISOString().split('T')[0]
@@ -69,7 +74,8 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
     const base = {
       ...form,
       amount: parseFloat(form.amount),
-      asset_id: form.type === 'expense' && form.asset_id ? form.asset_id : null
+      asset_id: form.type === 'expense' && form.asset_id ? form.asset_id : null,
+      family_member_id: form.family_member_id || null
     };
 
     if (split && !editData) {
@@ -180,6 +186,22 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
               ))}
             </select>
           </div>
+
+          {familyMembers && familyMembers.length > 0 && (
+            <div>
+              <label className="block text-sm text-white/50 mb-1.5">Family Member (Optional)</label>
+              <select
+                value={form.family_member_id}
+                onChange={e => setForm(f => ({ ...f, family_member_id: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
+              >
+                <option value="" className="bg-[#12122a]">Household (no member)</option>
+                {familyMembers.map(m => (
+                  <option key={m.id} value={m.id} className="bg-[#12122a]">{m.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {form.type === 'expense' && assets && assets.length > 0 && (
             <div>

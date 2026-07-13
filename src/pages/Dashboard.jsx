@@ -3,6 +3,7 @@ import { useEntity } from '../context/EntityContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import { useBudgets } from '../hooks/useBudgets';
+import { useBudgetSpend } from '../hooks/useBudgetSpend';
 import { useAccounts } from '../context/AccountContext';
 import { useAssets } from '../hooks/useAssets';
 import { useInvestments } from '../hooks/useInvestments';
@@ -129,17 +130,7 @@ export default function Dashboard() {
     return months;
   }, [transactions, currentMonth, currentYear]);
 
-  const budgetData = useMemo(() => {
-    return budgets.map(b => {
-      const spent = transactions
-        .filter(t => {
-          const d = new Date(t.date);
-          return t.type === 'expense' && t.category_id === b.category_id && d.getMonth() + 1 === b.month && d.getFullYear() === b.year;
-        })
-        .reduce((s, t) => s + t.amount, 0);
-      return { budget: b, spent };
-    });
-  }, [budgets, transactions]);
+  const budgetData = useBudgetSpend(budgets, transactions);
 
   return (
     <div className="space-y-6 animate-in">

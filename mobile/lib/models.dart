@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 class Entity {
   Entity.fromMap(Map<String, dynamic> m)
       : id = m['id'],
@@ -60,6 +62,7 @@ class Tx {
         type = m['type'] ?? 'expense',
         categoryId = m['category_id'],
         accountId = m['account_id'],
+        familyMemberId = m['family_member_id'],
         amount = (m['amount'] as num?)?.toDouble() ?? 0,
         description = m['description'] ?? '',
         date = DateTime.parse(m['date']),
@@ -70,6 +73,7 @@ class Tx {
   final String type;
   final String? categoryId;
   final String? accountId;
+  final String? familyMemberId;
   final double amount;
   final String description;
   final DateTime date;
@@ -214,7 +218,8 @@ class Investment {
         investedAmount = (m['invested_amount'] as num?)?.toDouble() ?? 0,
         currentValue = (m['current_value'] as num?)?.toDouble() ?? 0,
         roi = (m['roi'] as num?)?.toDouble() ?? 0,
-        profitLoss = (m['profit_loss'] as num?)?.toDouble() ?? 0;
+        profitLoss = (m['profit_loss'] as num?)?.toDouble() ?? 0,
+        purchaseDate = m['purchase_date'] == null ? null : DateTime.parse(m['purchase_date']);
   final String id;
   final String name;
   final String type;
@@ -222,6 +227,18 @@ class Investment {
   final double currentValue;
   final double roi;
   final double profitLoss;
+  final DateTime? purchaseDate;
+
+  /// Annualized return from the lump-sum invested_amount/current_value/
+  /// purchase_date — accurate for one-time purchases, approximate for a
+  /// recurring-contribution type like dps. Mirrors calculateCAGR in the
+  /// web app's src/hooks/useInvestments.js.
+  double? get cagr {
+    if (investedAmount <= 0 || purchaseDate == null) return null;
+    final daysHeld = DateTime.now().difference(purchaseDate!).inHours / 24;
+    if (daysHeld <= 0) return null;
+    return (math.pow(currentValue / investedAmount, 365 / daysHeld) - 1) * 100;
+  }
 }
 
 class Liability {
@@ -700,6 +717,147 @@ class MealNotification {
   final String title;
   final String body;
   final String link; // web route hint, unused on mobile
+  final bool isRead;
+  final DateTime createdAt;
+}
+
+class MealPaymentInfo {
+  MealPaymentInfo.fromMap(Map<String, dynamic> m)
+      : bkashNumber = m['bkash_number'],
+        nagadNumber = m['nagad_number'];
+  final String? bkashNumber;
+  final String? nagadNumber;
+}
+
+class MealStockItem {
+  MealStockItem.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        quantity = (m['quantity'] as num?)?.toDouble() ?? 0,
+        unit = m['unit'],
+        lowStockThreshold = (m['low_stock_threshold'] as num?)?.toDouble();
+  final String id;
+  final String name;
+  final double quantity;
+  final String? unit;
+  final double? lowStockThreshold;
+
+  bool get isLow => lowStockThreshold != null && quantity <= lowStockThreshold!;
+}
+
+class MealDutyRotationOrder {
+  MealDutyRotationOrder.fromMap(Map<String, dynamic> m)
+      : dutyTypeId = m['duty_type_id'],
+        memberId = m['member_id'],
+        sortOrder = m['sort_order'] ?? 0;
+  final String dutyTypeId;
+  final String memberId;
+  final int sortOrder;
+}
+
+class MealTrendPoint {
+  MealTrendPoint.fromMap(Map<String, dynamic> m)
+      : year = m['year'],
+        month = m['month'],
+        totalBazar = (m['total_bazar'] as num?)?.toDouble() ?? 0,
+        totalFixed = (m['total_fixed'] as num?)?.toDouble() ?? 0,
+        totalMeals = (m['total_meals'] as num?)?.toDouble() ?? 0,
+        mealRate = (m['meal_rate'] as num?)?.toDouble() ?? 0,
+        topSpenderName = m['top_spender_name'],
+        topSpenderAmount = (m['top_spender_amount'] as num?)?.toDouble();
+  final int year;
+  final int month;
+  final double totalBazar;
+  final double totalFixed;
+  final double totalMeals;
+  final double mealRate;
+  final String? topSpenderName;
+  final double? topSpenderAmount;
+}
+
+class MealItemPricePoint {
+  MealItemPricePoint.fromMap(Map<String, dynamic> m)
+      : date = DateTime.parse(m['date']),
+        amount = (m['amount'] as num?)?.toDouble() ?? 0;
+  final DateTime date;
+  final double amount;
+}
+
+/// One contribution/withdrawal toward an investment (v29) — feeds XIRR.
+class InvestmentContribution {
+  InvestmentContribution.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        date = DateTime.parse(m['date']),
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        type = m['type'] ?? 'contribution';
+  final String id;
+  final DateTime date;
+  final double amount;
+  final String type; // contribution | withdrawal
+}
+
+/// Full XIRR from a cash-flow history — accurate for recurring-contribution
+/// types like dps, unlike Investment.cagr's lump-sum approximation. Newton's
+/// method, mirroring calculateXIRR in the web app's useInvestments.js.
+/// Includes a synthetic final "sell everything today" flow using
+/// currentValue so the return reflects the investment's current worth.
+double? calculateXIRR(double currentValue, List<InvestmentContribution> contributions) {
+  if (contributions.isEmpty) return null;
+  final flows = contributions
+      .map((c) => (
+            date: c.date,
+            amount: c.type == 'withdrawal' ? -c.amount.abs() : c.amount.abs(),
+          ))
+      .toList()
+    ..add((date: DateTime.now(), amount: currentValue));
+  flows.sort((a, b) => a.date.compareTo(b.date));
+
+  final t0 = flows.first.date;
+  final years = flows.map((f) => f.date.difference(t0).inHours / 24 / 365).toList();
+  double npv(double rate) {
+    var s = 0.0;
+    for (var i = 0; i < flows.length; i++) {
+      s += flows[i].amount / math.pow(1 + rate, years[i]);
+    }
+    return s;
+  }
+
+  double dnpv(double rate) {
+    var s = 0.0;
+    for (var i = 0; i < flows.length; i++) {
+      if (years[i] == 0) continue;
+      s += -years[i] * flows[i].amount / math.pow(1 + rate, years[i] + 1);
+    }
+    return s;
+  }
+
+  var rate = 0.1;
+  for (var i = 0; i < 50; i++) {
+    final d = dnpv(rate);
+    if (d.abs() < 1e-9) break;
+    final next = rate - npv(rate) / d;
+    if (!next.isFinite) return null;
+    if ((next - rate).abs() < 1e-7) { rate = next; break; }
+    rate = next;
+  }
+  return rate.isFinite ? rate * 100 : null;
+}
+
+/// Budget-overspend / bill-due alert (v28) — server-generated daily.
+class FinanceNotification {
+  FinanceNotification.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        type = m['type'] ?? '',
+        title = m['title'] ?? '',
+        body = m['body'] ?? '',
+        link = m['link'] ?? '',
+        isRead = m['is_read'] ?? false,
+        createdAt = DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now();
+  final String id;
+  final String type; // budget_overspend | bill_due
+  final String title;
+  final String body;
+  final String? link;
   final bool isRead;
   final DateTime createdAt;
 }

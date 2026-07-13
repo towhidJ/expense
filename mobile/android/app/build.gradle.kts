@@ -2,6 +2,10 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // FCM push notifications — the build FAILS without google-services.json
+    // in this directory (mobile/android/app/), downloaded from your Firebase
+    // project console (Project settings > your Android app).
+    id("com.google.gms.google-services")
 }
 
 android {
