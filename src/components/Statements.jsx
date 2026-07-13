@@ -9,7 +9,7 @@ function StatementCard({ entityName, title, subtitle, onExport, children }) {
   return (
     <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
       <div className="relative border-b border-white/10 px-6 py-5 text-center">
-        <p className="text-xs uppercase tracking-[0.2em] text-cyan-400/70">{entityName || 'ExpenseTracker'}</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-cyan-400/70">{entityName || 'TakaKhata'}</p>
         <h2 className="text-xl font-bold text-white mt-1">{title}</h2>
         <p className="text-white/40 text-xs mt-1">{subtitle}</p>
         <button

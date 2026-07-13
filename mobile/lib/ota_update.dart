@@ -99,7 +99,7 @@ Future<void> checkForUpdate(BuildContext context, {bool manual = false}) async {
   try {
     await _ota.invokeMethod('downloadAndInstall', {
       'url': url,
-      'fileName': 'ExpenseTracker-v$versionName.apk',
+      'fileName': 'TakaKhata-v$versionName.apk',
     });
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

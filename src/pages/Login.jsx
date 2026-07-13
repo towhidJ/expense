@@ -44,7 +44,7 @@ export default function Login() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-cyan-500/25 mb-4">
             <DollarSign className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">ExpenseTracker</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">TakaKhata</h1>
           <p className="text-white/40 text-sm mt-1">Manage your finances with ease</p>
         </div>
 

@@ -656,7 +656,7 @@ class _MealsScreenState extends State<MealsScreen> {
           ),
           const SizedBox(height: 16),
           Card(
-            child: _moreTile(Icons.arrow_back, 'Expense Tracker', 'Back to the finance workspace', kOrange,
+            child: _moreTile(Icons.arrow_back, 'TakaKhata', 'Back to the finance workspace', kOrange,
                 () => Navigator.pop(context)),
           ),
         ],

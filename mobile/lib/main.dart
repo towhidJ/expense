@@ -23,7 +23,7 @@ class ExpenseApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: appThemeMode,
       builder: (context, mode, _) => MaterialApp(
-        title: 'ExpenseTracker',
+        title: 'TakaKhata',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(dark: false),
         darkTheme: buildTheme(dark: true),
@@ -97,7 +97,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   Future<void> _tryUnlock() async {
     try {
       final ok = await _auth.authenticate(
-        localizedReason: 'Unlock ExpenseTracker',
+        localizedReason: 'Unlock TakaKhata',
         options: const AuthenticationOptions(stickyAuth: true),
       );
       if (ok) {
@@ -127,7 +127,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                 child: const Icon(Icons.fingerprint, size: 44, color: Colors.white),
               ),
               const SizedBox(height: 20),
-              Text('ExpenseTracker Locked',
+              Text('TakaKhata Locked',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kFg)),
               const SizedBox(height: 6),
               Text('Use your fingerprint to unlock',

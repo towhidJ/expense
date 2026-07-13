@@ -18,12 +18,16 @@ export default function Layout() {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="ml-4 text-foreground font-semibold">ExpenseTracker</span>
+          <span className="ml-4 text-foreground font-semibold">TakaKhata</span>
         </header>
 
         <main className="p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
+
+        <footer className="px-6 py-4 text-center text-xs text-muted-foreground/60">
+          Developed by Towhidul Islam
+        </footer>
       </div>
     </div>
   );

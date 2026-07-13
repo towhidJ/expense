@@ -25,7 +25,7 @@ export default function VoucherModal({ transaction: t, entityName, onClose }) {
       <div style="padding:40px 48px;">
         <div style="border:2px solid #374151;padding:28px 32px;">
           <div style="text-align:center;border-bottom:2px solid #1f2937;padding-bottom:12px;">
-            <div style="font-size:22px;font-weight:700;color:#111827;">${esc(entityName || 'ExpenseTracker')}</div>
+            <div style="font-size:22px;font-weight:700;color:#111827;">${esc(entityName || 'TakaKhata')}</div>
             <div style="font-size:11px;color:#6b7280;">Personal Finance Manager</div>
             <span style="display:inline-block;margin-top:10px;padding:5px 18px;font-size:12px;font-weight:700;color:#ffffff;background:${badge};border-radius:4px;">${voucherTitle}</span>
           </div>
@@ -74,7 +74,7 @@ export default function VoucherModal({ transaction: t, entityName, onClose }) {
         <div className="p-5">
           <div className="bg-white text-gray-900 rounded-lg p-6 shadow-inner">
             <div className="text-center border-b-2 border-gray-800 pb-3">
-              <p className="text-xl font-bold">{entityName || 'ExpenseTracker'}</p>
+              <p className="text-xl font-bold">{entityName || 'TakaKhata'}</p>
               <p className="text-[11px] text-gray-500">Personal Finance Manager</p>
               <span className={`inline-block mt-2 px-4 py-1 text-xs font-bold text-white rounded ${isDebit ? 'bg-red-600' : 'bg-green-600'}`}>
                 {voucherTitle}

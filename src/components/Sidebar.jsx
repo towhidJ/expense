@@ -6,7 +6,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
-  Pencil, Trash2, AlertTriangle
+  Pencil, Trash2, AlertTriangle, ChevronUp
 } from 'lucide-react';
 
 const navItems = [
@@ -39,6 +39,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const [wsForm, setWsForm] = useState({ name: '', type: 'personal' });
   const [wsConfirmName, setWsConfirmName] = useState('');
   const [wsSubmitting, setWsSubmitting] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -140,7 +141,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <DollarSign className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">ExpenseTracker</h1>
+              <h1 className="text-lg font-bold text-white tracking-tight">TakaKhata</h1>
               <p className="text-xs text-white/40">Finance Manager</p>
             </div>
           </div>
@@ -217,29 +218,44 @@ export default function Sidebar({ isOpen, onClose }) {
             <span className="flex-1">Meal Manager</span>
             <span className="text-[10px] uppercase tracking-wider text-emerald-400/60">Workspace</span>
           </NavLink>
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-              {user?.email?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/80 truncate">{user?.user_metadata?.full_name || 'User'}</p>
-              <p className="text-xs text-white/30 truncate">{user?.email}</p>
-            </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen(o => !o)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left hover:bg-white/5 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                {user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white/80 truncate">{user?.user_metadata?.full_name || 'User'}</p>
+                <p className="text-xs text-white/30 truncate">{user?.email}</p>
+              </div>
+              <ChevronUp className={`w-4 h-4 text-white/30 shrink-0 transition-transform duration-200 ${profileOpen ? '' : 'rotate-180'}`} />
+            </button>
+
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-[55]" onClick={() => setProfileOpen(false)} />
+                <div className="absolute left-0 right-0 bottom-full mb-2 bg-[#12122a] border border-white/10 rounded-xl shadow-2xl z-[56] overflow-hidden">
+                  <button
+                    onClick={() => { setProfileOpen(false); setPwForm({ current: '', next: '', confirm: '' }); setShowPasswordModal(true); }}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 w-full transition-colors"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Change Password
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors border-t border-white/5"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => { setPwForm({ current: '', next: '', confirm: '' }); setShowPasswordModal(true); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all w-full"
-          >
-            <KeyRound className="w-5 h-5" />
-            Change Password
-          </button>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
         </div>
       </aside>
 

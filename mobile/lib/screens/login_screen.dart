@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.attach_money, size: 34, color: Colors.white),
                 ),
                 const SizedBox(height: 14),
-                const Text('ExpenseTracker', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const Text('TakaKhata', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                 Text('Manage your finances with ease',
                     style: TextStyle(color: kFg.withValues(alpha: 0.4), fontSize: 13)),
                 const SizedBox(height: 28),

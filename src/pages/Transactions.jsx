@@ -212,7 +212,7 @@ export default function Transactions() {
       {voucherTx && (
         <VoucherModal
           transaction={voucherTx}
-          entityName={currentEntity?.name ? `${currentEntity.name} — ExpenseTracker` : 'ExpenseTracker'}
+          entityName={currentEntity?.name ? `${currentEntity.name} — TakaKhata` : 'TakaKhata'}
           onClose={() => setVoucherTx(null)}
         />
       )}

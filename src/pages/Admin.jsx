@@ -65,7 +65,7 @@ export default function Admin() {
     }
     setUploading(true);
     try {
-      const path = `v${code}/ExpenseTracker-${form.version_name.trim()}.apk`;
+      const path = `v${code}/TakaKhata-${form.version_name.trim()}.apk`;
       const { error: upErr } = await supabase.storage
         .from(BUCKET)
         .upload(path, apkFile, {

@@ -143,7 +143,7 @@ export default function MealSidebar({ isOpen, onClose }) {
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:text-cyan-400 hover:bg-white/5 transition-all"
           >
             <ArrowLeftRight className="w-[18px] h-[18px]" />
-            Expense Tracker
+            TakaKhata
           </NavLink>
         </div>
       </aside>

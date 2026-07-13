@@ -134,7 +134,7 @@ class _VoucherScreenState extends State<VoucherScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
                       children: [
-                        Text(widget.entityName.isEmpty ? 'ExpenseTracker' : widget.entityName,
+                        Text(widget.entityName.isEmpty ? 'TakaKhata' : widget.entityName,
                             textAlign: TextAlign.center,
                             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ink)),
                         const Text('Personal Finance Manager',
