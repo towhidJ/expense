@@ -31,6 +31,7 @@ class _MealDutyScreenState extends State<MealDutyScreen> {
   List<MealDutyType>? _dutyTypes;
   List<MealDutyAssignment> _assignments = [];
   List<MealGroupMember> _members = [];
+  List<MealDutyRotationOrder> _rotationOrders = [];
 
   @override
   void initState() {
@@ -53,15 +54,128 @@ class _MealDutyScreenState extends State<MealDutyScreen> {
         state.fetchMealMembers(groupId),
       ]);
       if (!mounted) return;
+      final dutyTypes = results[1] as List<MealDutyType>;
+      final rotationOrders = widget.isManager && dutyTypes.isNotEmpty
+          ? await state.fetchMealRotationOrder(dutyTypes.map((t) => t.id).toList())
+          : <MealDutyRotationOrder>[];
+      if (!mounted) return;
       setState(() {
         _group = results[0] as MealGroup?;
-        _dutyTypes = results[1] as List<MealDutyType>;
+        _dutyTypes = dutyTypes;
         _assignments = results[2] as List<MealDutyAssignment>;
         _members = results[3] as List<MealGroupMember>;
+        _rotationOrders = rotationOrders;
       });
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
+  }
+
+  List<MealDutyRotationOrder> _orderFor(String dutyTypeId) =>
+      (_rotationOrders.where((r) => r.dutyTypeId == dutyTypeId).toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
+
+  Future<void> _manageRotation(MealDutyType type) async {
+    var order = _orderFor(type.id).map((r) => r.memberId).toList();
+    var days = 7;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${type.name} — Auto Rotation', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Pick who rotates through this duty and their order.', style: TextStyle(fontSize: 11, color: kFg38)),
+                const SizedBox(height: 10),
+                ..._approvedMembers.map((m) {
+                  final idx = order.indexOf(m.id);
+                  final inRotation = idx != -1;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Checkbox(
+                      value: inRotation,
+                      activeColor: kCyan,
+                      onChanged: (_) => setSheet(() {
+                        if (inRotation) {
+                          order.remove(m.id);
+                        } else {
+                          order.add(m.id);
+                        }
+                      }),
+                    ),
+                    title: Text(m.displayName, style: const TextStyle(fontSize: 13.5)),
+                    trailing: !inRotation
+                        ? null
+                        : Row(mainAxisSize: MainAxisSize.min, children: [
+                            Text('#${idx + 1}', style: TextStyle(fontSize: 11, color: kFg38)),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_upward, size: 16),
+                              onPressed: idx == 0 ? null : () => setSheet(() {
+                                final tmp = order[idx - 1];
+                                order[idx - 1] = order[idx];
+                                order[idx] = tmp;
+                              }),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_downward, size: 16),
+                              onPressed: idx == order.length - 1 ? null : () => setSheet(() {
+                                final tmp = order[idx + 1];
+                                order[idx + 1] = order[idx];
+                                order[idx] = tmp;
+                              }),
+                            ),
+                          ]),
+                  );
+                }),
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(
+                    child: TextFormField(
+                      initialValue: '7',
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Days to fill'),
+                      onChanged: (v) => days = int.tryParse(v) ?? 7,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    style: FilledButton.styleFrom(backgroundColor: kCyan),
+                    onPressed: order.isEmpty
+                        ? null
+                        : () async {
+                            try {
+                              await state.setMealRotationOrder(type.id, order);
+                              final created = await state.generateMealDutyRotation(type.id, _weekStart, days);
+                              if (sheetContext.mounted) Navigator.pop(sheetContext);
+                              await _load();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text(created.isEmpty
+                                        ? 'No new days to fill.'
+                                        : 'Filled ${created.length} day(s).')));
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                              }
+                            }
+                          },
+                    child: const Text('Fill Duty'),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _shiftWeek(int delta) {
@@ -317,8 +431,19 @@ class _MealDutyScreenState extends State<MealDutyScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(type.name,
-                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                    Row(children: [
+                                      Expanded(
+                                        child: Text(type.name,
+                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                      ),
+                                      if (widget.isManager)
+                                        IconButton(
+                                          tooltip: 'Auto rotation',
+                                          visualDensity: VisualDensity.compact,
+                                          icon: const Icon(Icons.repeat, size: 18, color: kCyan),
+                                          onPressed: () => _manageRotation(type),
+                                        ),
+                                    ]),
                                     const SizedBox(height: 8),
                                     Wrap(
                                       spacing: 6,

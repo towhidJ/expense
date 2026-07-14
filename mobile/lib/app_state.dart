@@ -94,6 +94,7 @@ class AppState extends ChangeNotifier {
     required double amount,
     required DateTime date,
     String description = '',
+    String? familyMemberId,
   }) async {
     await supabase.rpc('process_transaction', params: {
       'p_user_id': _uid,
@@ -105,6 +106,7 @@ class AppState extends ChangeNotifier {
       'p_amount': amount,
       'p_date': _d(date),
       'p_description': description,
+      'p_family_member_id': familyMemberId,
     });
     await refreshAccounts();
   }
@@ -117,6 +119,7 @@ class AppState extends ChangeNotifier {
     required double amount,
     required DateTime date,
     String description = '',
+    String? familyMemberId,
   }) async {
     await supabase.rpc('update_transaction_with_balance', params: {
       'p_user_id': _uid,
@@ -128,8 +131,22 @@ class AppState extends ChangeNotifier {
       'p_amount': amount,
       'p_date': _d(date),
       'p_description': description,
+      'p_family_member_id': familyMemberId,
     });
     await refreshAccounts();
+  }
+
+  // v30: family members for the current entity, used by the transaction
+  // form's optional member dropdown.
+  Future<List<FamilyMember>> fetchFamilyMembers() async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('family_members')
+        .select()
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order('created_at', ascending: false);
+    return rows.map<FamilyMember>(FamilyMember.fromMap).toList();
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -509,7 +526,14 @@ class AppState extends ChangeNotifier {
     return rows.map<Investment>(Investment.fromMap).toList();
   }
 
-  Future<void> upsertInvestment({String? id, required String name, required String type, required double investedAmount, required double currentValue}) async {
+  Future<void> upsertInvestment({
+    String? id,
+    required String name,
+    required String type,
+    required double investedAmount,
+    required double currentValue,
+    DateTime? purchaseDate,
+  }) async {
     final profitLoss = currentValue - investedAmount;
     final roi = investedAmount > 0 ? double.parse((profitLoss / investedAmount * 100).toStringAsFixed(2)) : 0.0;
     final payload = {
@@ -519,6 +543,7 @@ class AppState extends ChangeNotifier {
       'current_value': currentValue,
       'profit_loss': profitLoss,
       'roi': roi,
+      'purchase_date': purchaseDate == null ? null : _d(purchaseDate),
     };
     if (id == null) {
       await supabase.from('investments').insert({...payload, 'user_id': _uid, 'entity_id': currentEntity!.id});
@@ -529,6 +554,30 @@ class AppState extends ChangeNotifier {
 
   Future<void> deleteInvestment(String id) async {
     await supabase.from('investments').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  // ---- v29: investment contribution history (full XIRR) ----
+
+  Future<List<InvestmentContribution>> fetchInvestmentContributions(String investmentId) async {
+    final rows = await supabase
+        .from('investment_contributions')
+        .select()
+        .eq('investment_id', investmentId)
+        .order('date', ascending: true);
+    return rows.map<InvestmentContribution>(InvestmentContribution.fromMap).toList();
+  }
+
+  Future<void> addInvestmentContribution(String investmentId, {
+    required DateTime date, required double amount, required String type,
+  }) async {
+    await supabase.from('investment_contributions').insert({
+      'investment_id': investmentId, 'user_id': _uid,
+      'date': _d(date), 'amount': amount, 'type': type,
+    });
+  }
+
+  Future<void> deleteInvestmentContribution(String id) async {
+    await supabase.from('investment_contributions').delete().eq('id', id);
   }
 
   // ---- Recurring ----
@@ -1224,6 +1273,143 @@ class AppState extends ChangeNotifier {
 
   Future<void> removeMealDutyAssignment(String id) async {
     await supabase.from('meal_duty_assignments').delete().eq('id', id);
+  }
+
+  // ---- Meals v26: auto duty rotation ----
+
+  Future<List<MealDutyRotationOrder>> fetchMealRotationOrder(
+      List<String> dutyTypeIds) async {
+    if (dutyTypeIds.isEmpty) return [];
+    final rows = await supabase
+        .from('meal_duty_rotation_order')
+        .select()
+        .inFilter('duty_type_id', dutyTypeIds)
+        .order('sort_order', ascending: true);
+    return rows.map<MealDutyRotationOrder>(MealDutyRotationOrder.fromMap).toList();
+  }
+
+  Future<void> setMealRotationOrder(String dutyTypeId, List<String> memberIds) async {
+    await supabase.rpc('set_duty_rotation_order', params: {
+      'p_duty_type_id': dutyTypeId,
+      'p_member_ids': memberIds,
+    });
+  }
+
+  Future<List<MealDutyAssignment>> generateMealDutyRotation(
+      String dutyTypeId, DateTime startDate, int days) async {
+    final rows = await supabase.rpc('generate_duty_rotation', params: {
+      'p_duty_type_id': dutyTypeId,
+      'p_start_date': _d(startDate),
+      'p_days': days,
+    });
+    return (rows as List)
+        .map<MealDutyAssignment>((r) => MealDutyAssignment.fromMap(Map<String, dynamic>.from(r)))
+        .toList();
+  }
+
+  // ---- Meals v23: bKash/Nagad payment info ----
+
+  Future<MealPaymentInfo?> fetchMealPaymentInfo(String groupId) async {
+    final row = await supabase
+        .from('meal_group_payment_info')
+        .select()
+        .eq('group_id', groupId)
+        .maybeSingle();
+    return row == null ? null : MealPaymentInfo.fromMap(row);
+  }
+
+  Future<void> updateMealPaymentInfo(
+      String groupId, {String? bkashNumber, String? nagadNumber}) async {
+    await supabase.from('meal_group_payment_info').upsert({
+      'group_id': groupId,
+      'bkash_number': bkashNumber,
+      'nagad_number': nagadNumber,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'group_id');
+  }
+
+  // ---- Meals v24/v25: trend charts + item price history ----
+
+  Future<List<MealTrendPoint>> fetchMealTrend(String groupId, {int monthsBack = 6}) async {
+    final rows = await supabase.rpc('get_meal_trend', params: {
+      'p_group_id': groupId,
+      'p_months_back': monthsBack,
+    });
+    return (rows as List)
+        .map<MealTrendPoint>((r) => MealTrendPoint.fromMap(Map<String, dynamic>.from(r)))
+        .toList();
+  }
+
+  Future<List<String>> fetchMealItemNames(String groupId) async {
+    final rows = await supabase.rpc('get_meal_item_names', params: {'p_group_id': groupId});
+    return (rows as List).map<String>((r) => r['name'] as String).toList();
+  }
+
+  Future<List<MealItemPricePoint>> fetchMealItemPriceHistory(
+      String groupId, String itemName) async {
+    final rows = await supabase.rpc('get_meal_item_price_history', params: {
+      'p_group_id': groupId,
+      'p_item_name': itemName,
+    });
+    return (rows as List)
+        .map<MealItemPricePoint>((r) => MealItemPricePoint.fromMap(Map<String, dynamic>.from(r)))
+        .toList();
+  }
+
+  // ---- Meals v27: stock/inventory tracker ----
+
+  Future<List<MealStockItem>> fetchMealStockItems(String groupId) async {
+    final rows = await supabase
+        .from('meal_stock_items')
+        .select()
+        .eq('group_id', groupId)
+        .order('name', ascending: true);
+    return rows.map<MealStockItem>(MealStockItem.fromMap).toList();
+  }
+
+  Future<void> addMealStockItem({
+    required String groupId,
+    required String name,
+    double quantity = 0,
+    String? unit,
+    double? lowStockThreshold,
+  }) async {
+    await supabase.from('meal_stock_items').insert({
+      'group_id': groupId,
+      'name': name,
+      'quantity': quantity,
+      'unit': unit,
+      'low_stock_threshold': lowStockThreshold,
+    });
+  }
+
+  Future<void> adjustMealStock(String id, double delta) async {
+    await supabase.rpc('adjust_meal_stock', params: {'p_stock_id': id, 'p_delta': delta});
+  }
+
+  Future<void> deleteMealStockItem(String id) async {
+    await supabase.from('meal_stock_items').delete().eq('id', id);
+  }
+
+  // ---- v28: finance alerts (budget overspend / bill due) ----
+
+  Future<List<FinanceNotification>> fetchFinanceNotifications() async {
+    final rows = await supabase
+        .from('finance_notifications')
+        .select()
+        .eq('user_id', _uid)
+        .order('created_at', ascending: false)
+        .limit(50);
+    return rows.map<FinanceNotification>(FinanceNotification.fromMap).toList();
+  }
+
+  Future<void> markFinanceNotificationsRead(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await supabase.from('finance_notifications').update({'is_read': true}).inFilter('id', ids);
+  }
+
+  Future<void> deleteFinanceNotification(String id) async {
+    await supabase.from('finance_notifications').delete().eq('id', id);
   }
 
   Future<MealMonthSummary> fetchMealMonthSummary(

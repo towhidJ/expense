@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <!-- OTA update: open the package installer for the downloaded APK -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- FCM push notifications on Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="TakaKhata"
         android:name="${applicationName}"

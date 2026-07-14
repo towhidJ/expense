@@ -16,6 +16,8 @@ import DutyRoster from '../../components/meals/DutyRoster';
 import MembersTab from '../../components/meals/MembersTab';
 import GroupSettings from '../../components/meals/GroupSettings';
 import Onboarding from '../../components/meals/Onboarding';
+import MealReports from '../../components/meals/MealReports';
+import StockTab from '../../components/meals/StockTab';
 
 // Thin pages for the /meals/* workspace routes. All state comes from
 // MealContext (group, month, data) so it survives page switches.
@@ -90,6 +92,7 @@ export function MealDepositsPage() {
       <DepositsTab
         deposits={data.deposits} members={data.members} isManager={isManager}
         addDeposit={data.addDeposit} updateDeposit={data.updateDeposit} deleteDeposit={data.deleteDeposit}
+        paymentInfo={data.paymentInfo} groupName={data.group?.name}
       />
     </div>
   );
@@ -121,6 +124,8 @@ export function MealDutyPage() {
         members={data.members} isManager={isManager} year={year} month={month}
         assignDuty={data.assignDuty} removeDutyAssignment={data.removeDutyAssignment}
         addDutyType={data.addDutyType} updateDutyType={data.updateDutyType} deleteDutyType={data.deleteDutyType}
+        rotationOrders={data.rotationOrders} setRotationOrder={data.setRotationOrder}
+        generateDutyRotation={data.generateDutyRotation}
       />
     </div>
   );
@@ -151,6 +156,7 @@ export function MealSettingsPage() {
       <GroupSettings
         group={data.group} isManager={isManager}
         updateGroup={data.updateGroup} regenerateCode={data.regenerateCode}
+        paymentInfo={data.paymentInfo} updatePaymentInfo={data.updatePaymentInfo}
       />
     </div>
   );
@@ -242,6 +248,32 @@ export function MealNotificationsPage() {
         notifications={data.notifications}
         markNotificationsRead={data.markNotificationsRead}
         deleteNotification={data.deleteNotification}
+      />
+    </div>
+  );
+}
+
+export function MealReportsPage() {
+  const { data } = useMeal();
+  if (data.loading && !data.group) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Reports" subtitle="Trends over the last few months and item price history." />
+      <MealReports fetchTrend={data.fetchTrend} fetchItemNames={data.fetchItemNames} fetchItemPriceHistory={data.fetchItemPriceHistory} />
+    </div>
+  );
+}
+
+export function MealStockPage() {
+  const { data, isManager } = useMeal();
+  if (data.loading && !data.group) return <Loading />;
+  return (
+    <div className="animate-in">
+      <PageHeader title="Stock" subtitle="What's in the pantry, so bazar doesn't over- or under-buy." />
+      <StockTab
+        stockItems={data.stockItems} isManager={isManager}
+        addStockItem={data.addStockItem} adjustStock={data.adjustStock}
+        updateStockItem={data.updateStockItem} deleteStockItem={data.deleteStockItem}
       />
     </div>
   );

@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useBudgets } from '../hooks/useBudgets';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
+import { useBudgetSpend } from '../hooks/useBudgetSpend';
+import { useFamily } from '../hooks/useFamily';
 import BudgetCard from '../components/BudgetCard';
 import { Plus, X } from 'lucide-react';
 
@@ -9,26 +11,17 @@ export default function Budgets() {
   const { budgets, loading, fetchBudgets, addBudget, deleteBudget } = useBudgets();
   const { categories } = useCategories();
   const { transactions } = useTransactions();
+  const { members: familyMembers } = useFamily();
   const [showForm, setShowForm] = useState(false);
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
-  const [form, setForm] = useState({ category_id: '', amount: '' });
+  const [form, setForm] = useState({ category_id: '', amount: '', family_member_id: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const expenseCategories = categories.filter(c => c.type === 'expense');
 
-  const budgetData = useMemo(() => {
-    return budgets.map(b => {
-      const spent = transactions
-        .filter(t => {
-          const d = new Date(t.date);
-          return t.type === 'expense' && t.category_id === b.category_id && d.getMonth() + 1 === b.month && d.getFullYear() === b.year;
-        })
-        .reduce((s, t) => s + t.amount, 0);
-      return { budget: b, spent };
-    });
-  }, [budgets, transactions]);
+  const budgetData = useBudgetSpend(budgets, transactions);
 
   const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
   const totalSpent = budgetData.reduce((s, b) => s + b.spent, 0);
@@ -37,9 +30,9 @@ export default function Budgets() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await addBudget({ ...form, amount: parseFloat(form.amount), month, year });
+      await addBudget({ ...form, amount: parseFloat(form.amount), family_member_id: form.family_member_id || null, month, year });
       setShowForm(false);
-      setForm({ category_id: '', amount: '' });
+      setForm({ category_id: '', amount: '', family_member_id: '' });
     } catch (err) {
       alert(err.message);
     }
@@ -141,6 +134,16 @@ export default function Budgets() {
                 <label className="block text-sm text-white/50 mb-1.5">Budget Amount (৳)</label>
                 <input type="number" required min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 placeholder:text-white/20" />
               </div>
+              {familyMembers.length > 0 && (
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Family Member (Optional)</label>
+                  <select value={form.family_member_id} onChange={e => setForm(f => ({ ...f, family_member_id: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none">
+                    <option value="" className="bg-[#12122a]">Household (whole family)</option>
+                    {familyMembers.map(m => <option key={m.id} value={m.id} className="bg-[#12122a]">{m.name}</option>)}
+                  </select>
+                  <p className="text-white/30 text-xs mt-1">A member-scoped budget tracks only their spend; a household budget can coexist for the same category.</p>
+                </div>
+              )}
               <p className="text-xs text-white/30">Budget for: {months[month - 1]} {year}</p>
               <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50">
                 {submitting ? 'Saving...' : 'Add Budget'}

@@ -57,6 +57,10 @@ dependencies:
   pdf: ^3.11.0
   printing: ^5.13.0
   image_picker: ^1.1.2
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.6
+  qr_flutter: ^4.1.0
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:

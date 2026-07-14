@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, PiggyBank } from 'lucide-react';
+import PaymentQR from './PaymentQR';
 
 const fmt = (n) => `৳${Number(n || 0).toLocaleString()}`;
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
-export default function DepositsTab({ deposits, members, isManager, addDeposit, updateDeposit, deleteDeposit }) {
+export default function DepositsTab({ deposits, members, isManager, addDeposit, updateDeposit, deleteDeposit, paymentInfo, groupName }) {
   const approvedMembers = members.filter(m => m.status === 'approved');
   const memberName = (id) => members.find(m => m.id === id)?.display_name || 'Unknown';
 
@@ -32,10 +33,11 @@ export default function DepositsTab({ deposits, members, isManager, addDeposit, 
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <p className="text-white/60 text-sm">
           Total deposits this month: <span className="text-emerald-400 font-semibold">{fmt(total)}</span>
         </p>
+        <PaymentQR paymentInfo={paymentInfo} groupName={groupName} amount={form.amount} />
         {isManager && (
           <button
             onClick={() => { setIsAdding(true); setEditing(null); setForm(initialForm); }}

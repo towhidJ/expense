@@ -14,7 +14,9 @@ export default function BudgetCard({ budget, spent }) {
             <span className="text-xl">{budget.categories?.icon || '📁'}</span>
             <div>
               <p className="text-sm font-medium">{budget.categories?.name || 'Category'}</p>
-              <p className="text-xs text-muted-foreground">Monthly Budget</p>
+              <p className="text-xs text-muted-foreground">
+                {budget.family_members?.name ? `${budget.family_members.name}'s Budget` : 'Monthly Budget'}
+              </p>
             </div>
           </div>
           <div className="text-right">

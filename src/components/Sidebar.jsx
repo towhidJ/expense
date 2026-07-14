@@ -3,10 +3,11 @@ import { NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
-  Pencil, Trash2, AlertTriangle, ChevronUp
+  Pencil, Trash2, AlertTriangle, ChevronUp, Bell
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
   { to: '/reports', icon: PieChart, label: 'Reports' },
   { to: '/budgets', icon: Wallet, label: 'Budgets' },
+  { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/goals', icon: Target, label: 'Goals' },
   { to: '/savings', icon: PiggyBank, label: 'Savings' },
   { to: '/family', icon: Users, label: 'Family' },
@@ -31,6 +33,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { entities, currentEntity, switchEntity, addEntity, updateEntity, deleteEntity } = useEntity();
+  const { notifications: financeNotifications } = useFinanceNotifications();
+  const unreadAlerts = financeNotifications.filter(n => !n.is_read).length;
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
@@ -202,7 +206,12 @@ export default function Sidebar({ isOpen, onClose }) {
               }
             >
               <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {label === 'Alerts' && unreadAlerts > 0 && (
+                <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center">
+                  {unreadAlerts}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

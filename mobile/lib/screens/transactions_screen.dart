@@ -306,11 +306,21 @@ class _TxFormSheetState extends State<TxFormSheet> {
   late String _type = widget.edit?.type ?? 'expense';
   late String? _categoryId = widget.edit?.categoryId;
   late String? _accountId = widget.edit?.accountId;
+  late String? _familyMemberId = widget.edit?.familyMemberId;
   late final _amount = TextEditingController(
       text: widget.edit == null ? '' : widget.edit!.amount.toString());
   late final _description = TextEditingController(text: widget.edit?.description ?? '');
   late DateTime _date = widget.edit?.date ?? DateTime.now();
   bool _busy = false;
+  List<FamilyMember> _familyMembers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.state.fetchFamilyMembers().then((rows) {
+      if (mounted) setState(() => _familyMembers = rows);
+    });
+  }
 
   Future<void> _save() async {
     final amount = double.tryParse(_amount.text.trim());
@@ -330,6 +340,7 @@ class _TxFormSheetState extends State<TxFormSheet> {
           amount: amount,
           date: _date,
           description: _description.text.trim(),
+          familyMemberId: _familyMemberId,
         );
       } else {
         await widget.state.updateTransaction(
@@ -340,6 +351,7 @@ class _TxFormSheetState extends State<TxFormSheet> {
           amount: amount,
           date: _date,
           description: _description.text.trim(),
+          familyMemberId: _familyMemberId,
         );
       }
       if (mounted) Navigator.pop(context, true);
@@ -418,6 +430,19 @@ class _TxFormSheetState extends State<TxFormSheet> {
                   .toList(),
               onChanged: (v) => setState(() => _accountId = v),
             ),
+            if (_familyMembers.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _familyMembers.any((m) => m.id == _familyMemberId) ? _familyMemberId : null,
+                dropdownColor: kCard,
+                decoration: const InputDecoration(labelText: 'Family Member (Optional)'),
+                items: [
+                  const DropdownMenuItem<String>(value: null, child: Text('Household (no member)')),
+                  ..._familyMembers.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name))),
+                ],
+                onChanged: (v) => setState(() => _familyMemberId = v),
+              ),
+            ],
             const SizedBox(height: 12),
             TextField(
               controller: _amount,

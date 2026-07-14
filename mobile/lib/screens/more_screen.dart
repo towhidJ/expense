@@ -9,6 +9,7 @@ import 'assets_screen.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
 import 'family_screen.dart';
+import 'finance_notifications_screen.dart';
 import 'goals_screen.dart';
 import 'investments_screen.dart';
 import 'liabilities_screen.dart';
@@ -168,6 +169,7 @@ class _MoreScreenState extends State<MoreScreen> {
       (Icons.restaurant, 'Meals', kEmerald, () => MealsScreen(state: state)),
       (Icons.pie_chart_outline, 'Reports', kPurple, () => ReportsScreen(state: state)),
       (Icons.account_balance_wallet_outlined, 'Budgets', kCyan, () => BudgetsScreen(state: state)),
+      (Icons.notifications_active_outlined, 'Alerts', kRed, () => FinanceNotificationsScreen(state: state)),
       (Icons.flag_outlined, 'Goals', kEmerald, () => GoalsScreen(state: state)),
       (Icons.savings_outlined, 'Savings', kOrange, () => SavingsScreen(state: state)),
       (Icons.swap_horiz, 'Transfers', kCyan, () => TransfersScreen(state: state)),

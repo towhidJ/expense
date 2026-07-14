@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Copy, RefreshCw, Save } from 'lucide-react';
+import { Copy, RefreshCw, Save, Wallet } from 'lucide-react';
 
-export default function GroupSettings({ group, isManager, updateGroup, regenerateCode }) {
+export default function GroupSettings({ group, isManager, updateGroup, regenerateCode, paymentInfo, updatePaymentInfo }) {
   const [form, setForm] = useState({
     name: '', has_maid: false,
     breakfast_value: 0.5, lunch_value: 1, dinner_value: 1,
@@ -9,6 +9,15 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
   });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [payForm, setPayForm] = useState({ bkash_number: '', nagad_number: '' });
+  const [savingPay, setSavingPay] = useState(false);
+
+  useEffect(() => {
+    setPayForm({
+      bkash_number: paymentInfo?.bkash_number || '',
+      nagad_number: paymentInfo?.nagad_number || ''
+    });
+  }, [paymentInfo]);
 
   useEffect(() => {
     if (group) {
@@ -52,6 +61,19 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
       alert('Error saving settings: ' + err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePay = async (e) => {
+    e.preventDefault();
+    setSavingPay(true);
+    try {
+      await updatePaymentInfo(payForm);
+    } catch (err) {
+      console.error(err);
+      alert('Error saving payment info: ' + err.message);
+    } finally {
+      setSavingPay(false);
     }
   };
 
@@ -129,6 +151,35 @@ export default function GroupSettings({ group, isManager, updateGroup, regenerat
           <p className="text-white/30 text-xs mt-2">Only the manager can change these.</p>
         </div>
       )}
+
+      {isManager ? (
+        <form onSubmit={handleSavePay} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 space-y-4">
+          <h3 className="text-white font-semibold flex items-center gap-2"><Wallet size={16} /> bKash / Nagad Payment</h3>
+          <p className="text-white/40 text-xs -mt-2">Members will see a QR code to scan when paying a deposit. This is just a number + QR — no automatic payment gateway.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/60 mb-1">bKash number</label>
+              <input type="tel" value={payForm.bkash_number} onChange={e => setPayForm({ ...payForm, bkash_number: e.target.value })} placeholder="01XXXXXXXXX" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500/50" />
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1">Nagad number</label>
+              <input type="tel" value={payForm.nagad_number} onChange={e => setPayForm({ ...payForm, nagad_number: e.target.value })} placeholder="01XXXXXXXXX" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50" />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" disabled={savingPay} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-pink-500/20 font-medium disabled:opacity-50">
+              <Save size={16} /> {savingPay ? 'Saving...' : 'Save Payment Info'}
+            </button>
+          </div>
+        </form>
+      ) : (paymentInfo?.bkash_number || paymentInfo?.nagad_number) ? (
+        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 text-sm text-white/60 space-y-2">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Wallet size={16} /> bKash / Nagad Payment</h3>
+          {paymentInfo.bkash_number && <p>bKash: <span className="text-white">{paymentInfo.bkash_number}</span></p>}
+          {paymentInfo.nagad_number && <p>Nagad: <span className="text-white">{paymentInfo.nagad_number}</span></p>}
+          <p className="text-white/30 text-xs mt-2">Scan the QR on the Deposits page to pay.</p>
+        </div>
+      ) : null}
     </div>
   );
 }
