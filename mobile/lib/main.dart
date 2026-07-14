@@ -7,6 +7,7 @@ import 'config.dart';
 import 'push_notifications.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -30,7 +31,7 @@ class ExpenseApp extends StatelessWidget {
         theme: buildTheme(dark: false),
         darkTheme: buildTheme(dark: true),
         themeMode: mode,
-        home: const AuthGate(),
+        home: const SplashGate(child: AuthGate()),
       ),
     );
   }
