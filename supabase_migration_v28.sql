@@ -19,15 +19,18 @@ CREATE TABLE IF NOT EXISTS finance_notifications (
   body TEXT,
   link TEXT,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  -- created_at::date isn't usable in an index — it depends on the session's
+  -- TimeZone setting, so Postgres won't call it IMMUTABLE. AT TIME ZONE
+  -- 'UTC' with a fixed literal zone is deterministic, so a generated column
+  -- off that works and gives ON CONFLICT a plain column to target.
+  created_date DATE GENERATED ALWAYS AS ((created_at AT TIME ZONE 'UTC')::date) STORED
 );
 CREATE INDEX IF NOT EXISTS idx_finance_notifications_user
   ON finance_notifications(user_id, is_read, created_at);
--- One alert per ref per day, so re-running the daily check doesn't spam
--- (a UNIQUE constraint can't reference an expression like created_at::date,
--- so this is a unique index instead).
+-- One alert per ref per day, so re-running the daily check doesn't spam.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_finance_notifications_dedup
-  ON finance_notifications(user_id, type, ref_id, (created_at::date));
+  ON finance_notifications(user_id, type, ref_id, created_date);
 
 ALTER TABLE finance_notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own finance notifications" ON finance_notifications;
@@ -69,9 +72,9 @@ BEGIN
     AND b.amount > 0 AND spend.spent / b.amount >= 0.8
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'budget_overspend' AND n.ref_id = b.id AND n.created_at::date = v_today
+      WHERE n.type = 'budget_overspend' AND n.ref_id = b.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   -- Recurring transactions due within 3 days
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
@@ -83,9 +86,9 @@ BEGIN
   WHERE r.is_active AND r.next_run_date <= v_horizon
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = r.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = r.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   -- Recurring savings installments due within 3 days
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
@@ -97,9 +100,9 @@ BEGIN
   WHERE s.is_active AND s.next_run_date <= v_horizon
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = s.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = s.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   -- Liabilities due within 3 days (still outstanding)
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
@@ -111,9 +114,9 @@ BEGIN
   WHERE l.due_date IS NOT NULL AND l.due_date <= v_horizon AND l.remaining_balance > 0
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = l.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = l.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

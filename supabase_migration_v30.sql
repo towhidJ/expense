@@ -150,9 +150,9 @@ BEGIN
     AND b.amount > 0 AND spend.spent / b.amount >= 0.8
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'budget_overspend' AND n.ref_id = b.id AND n.created_at::date = v_today
+      WHERE n.type = 'budget_overspend' AND n.ref_id = b.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
   SELECT r.user_id, r.entity_id, 'bill_due', r.id, 'Upcoming: ' || r.title,
@@ -163,9 +163,9 @@ BEGIN
   WHERE r.is_active AND r.next_run_date <= v_horizon
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = r.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = r.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
   SELECT s.user_id, s.entity_id, 'bill_due', s.id, 'Upcoming: ' || s.title,
@@ -176,9 +176,9 @@ BEGIN
   WHERE s.is_active AND s.next_run_date <= v_horizon
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = s.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = s.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 
   INSERT INTO finance_notifications (user_id, entity_id, type, ref_id, title, body, link)
   SELECT l.user_id, l.entity_id, 'bill_due', l.id, 'Upcoming: ' || l.name,
@@ -189,8 +189,8 @@ BEGIN
   WHERE l.due_date IS NOT NULL AND l.due_date <= v_horizon AND l.remaining_balance > 0
     AND NOT EXISTS (
       SELECT 1 FROM finance_notifications n
-      WHERE n.type = 'bill_due' AND n.ref_id = l.id AND n.created_at::date = v_today
+      WHERE n.type = 'bill_due' AND n.ref_id = l.id AND n.created_date = v_today
     )
-  ON CONFLICT (user_id, type, ref_id, (created_at::date)) DO NOTHING;
+  ON CONFLICT (user_id, type, ref_id, created_date) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
