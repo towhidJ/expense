@@ -1,9 +1,25 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
-import { AlertTriangle, CalendarClock, Trash2, Bell } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Trash2, Bell, Repeat, PieChart, Target, TrendingUp } from 'lucide-react';
 
-const TYPE_ICONS = { budget_overspend: AlertTriangle, bill_due: CalendarClock };
+const TYPE_ICONS = {
+  budget_overspend: AlertTriangle,
+  bill_due: CalendarClock,
+  recurring_posted: Repeat,
+  weekly_digest: PieChart,
+  goal_milestone: Target,
+  large_expense: TrendingUp,
+};
+
+const TYPE_COLORS = {
+  budget_overspend: 'bg-red-500/15 text-red-400',
+  bill_due: 'bg-orange-500/15 text-orange-400',
+  recurring_posted: 'bg-cyan-500/15 text-cyan-400',
+  weekly_digest: 'bg-purple-500/15 text-purple-400',
+  goal_milestone: 'bg-emerald-500/15 text-emerald-400',
+  large_expense: 'bg-red-500/15 text-red-400',
+};
 
 function timeAgo(ts) {
   const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
@@ -57,7 +73,7 @@ export default function Alerts() {
                 onClick={() => n.link && navigate(n.link)}
                 className={`px-5 py-4 flex items-start gap-3 ${n.link ? 'cursor-pointer hover:bg-white/[0.03]' : ''} ${!n.is_read ? 'bg-cyan-500/[0.04]' : ''}`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  n.type === 'budget_overspend' ? 'bg-red-500/15 text-red-400' : 'bg-orange-500/15 text-orange-400'
+                  TYPE_COLORS[n.type] || 'bg-orange-500/15 text-orange-400'
                 }`}>
                   <Icon size={16} />
                 </div>

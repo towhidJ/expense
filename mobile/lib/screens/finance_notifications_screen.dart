@@ -37,10 +37,22 @@ class _FinanceNotificationsScreenState extends State<FinanceNotificationsScreen>
     }
   }
 
-  IconData _icon(String type) =>
-      type == 'budget_overspend' ? Icons.warning_amber_rounded : Icons.event_busy_outlined;
+  IconData _icon(String type) => switch (type) {
+        'budget_overspend' => Icons.warning_amber_rounded,
+        'recurring_posted' => Icons.repeat_rounded,
+        'weekly_digest' => Icons.pie_chart_outline_rounded,
+        'goal_milestone' => Icons.flag_rounded,
+        'large_expense' => Icons.trending_up_rounded,
+        _ => Icons.event_busy_outlined,
+      };
 
-  Color _color(String type) => type == 'budget_overspend' ? kRed : kOrange;
+  Color _color(String type) => switch (type) {
+        'budget_overspend' || 'large_expense' => kRed,
+        'recurring_posted' => kCyan,
+        'weekly_digest' => kPurple,
+        'goal_milestone' => kEmerald,
+        _ => kOrange,
+      };
 
   String _timeAgo(DateTime ts) {
     final mins = DateTime.now().difference(ts).inMinutes;
