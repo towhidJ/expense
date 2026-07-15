@@ -38,6 +38,15 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const signInWithProvider = async (provider) => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) throw error;
+    return data;
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -56,7 +65,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithProvider, signOut, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

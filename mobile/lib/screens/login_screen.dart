@@ -62,6 +62,34 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) setState(() => _busy = false);
   }
 
+  Future<void> _google() async {
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      // Opens an external browser; on success Google redirects back to the
+      // com.towhid.expense_tracker://login-callback/ deep link and
+      // supabase_flutter recovers the session, which AuthGate reacts to.
+      await supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.towhid.expense_tracker://login-callback/',
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+    } on AuthException catch (e) {
+      setState(() {
+        _message = e.message;
+        _messageIsError = true;
+      });
+    } catch (e) {
+      setState(() {
+        _message = e.toString();
+        _messageIsError = true;
+      });
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,6 +157,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 18),
                         GradientButton(label: _isSignUp ? 'Create Account' : 'Sign In', busy: _busy, onPressed: _submit),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: kFg.withValues(alpha: 0.12))),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('or continue with',
+                                  style: TextStyle(color: kFg.withValues(alpha: 0.35), fontSize: 12)),
+                            ),
+                            Expanded(child: Divider(color: kFg.withValues(alpha: 0.12))),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _busy ? null : _google,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            side: BorderSide(color: kFg.withValues(alpha: 0.18)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: Container(
+                            width: 20,
+                            height: 20,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: const Text('G',
+                                style: TextStyle(
+                                    color: Color(0xFF4285F4), fontWeight: FontWeight.bold, fontSize: 14)),
+                          ),
+                          label: Text('Continue with Google',
+                              style: TextStyle(color: kFg, fontSize: 14, fontWeight: FontWeight.w500)),
+                        ),
                         const SizedBox(height: 12),
                         Center(
                           child: TextButton(
