@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../ai_service.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
@@ -313,6 +314,9 @@ class _TxFormSheetState extends State<TxFormSheet> {
   late DateTime _date = widget.edit?.date ?? DateTime.now();
   bool _busy = false;
   List<FamilyMember> _familyMembers = [];
+  final _aiText = TextEditingController();
+  bool _aiBusy = false;
+  String? _aiError;
 
   @override
   void initState() {
@@ -320,6 +324,46 @@ class _TxFormSheetState extends State<TxFormSheet> {
     widget.state.fetchFamilyMembers().then((rows) {
       if (mounted) setState(() => _familyMembers = rows);
     });
+  }
+
+  Future<void> _aiFill() async {
+    final text = _aiText.text.trim();
+    if (text.isEmpty) return;
+    setState(() {
+      _aiBusy = true;
+      _aiError = null;
+    });
+    try {
+      final r = await AiService.parseTransaction(
+        text,
+        categories: widget.state.categories,
+        accounts: widget.state.accounts,
+      );
+      if (!mounted) return;
+      setState(() {
+        final t = r['type'];
+        if (t == 'income' || t == 'expense') _type = t;
+        final cat = r['category_id'];
+        if (cat is String && cat.isNotEmpty) _categoryId = cat;
+        final acc = r['account_id'];
+        if (acc is String && acc.isNotEmpty) _accountId = acc;
+        final amt = r['amount'];
+        if (amt is num) _amount.text = amt.toString();
+        final desc = r['description'];
+        if (desc is String && desc.isNotEmpty) _description.text = desc;
+        final date = r['date'];
+        if (date is String && date.isNotEmpty) {
+          _date = DateTime.tryParse(date) ?? _date;
+        }
+        _aiBusy = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _aiBusy = false;
+        _aiError = 'AI unavailable — fill the form manually.';
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -388,6 +432,67 @@ class _TxFormSheetState extends State<TxFormSheet> {
             Text(widget.edit == null ? 'Add Transaction' : 'Edit Transaction',
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
+            if (widget.edit == null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: kCyan.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: kCyan.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.auto_awesome, size: 14, color: kCyan),
+                        const SizedBox(width: 6),
+                        Text('Describe it — AI fills the form',
+                            style: TextStyle(fontSize: 12, color: kCyan)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _aiText,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _aiFill(),
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              hintText: 'gtokal Agora te 500 taka bazar korlam',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: kCyan.withValues(alpha: 0.2),
+                            foregroundColor: kCyan,
+                          ),
+                          onPressed: _aiBusy ? null : _aiFill,
+                          child: _aiBusy
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: kCyan),
+                                )
+                              : const Text('Fill'),
+                        ),
+                      ],
+                    ),
+                    if (_aiError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(_aiError!,
+                            style: TextStyle(fontSize: 11, color: kOrange)),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Row(
               children: ['expense', 'income'].map((t) {
                 final selected = _type == t;

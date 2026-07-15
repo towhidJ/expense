@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Split } from 'lucide-react';
+import { X, Split, Sparkles } from 'lucide-react';
 import { useAssets } from '../hooks/useAssets';
 import { useAccounts } from '../context/AccountContext';
 import { useAttachments } from '../hooks/useAttachments';
 import { useFamily } from '../hooks/useFamily';
+import { parseTransaction } from '../lib/ai';
 import DocumentUpload from './DocumentUpload';
 
 export default function TransactionForm({ isOpen, onClose, onSubmit, categories, editData }) {
@@ -26,11 +27,16 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
   const [files, setFiles] = useState([]);
   const [existing, setExisting] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [aiText, setAiText] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   useEffect(() => {
     setFiles([]);
     setSplit(false);
     setSplitForm({ account_id_2: '', amount_2: '' });
+    setAiText('');
+    setAiError('');
     if (editData) {
       setForm({
         type: editData.type,
@@ -67,6 +73,30 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const handleAiFill = async () => {
+    if (!aiText.trim()) return;
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const r = await parseTransaction(aiText.trim(), { categories, accounts });
+      // Only override fields the model actually resolved; keep sensible current
+      // values otherwise. User reviews before saving, so nothing auto-submits.
+      setForm(f => ({
+        ...f,
+        type: r.type === 'income' ? 'income' : 'expense',
+        category_id: r.category_id || (r.type !== f.type ? '' : f.category_id),
+        account_id: r.account_id || f.account_id,
+        amount: r.amount != null ? String(r.amount) : f.amount,
+        description: r.description || f.description,
+        date: r.date || f.date,
+      }));
+    } catch (err) {
+      setAiError(err.message || 'AI unavailable — fill the form manually.');
+      console.error(err);
+    }
+    setAiLoading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -123,6 +153,35 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {!editData && (
+            <div className="rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-600/10 border border-cyan-500/20 p-3">
+              <label className="flex items-center gap-1.5 text-xs text-cyan-300/80 mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Describe it — AI fills the form
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={aiText}
+                  onChange={e => setAiText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); handleAiFill(); }
+                  }}
+                  placeholder="e.g. gtokal Agora te 500 taka bazar korlam"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/25"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiFill}
+                  disabled={aiLoading || !aiText.trim()}
+                  className="px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-sm font-medium hover:bg-cyan-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {aiLoading ? '…' : 'Fill'}
+                </button>
+              </div>
+              {aiError && <p className="text-xs text-amber-400/80 mt-1.5">{aiError}</p>}
+            </div>
+          )}
+
           <div className="flex gap-2">
             {['expense', 'income'].map(type => (
               <button

@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env*
+
+# Secrets — never commit service-account keys
+*firebase-adminsdk*.json
+takakhata-52fb2-firebase-adminsdk-fbsvc-b03c71a005.json
