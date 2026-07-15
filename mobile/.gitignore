@@ -45,5 +45,5 @@ app.*.map.json
 /android/app/release
 
 # Firebase config — project-specific, not something to publish
-/android/app/google-services.json
+# /android/app/google-services.json
 GoogleService-Info.plist

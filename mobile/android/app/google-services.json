@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "662544699526",
+    "project_id": "takakhata-52fb2",
+    "storage_bucket": "takakhata-52fb2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662544699526:android:f9d0005a40daa54057c107",
+        "android_client_info": {
+          "package_name": "com.towhid.expense_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOmZagH3Qa7nOzu7lYEvh8Ksj-Z01F2iE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

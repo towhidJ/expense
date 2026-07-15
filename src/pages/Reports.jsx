@@ -18,8 +18,7 @@ import {
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart,
   BarChart, Bar
 } from 'recharts';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { downloadHtmlAsPdf, multiSectionHtml } from '../lib/htmlPdf';
 import * as XLSX from 'xlsx';
 
 const COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#6366f1', '#f97316', '#14b8a6', '#64748b'];
@@ -244,53 +243,53 @@ export default function Reports() {
   const categoryLabel = categoryFilter !== 'all' ? categories.find(c => c.id === categoryFilter)?.name : null;
 
   const exportLoanPDF = () => {
-    const doc = new jsPDF();
-    const title = `Loan & Due Report - ${periodLabel}`;
     const takenRemaining = liabilities.filter(l => l.type !== 'loan_given').reduce((s, l) => s + Number(l.remaining_balance), 0);
     const givenRemaining = liabilities.filter(l => l.type === 'loan_given').reduce((s, l) => s + Number(l.remaining_balance), 0);
-
-    doc.setFontSize(18);
-    doc.text(title, 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Total Payable (loans taken, dues): BDT ${takenRemaining.toLocaleString()}`, 14, 32);
-    doc.text(`Total Receivable (loans given): BDT ${givenRemaining.toLocaleString()}`, 14, 38);
-
-    autoTable(doc, {
-      startY: 46,
-      head: [['Name', 'Type', 'Principal (BDT)', 'Remaining (BDT)', 'Due Date', 'Status']],
-      body: liabilities.map(l => [
-        l.name,
-        l.type.replace('_', ' '),
-        Number(l.principal).toLocaleString(),
-        Number(l.remaining_balance).toLocaleString(),
-        l.due_date || '-',
-        l.remaining_balance <= 0 ? 'PAID' : 'ACTIVE'
-      ]),
-      theme: 'grid',
-      headStyles: { fillColor: [239, 68, 68] }
-    });
-
     const periodRepayments = repayments.filter(r => inPeriod(r.date));
-    let y = (doc.lastAutoTable?.finalY || 46) + 12;
-    doc.setFontSize(14);
-    doc.text(`Repayments (${periodLabel})`, 14, y);
-    autoTable(doc, {
-      startY: y + 4,
-      head: [['Date', 'Liability', 'Account', 'Amount (BDT)', 'Notes']],
-      body: periodRepayments.length
-        ? periodRepayments.map(r => [
-            r.date,
-            liabilities.find(l => l.id === r.liability_id)?.name || 'Unknown',
-            r.accounts?.name || '-',
-            Number(r.amount).toLocaleString(),
-            r.notes || '-'
-          ])
-        : [['No repayments in this period', '', '', '', '']],
-      theme: 'grid',
-      headStyles: { fillColor: [16, 185, 129] }
-    });
 
-    doc.save(`Loan_Due_Report_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    downloadHtmlAsPdf(
+      multiSectionHtml({
+        entityName: currentEntity?.name,
+        title: 'Loan & Due Report',
+        subtitle: periodLabel,
+        sections: [
+          {
+            title: 'Summary',
+            head: ['', 'Amount (৳)'],
+            rows: [
+              ['Total Payable (loans taken, dues)', takenRemaining.toLocaleString()],
+              ['Total Receivable (loans given)', givenRemaining.toLocaleString()]
+            ]
+          },
+          {
+            title: 'Liabilities',
+            head: ['Name', 'Type', 'Principal (৳)', 'Remaining (৳)', 'Due Date', 'Status'],
+            rows: liabilities.map(l => [
+              l.name,
+              l.type.replace('_', ' '),
+              Number(l.principal).toLocaleString(),
+              Number(l.remaining_balance).toLocaleString(),
+              l.due_date || '-',
+              l.remaining_balance <= 0 ? 'PAID' : 'ACTIVE'
+            ])
+          },
+          {
+            title: `Repayments (${periodLabel})`,
+            head: ['Date', 'Liability', 'Account', 'Amount (৳)', 'Notes'],
+            rows: periodRepayments.length
+              ? periodRepayments.map(r => [
+                  r.date,
+                  liabilities.find(l => l.id === r.liability_id)?.name || 'Unknown',
+                  r.accounts?.name || '-',
+                  Number(r.amount).toLocaleString(),
+                  r.notes || '-'
+                ])
+              : [['No repayments in this period', '', '', '', '']]
+          }
+        ]
+      }),
+      `Loan_Due_Report_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+    );
   };
 
   const exportPDF = () => {
@@ -299,38 +298,45 @@ export default function Reports() {
       return;
     }
 
-    const doc = new jsPDF();
     const typeLabel = REPORT_TYPES.find(r => r.id === reportType)?.label || 'Report';
     const title = `${typeLabel}${categoryLabel ? ` (${categoryLabel})` : ''} - ${periodLabel}`;
     const txs = reportType === 'full' ? monthTx : monthTx.filter(t => t.type === reportType);
     const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
-    doc.setFontSize(18);
-    doc.text(title, 14, 22);
+    const summaryRows = [];
+    if (reportType !== 'expense') summaryRows.push(['Total Income', income.toLocaleString()]);
+    if (reportType !== 'income') summaryRows.push(['Total Expense', expense.toLocaleString()]);
+    if (reportType === 'full') summaryRows.push(['Net Savings', (income - expense).toLocaleString()]);
 
-    doc.setFontSize(12);
-    let y = 32;
-    if (reportType !== 'expense') { doc.text(`Total Income: BDT ${income.toLocaleString()}`, 14, y); y += 6; }
-    if (reportType !== 'income') { doc.text(`Total Expense: BDT ${expense.toLocaleString()}`, 14, y); y += 6; }
-    if (reportType === 'full') { doc.text(`Net Savings: BDT ${(income - expense).toLocaleString()}`, 14, y); y += 6; }
-
-    autoTable(doc, {
-      startY: y + 2,
-      head: [['Date', 'Type', 'Category', 'Account', 'Amount (BDT)', 'Description']],
-      body: txs.map(t => [
-        t.date,
-        t.type.toUpperCase(),
-        t.categories?.name || 'Other',
-        t.accounts?.name || '-',
-        t.amount.toLocaleString(),
-        t.description || '-'
-      ]),
-      theme: 'grid',
-      headStyles: { fillColor: [6, 182, 212] }
-    });
-
-    doc.save(`${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    downloadHtmlAsPdf(
+      multiSectionHtml({
+        entityName: currentEntity?.name,
+        title: `${typeLabel}${categoryLabel ? ` (${categoryLabel})` : ''}`,
+        subtitle: periodLabel,
+        sections: [
+          {
+            title: 'Summary',
+            head: ['', 'Amount (৳)'],
+            rows: summaryRows,
+            boldRows: reportType === 'full' ? [summaryRows.length - 1] : []
+          },
+          {
+            title: 'Transactions',
+            head: ['Date', 'Type', 'Category', 'Account', 'Amount (৳)', 'Description'],
+            rows: txs.map(t => [
+              t.date,
+              t.type.toUpperCase(),
+              t.categories?.name || 'Other',
+              t.accounts?.name || '-',
+              t.amount.toLocaleString(),
+              t.description || '-'
+            ])
+          }
+        ]
+      }),
+      `${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+    );
   };
 
   const exportExcel = () => {
