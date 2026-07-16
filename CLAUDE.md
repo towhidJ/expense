@@ -1,5 +1,14 @@
 # CLAUDE.md — Project knowledge for Claude Code
 
+## Current status (updated 2026-07-16)
+
+All 16 planned modules are DONE on web and pushed to main: Dena-Paona, Forecast, Zakat (v34 batch), then Subscriptions, Insurance, Utility, Rent, Warranty, Backup, Activity Log, Bill Splitter, Tax, AI Insights, Receipt OCR, Multi-currency, and meal-stock expiry (v35 batch). Every page was verified with a headless-Chrome render audit (no console errors, mobile-safe).
+
+**Pending / next steps:**
+1. USER ACTION: run `supabase_migration_v34.sql` then `supabase_migration_v35.sql` in the Supabase SQL Editor — nothing DB-backed works until then (Forecast/Zakat/Tax/Insights/Scan/Backup work without them).
+2. The Flutter app (`mobile/`) has NONE of the 16 new modules — porting them is the natural next task.
+3. Optional: Vite build warns the main chunk is >2.3 MB — code-splitting via route-level `React.lazy` would help load time.
+
 Expense tracker "TakaKhata": React 19 + Vite 6 + Tailwind 4 + Supabase (BDT ৳ currency, dark theme, no test suite). `mobile/` holds the Flutter Android companion app. This file carries the cross-machine project memory — keep it updated when architecture facts change.
 
 ## Golden rules
@@ -15,6 +24,7 @@ Expense tracker "TakaKhata": React 19 + Vite 6 + Tailwind 4 + Supabase (BDT ৳ 
 - Liability type `loan_given` is a **receivable** (adds to net worth), not a debt. There is no `status` column on liabilities — use `remaining_balance > 0`.
 - Person-to-person loans (Dena-Paona, `/lending`) are liabilities rows with `counterparty` set; the Liabilities page filters them out (`!l.counterparty`), same pattern as Bazar's `shop_due` shop khatas.
 - Recurring transactions auto-post into `transactions`, so trailing monthly averages (used by `/forecast`) already include them — never add recurring on top of averages.
+- Meal stock (`meal_stock_items`) has `expiry_date` — StockTab shows expired / expires-in-7d badges; `addStockItem` in useMealData passes it through.
 - Meal Manager (`/meals/*`) is a separate multi-user workspace scoped by `group_id` (NOT entity_id) with membership-based RLS via SECURITY DEFINER helpers; month math ONLY via `get_meal_month_summary` RPC (shared web+mobile — never recompute client-side). `meal_group_members.display_name` is a snapshot because profiles RLS is self-only.
 - Cash flow statement counts only account-linked movements (due purchases have no account_id, shown as memo); trial balance equity is the balancing figure.
 - Zakat page (`/zakat`) persists its settings in localStorage key `zakat_settings_v1`; nisab from per-vori gold/silver prices.

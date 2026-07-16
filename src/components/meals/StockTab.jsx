@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Minus, Trash2, Package, AlertTriangle } from 'lucide-react';
 
 export default function StockTab({ stockItems, isManager, addStockItem, adjustStock, deleteStockItem }) {
-  const initialForm = { name: '', quantity: '', unit: '', low_stock_threshold: '' };
+  const initialForm = { name: '', quantity: '', unit: '', low_stock_threshold: '', expiry_date: '' };
   const [form, setForm] = useState(initialForm);
   const [isAdding, setIsAdding] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -35,6 +35,7 @@ export default function StockTab({ stockItems, isManager, addStockItem, adjustSt
   };
 
   const isLow = (item) => item.low_stock_threshold != null && Number(item.quantity) <= Number(item.low_stock_threshold);
+  const expiryDays = (item) => item.expiry_date ? Math.ceil((new Date(item.expiry_date) - new Date()) / 86400000) : null;
 
   return (
     <div className="space-y-4">
@@ -69,6 +70,10 @@ export default function StockTab({ stockItems, isManager, addStockItem, adjustSt
               <label className="block text-sm text-white/60 mb-1">Low-stock alert below</label>
               <input type="number" min="0" step="0.01" value={form.low_stock_threshold} onChange={e => setForm({ ...form, low_stock_threshold: e.target.value })} placeholder="optional" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
             </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1">Expiry date</label>
+              <input type="date" value={form.expiry_date} onChange={e => setForm({ ...form, expiry_date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+            </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
               <button type="button" onClick={() => setIsAdding(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
               <button type="submit" disabled={saving} className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium disabled:opacity-50">
@@ -90,7 +95,16 @@ export default function StockTab({ stockItems, isManager, addStockItem, adjustSt
                 {item.name}
                 {isLow(item) && <span title="Low stock" className="text-red-400"><AlertTriangle size={13} /></span>}
               </p>
-              <p className="text-white/40 text-xs">{item.quantity} {item.unit || ''}</p>
+              <p className="text-white/40 text-xs">
+                {item.quantity} {item.unit || ''}
+                {expiryDays(item) != null && (
+                  expiryDays(item) < 0
+                    ? <span className="text-red-400 font-medium"> · expired!</span>
+                    : expiryDays(item) <= 7
+                      ? <span className="text-amber-400 font-medium"> · expires in {expiryDays(item)}d</span>
+                      : <span> · exp {new Date(item.expiry_date).toLocaleDateString()}</span>
+                )}
+              </p>
             </div>
             <div className="flex items-center gap-1.5">
               <input

@@ -698,10 +698,11 @@ export function useMealData(groupId, year, month) {
 
   // ---- Stock/inventory tracker (any member; delete = manager — v27) ----
 
-  const addStockItem = async ({ name, quantity, unit, low_stock_threshold }) => {
+  const addStockItem = async ({ name, quantity, unit, low_stock_threshold, expiry_date }) => {
     const { error } = await supabase.from('meal_stock_items').insert({
       group_id: groupId, name, quantity: Number(quantity) || 0,
-      unit: unit || null, low_stock_threshold: low_stock_threshold === '' || low_stock_threshold == null ? null : Number(low_stock_threshold)
+      unit: unit || null, low_stock_threshold: low_stock_threshold === '' || low_stock_threshold == null ? null : Number(low_stock_threshold),
+      expiry_date: expiry_date || null
     });
     if (error) throw error;
     await fetchStockItems();
