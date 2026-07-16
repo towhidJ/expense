@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useZakat } from '../hooks/useZakat';
 import { useAccounts } from '../context/AccountContext';
+import { sumBDT } from '../lib/currency';
 import { Moon, Info } from 'lucide-react';
 
 const fmt = (n) => `৳${Math.round(Number(n || 0)).toLocaleString()}`;
@@ -46,7 +47,7 @@ export default function Zakat() {
   const set = (patch) => setS(prev => ({ ...prev, ...patch }));
 
   const cash = useMemo(
-    () => accounts.reduce((sum, a) => sum + Number(a.current_balance || 0), 0),
+    () => sumBDT(accounts),
     [accounts]
   );
 

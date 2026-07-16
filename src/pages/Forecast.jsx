@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useCashflowForecast } from '../hooks/useCashflowForecast';
 import { useAccounts } from '../context/AccountContext';
+import { sumBDT } from '../lib/currency';
 import StatCard from '../components/StatCard';
 import ChartCard from '../components/ChartCard';
 import { Wallet, TrendingUp, TrendingDown, LineChart, AlertTriangle, Repeat } from 'lucide-react';
@@ -31,7 +32,7 @@ export default function Forecast() {
   const [adjExpense, setAdjExpense] = useState('');
 
   const currentBalance = useMemo(
-    () => accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0),
+    () => sumBDT(accounts),
     [accounts]
   );
 

@@ -27,6 +27,17 @@ import Savings from './pages/Savings';
 import Liabilities from './pages/Liabilities';
 import Lending from './pages/Lending';
 import Zakat from './pages/Zakat';
+import Subscriptions from './pages/Subscriptions';
+import Insurance from './pages/Insurance';
+import Utility from './pages/Utility';
+import Rent from './pages/Rent';
+import Warranty from './pages/Warranty';
+import Backup from './pages/Backup';
+import Activity from './pages/Activity';
+import Splitter from './pages/Splitter';
+import Tax from './pages/Tax';
+import Insights from './pages/Insights';
+import ScanReceipt from './pages/ScanReceipt';
 import Investments from './pages/Investments';
 import FamilyMembers from './pages/FamilyMembers';
 import Recurring from './pages/Recurring';
@@ -62,6 +73,17 @@ function App() {
                 <Route path="liabilities" element={<Liabilities />} />
                 <Route path="lending" element={<Lending />} />
                 <Route path="zakat" element={<Zakat />} />
+                <Route path="subscriptions" element={<Subscriptions />} />
+                <Route path="insurance" element={<Insurance />} />
+                <Route path="utility" element={<Utility />} />
+                <Route path="rent" element={<Rent />} />
+                <Route path="warranty" element={<Warranty />} />
+                <Route path="backup" element={<Backup />} />
+                <Route path="activity" element={<Activity />} />
+                <Route path="splitter" element={<Splitter />} />
+                <Route path="tax" element={<Tax />} />
+                <Route path="insights" element={<Insights />} />
+                <Route path="scan" element={<ScanReceipt />} />
                 <Route path="investments" element={<Investments />} />
                 <Route path="family" element={<FamilyMembers />} />
                 <Route path="accounts" element={<Accounts />} />

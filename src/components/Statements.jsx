@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { FileText, Banknote, HandCoins } from 'lucide-react';
 import { downloadHtmlAsPdf, statementHtml, multiSectionHtml } from '../lib/htmlPdf';
+import { sumBDT } from '../lib/currency';
 
 const fmt = (n) => '৳' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const pdfNum = (n) => '৳' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -150,7 +151,7 @@ export function CashFlowStatement({ periodTx, savings, repayments, liabilities, 
     const loanPaymentsOut = periodRepay.filter(r => !givenIds.has(r.liability_id) && !shopIds.has(r.liability_id)).reduce((s, r) => s + Number(r.amount), 0);
 
     const transferVolume = transfers.filter(t => inPeriod(t.date)).reduce((s, t) => s + Number(t.amount), 0);
-    const totalBalance = accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0);
+    const totalBalance = sumBDT(accounts);
 
     const operating = cashIncome - cashExpense;
     const savingsNet = savingsIn - savingsOut;

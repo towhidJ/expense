@@ -42,7 +42,8 @@ export default function Recurring() {
     category_id: '',
     frequency: 'monthly',
     next_run_date: new Date().toISOString().split('T')[0],
-    is_active: true
+    is_active: true,
+    is_subscription: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -242,6 +243,8 @@ export default function Recurring() {
             <div className="sm:col-span-2 flex items-center gap-2 mt-2">
               <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({...form, is_active: e.target.checked})} className="w-4 h-4 rounded border-white/10 bg-[#12122a] text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
               <label htmlFor="is_active" className="text-sm text-white/80">Active (Will run automatically)</label>
+              <input type="checkbox" id="is_subscription" checked={form.is_subscription || false} onChange={e => setForm({...form, is_subscription: e.target.checked})} className="w-4 h-4 ml-4 rounded border-white/10 bg-[#12122a] text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
+              <label htmlFor="is_subscription" className="text-sm text-white/80">Subscription (show on Subscriptions page)</label>
             </div>
 
             <div className="sm:col-span-2 flex justify-end gap-3 mt-4">

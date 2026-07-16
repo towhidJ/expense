@@ -16,6 +16,7 @@ import ChartCard from '../components/ChartCard';
 import TransactionList from '../components/TransactionList';
 import BudgetCard from '../components/BudgetCard';
 import UpcomingPanel from '../components/UpcomingPanel';
+import { sumBDT } from '../lib/currency';
 import { Shield, Bike, Landmark, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -56,7 +57,7 @@ export default function Dashboard() {
   const currentYear = now.getFullYear();
 
   // NET WORTH CALCULATION
-  const totalCash = accounts.reduce((sum, a) => sum + Number(a.current_balance || 0), 0);
+  const totalCash = sumBDT(accounts);
   const totalAssetsValue = assets.reduce((sum, a) => sum + Number(a.current_value || a.value || 0), 0);
   const totalInvestmentsValue = investments.reduce((sum, i) => sum + Number(i.current_value || 0), 0);
   const activeLiabilities = liabilities.filter(l => Number(l.remaining_balance) > 0);

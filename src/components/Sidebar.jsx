@@ -7,29 +7,50 @@ import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
-  Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon
+  Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
+  Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine
 } from 'lucide-react';
 
+// Sections keep the long nav scannable; a null `to` renders a heading.
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/accounts', icon: Landmark, label: 'Accounts' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
+  { to: '/scan', icon: ScanLine, label: 'Scan Receipt' },
   { to: '/bazar', icon: ShoppingBasket, label: 'Bazar' },
+  { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
   { to: '/recurring', icon: Repeat, label: 'Recurring' },
   { to: '/categories', icon: Tags, label: 'Categories' },
-  { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
+
+  { heading: 'Planning' },
   { to: '/reports', icon: PieChart, label: 'Reports' },
+  { to: '/insights', icon: Sparkles, label: 'Insights' },
   { to: '/forecast', icon: TrendingUp, label: 'Forecast' },
   { to: '/budgets', icon: Wallet, label: 'Budgets' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/goals', icon: Target, label: 'Goals' },
   { to: '/savings', icon: PiggyBank, label: 'Savings' },
-  { to: '/family', icon: Users, label: 'Family' },
+  { to: '/tax', icon: Scale, label: 'Tax' },
+  { to: '/zakat', icon: Moon, label: 'Zakat' },
+
+  { heading: 'Wealth & Debts' },
   { to: '/assets', icon: Bike, label: 'Assets' },
+  { to: '/investments', icon: TrendingUp, label: 'Investments' },
   { to: '/liabilities', icon: Shield, label: 'Liabilities' },
   { to: '/lending', icon: HandCoins, label: 'Dena-Paona' },
-  { to: '/investments', icon: TrendingUp, label: 'Investments' },
-  { to: '/zakat', icon: Moon, label: 'Zakat' }
+  { to: '/insurance', icon: Umbrella, label: 'Insurance' },
+  { to: '/warranty', icon: BadgeCheck, label: 'Warranty' },
+
+  { heading: 'Household' },
+  { to: '/utility', icon: Zap, label: 'Utility Bills' },
+  { to: '/rent', icon: Home, label: 'Rent' },
+  { to: '/subscriptions', icon: Tv, label: 'Subscriptions' },
+  { to: '/splitter', icon: Split, label: 'Bill Splitter' },
+  { to: '/family', icon: Users, label: 'Family' },
+
+  { heading: 'System' },
+  { to: '/activity', icon: History, label: 'Activity Log' },
+  { to: '/backup', icon: DatabaseBackup, label: 'Backup' }
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -195,7 +216,10 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {[...navItems, ...(isAdmin ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }] : [])].map(({ to, icon: Icon, label }) => (
+          {[...navItems, ...(isAdmin ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }] : [])].map(({ to, icon: Icon, label, heading }) => (
+            heading ? (
+              <p key={heading} className="pt-4 pb-1 px-4 text-[10px] uppercase tracking-widest text-white/25 select-none">{heading}</p>
+            ) : (
             <NavLink
               key={to}
               to={to}
@@ -216,6 +240,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 </span>
               )}
             </NavLink>
+            )
           ))}
         </nav>
 

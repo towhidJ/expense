@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAccounts } from '../context/AccountContext';
 import { Plus, Wallet, Building, CreditCard, Smartphone, Edit2, Trash2, Landmark } from 'lucide-react';
+import { sumBDT, toBDT, isForeign, CURRENCIES } from '../lib/currency';
 
 const ACCOUNT_TYPES = [
   { id: 'bank', label: 'Bank', icon: Building, color: 'text-blue-400', bg: 'bg-blue-500/10' },
@@ -22,6 +23,7 @@ export default function Accounts() {
     opening_balance: 0,
     current_balance: 0,
     currency: '৳',
+    exchange_rate: 1,
     notes: ''
   };
   const [form, setForm] = useState(initialForm);
@@ -52,10 +54,10 @@ export default function Accounts() {
 
 
   // Summary totals
-  const totalBalance = accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0);
+  const totalBalance = sumBDT(accounts); // foreign-currency accounts converted at their manual rate
   const byType = ACCOUNT_TYPES.map(t => ({
     ...t,
-    total: accounts.filter(a => a.type === t.id).reduce((s, a) => s + Number(a.current_balance || 0), 0),
+    total: sumBDT(accounts.filter(a => a.type === t.id)),
     count: accounts.filter(a => a.type === t.id).length
   })).filter(t => t.count > 0);
 
@@ -132,6 +134,19 @@ export default function Accounts() {
               <label className="block text-sm text-white/60 mb-1">Current Balance</label>
               <input required type="number" step="0.01" value={form.current_balance} onChange={e => setForm({...form, current_balance: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
             </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1">Currency</label>
+              <select value={form.currency} onChange={e => setForm({...form, currency: e.target.value, exchange_rate: e.target.value === '৳' ? 1 : form.exchange_rate})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+                {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            {form.currency !== '৳' && (
+              <div className="animate-in fade-in slide-in-from-top-2">
+                <label className="block text-sm text-white/60 mb-1">Exchange Rate (1 {form.currency} = ? ৳)</label>
+                <input required type="number" step="0.0001" min="0" value={form.exchange_rate} onChange={e => setForm({...form, exchange_rate: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                <p className="text-xs text-white/40 mt-1">Used to convert this account into ৳ for totals and reports. Update it when the rate changes.</p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <label className="block text-sm text-white/60 mb-1">Notes</label>
               <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" rows={2} />
@@ -182,6 +197,7 @@ export default function Accounts() {
                   )}
                 </div>
                 <p className="text-2xl font-semibold text-white">{acc.currency}{Number(acc.current_balance).toLocaleString()}</p>
+                {isForeign(acc) && <p className="text-xs text-white/40 mt-0.5">≈ ৳{Math.round(toBDT(acc)).toLocaleString()} @ {acc.exchange_rate}</p>}
               </div>
             </div>
           );

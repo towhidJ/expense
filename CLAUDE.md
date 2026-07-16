@@ -6,7 +6,7 @@ Expense tracker "TakaKhata": React 19 + Vite 6 + Tailwind 4 + Supabase (BDT ৳ 
 
 - **Money movements must go through Postgres RPCs** (`process_transaction`, `process_transfer`, `process_loan_repayment`, `process_new_loan`, `process_saving`, `process_bazar_purchase`, `update/delete_transaction_with_balance`) — never plain inserts/updates, or `accounts.current_balance` silently corrupts.
 - **Every table is scoped by `entity_id`** (personal/family/business workspaces). `EntityContext.currentEntity` drives all hooks — a missing `currentEntity` in a `useCallback` dep array is the classic bug here (stale data after workspace switch).
-- **Migrations are manual**: schema lives in numbered `supabase_migration_v*.sql` files at repo root; each new one must be pasted into the Supabase SQL Editor by the user. Latest: **v34** (Dena-Paona `liabilities.counterparty`). If a feature "doesn't work", first suspect an unapplied migration.
+- **Migrations are manual**: schema lives in numbered `supabase_migration_v*.sql` files at repo root; each new one must be pasted into the Supabase SQL Editor by the user. Latest: **v35** (split/insurance/utility/rent/activity-log tables + subscription/warranty/exchange-rate/stock-expiry columns; v34 = Dena-Paona `liabilities.counterparty`). If a feature "doesn't work", first suspect an unapplied migration.
 - **Touch-visible actions**: edit/delete buttons must be visible without hover. Web: `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` (hover-reveal desktop only). Flutter: visible trailing `PopupMenuButton` (⋮), never long-press-only. The user considers hidden actions to be missing features.
 - `npm run lint` reports ~29 pre-existing errors (react-hooks v7 strict rules like `set-state-in-effect` on the standard fetch-in-effect hook pattern, unused React imports in vendored `src/components/ui/*`) — not regressions, don't chase them.
 
@@ -23,7 +23,10 @@ Expense tracker "TakaKhata": React 19 + Vite 6 + Tailwind 4 + Supabase (BDT ৳ 
 
 - Routing in `src/App.jsx`; nav in `src/components/Sidebar.jsx`; pages in `src/pages/`, one data hook per feature in `src/hooks/` (fetch + CRUD, entity-scoped).
 - Reports (`/reports`) has statement tabs in `src/components/Statements.jsx`, Bangla-safe PDFs via `src/lib/htmlPdf.js`, vouchers via `VoucherModal.jsx` + `src/lib/amountInWords.js` (lakh/crore style).
-- Newest modules (2026-07-16, web-only so far): `/lending` (Dena-Paona person ledger), `/forecast` (6-month cashflow projection), `/zakat` (zakat calculator).
+- Newest modules (2026-07-16, web-only so far): `/lending` (Dena-Paona person ledger), `/forecast` (6-month cashflow projection), `/zakat`, `/subscriptions` (view over `recurring_transactions.is_subscription`), `/insurance`, `/utility` (pay via `process_transaction`, sets `utility_bills.transaction_id`), `/rent` (landlord units + month grid; collect optionally logs income via RPC), `/warranty` (assets.warranty_expiry + attachments.asset_id), `/backup` (JSON/CSV export, skips missing tables), `/activity` (trigger-fed `activity_log`, read-only), `/splitter` (split_events/members/expenses, greedy settlement), `/tax` (BD FY Jul–Jun slabs, all editable, localStorage `tax_settings_v1`), `/insights` (client-side stats + `getInsights` AI chat, aggregates only), `/scan` (receipt OCR via `parseReceipt` → `process_transaction` per row).
+- `src/hooks/useEntityTable.js` is the generic entity-scoped CRUD hook for simple tables — use it for new record-keeping tables; money movements still need RPC-backed hooks.
+- Multi-currency: `accounts.exchange_rate` (manual, 1 unit = X BDT) + `src/lib/currency.js` (`toBDT`/`sumBDT`) — Dashboard/Forecast/Zakat/Accounts/Statements totals all go through `sumBDT`; new totals over accounts must too.
+- The `gemini` edge function (supabase/functions/gemini) routes on `action`: parse_transaction, parse_receipt, insights, meal_report — client helpers in `src/lib/ai.js`.
 - Admin OTA page (`/admin`, admins only via `useIsAdmin`) uploads Flutter APKs to the `app-releases` bucket + `app_versions` row.
 
 ## Flutter app (`mobile/`)

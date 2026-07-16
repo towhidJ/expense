@@ -16,8 +16,8 @@ export function useAttachments() {
   const [uploading, setUploading] = useState(false);
 
   // Upload one file to storage and record it in the attachments table.
-  // Pass exactly one of { transactionId, liabilityId } to link it.
-  const uploadAttachment = useCallback(async (file, { transactionId = null, liabilityId = null } = {}) => {
+  // Pass exactly one of { transactionId, liabilityId, assetId } to link it.
+  const uploadAttachment = useCallback(async (file, { transactionId = null, liabilityId = null, assetId = null } = {}) => {
     if (!file || !user) return null;
     setUploading(true);
     try {
@@ -36,6 +36,7 @@ export function useAttachments() {
           entity_id: currentEntity?.id || null,
           transaction_id: transactionId,
           liability_id: liabilityId,
+          asset_id: assetId,
           file_name: file.name,
           file_url: urlData.publicUrl,
           storage_path: path,
@@ -61,11 +62,12 @@ export function useAttachments() {
     return results;
   }, [uploadAttachment]);
 
-  const fetchAttachments = useCallback(async ({ transactionId = null, liabilityId = null } = {}) => {
+  const fetchAttachments = useCallback(async ({ transactionId = null, liabilityId = null, assetId = null } = {}) => {
     if (!user) return [];
     let query = supabase.from('attachments').select('*').eq('user_id', user.id);
     if (transactionId) query = query.eq('transaction_id', transactionId);
     if (liabilityId) query = query.eq('liability_id', liabilityId);
+    if (assetId) query = query.eq('asset_id', assetId);
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching attachments:', error);
