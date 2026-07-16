@@ -7,7 +7,7 @@ import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
-  Pencil, Trash2, AlertTriangle, ChevronUp, Bell
+  Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/categories', icon: Tags, label: 'Categories' },
   { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
   { to: '/reports', icon: PieChart, label: 'Reports' },
+  { to: '/forecast', icon: TrendingUp, label: 'Forecast' },
   { to: '/budgets', icon: Wallet, label: 'Budgets' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/goals', icon: Target, label: 'Goals' },
@@ -26,7 +27,9 @@ const navItems = [
   { to: '/family', icon: Users, label: 'Family' },
   { to: '/assets', icon: Bike, label: 'Assets' },
   { to: '/liabilities', icon: Shield, label: 'Liabilities' },
-  { to: '/investments', icon: TrendingUp, label: 'Investments' }
+  { to: '/lending', icon: HandCoins, label: 'Dena-Paona' },
+  { to: '/investments', icon: TrendingUp, label: 'Investments' },
+  { to: '/zakat', icon: Moon, label: 'Zakat' }
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

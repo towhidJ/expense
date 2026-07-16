@@ -17,6 +17,7 @@ import {
   MealCalendarPage, MealNotificationsPage, MealReportsPage, MealStockPage
 } from './pages/meals/MealPages';
 import Reports from './pages/Reports';
+import Forecast from './pages/Forecast';
 import Budgets from './pages/Budgets';
 import Assets from './pages/Assets';
 import Accounts from './pages/Accounts';
@@ -24,6 +25,8 @@ import Transfers from './pages/Transfers';
 import Goals from './pages/Goals';
 import Savings from './pages/Savings';
 import Liabilities from './pages/Liabilities';
+import Lending from './pages/Lending';
+import Zakat from './pages/Zakat';
 import Investments from './pages/Investments';
 import FamilyMembers from './pages/FamilyMembers';
 import Recurring from './pages/Recurring';
@@ -53,9 +56,12 @@ function App() {
                 <Route path="import" element={<ImportTransactions />} />
                 <Route path="bazar" element={<Bazar />} />
                 <Route path="reports" element={<Reports />} />
+                <Route path="forecast" element={<Forecast />} />
                 <Route path="budgets" element={<Budgets />} />
                 <Route path="assets" element={<Assets />} />
                 <Route path="liabilities" element={<Liabilities />} />
+                <Route path="lending" element={<Lending />} />
+                <Route path="zakat" element={<Zakat />} />
                 <Route path="investments" element={<Investments />} />
                 <Route path="family" element={<FamilyMembers />} />
                 <Route path="accounts" element={<Accounts />} />

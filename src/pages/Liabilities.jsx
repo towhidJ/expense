@@ -474,6 +474,7 @@ export default function Liabilities() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {liabilities
           .filter(l => l.type !== 'shop_due') // shop khatas are managed on the Bazar page
+          .filter(l => !l.counterparty) // person-to-person loans live on the Dena-Paona page
           .filter(l => showPaid || l.remaining_balance > 0)
           .map(liability => {
           const isPaidOff = liability.remaining_balance <= 0;
