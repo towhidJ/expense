@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { AuthProvider } from './context/AuthContext';
 import { EntityProvider } from './context/EntityContext';
 import { AccountProvider } from './context/AccountContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
+import PremiumGate from './components/PremiumGate';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -46,9 +48,13 @@ import Admin from './pages/Admin';
 import Alerts from './pages/Alerts';
 import ImportTransactions from './pages/ImportTransactions';
 
+// Wrap a route element in the premium gate for its module key (v39 gating).
+const g = (key, el) => <PremiumGate module={key}>{el}</PremiumGate>;
+
 function App() {
   return (
     <AuthProvider>
+      <SubscriptionProvider>
       <EntityProvider>
         <AccountProvider>
           <BrowserRouter>
@@ -64,34 +70,34 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="transactions" element={<Transactions />} />
-                <Route path="import" element={<ImportTransactions />} />
-                <Route path="bazar" element={<Bazar />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="forecast" element={<Forecast />} />
-                <Route path="budgets" element={<Budgets />} />
-                <Route path="assets" element={<Assets />} />
-                <Route path="liabilities" element={<Liabilities />} />
-                <Route path="lending" element={<Lending />} />
-                <Route path="zakat" element={<Zakat />} />
-                <Route path="subscriptions" element={<Subscriptions />} />
-                <Route path="insurance" element={<Insurance />} />
-                <Route path="utility" element={<Utility />} />
-                <Route path="rent" element={<Rent />} />
-                <Route path="warranty" element={<Warranty />} />
-                <Route path="backup" element={<Backup />} />
-                <Route path="activity" element={<Activity />} />
-                <Route path="splitter" element={<Splitter />} />
-                <Route path="tax" element={<Tax />} />
-                <Route path="insights" element={<Insights />} />
-                <Route path="scan" element={<ScanReceipt />} />
-                <Route path="investments" element={<Investments />} />
-                <Route path="family" element={<FamilyMembers />} />
+                <Route path="import" element={g('import', <ImportTransactions />)} />
+                <Route path="bazar" element={g('bazar', <Bazar />)} />
+                <Route path="reports" element={g('reports', <Reports />)} />
+                <Route path="forecast" element={g('forecast', <Forecast />)} />
+                <Route path="budgets" element={g('budgets', <Budgets />)} />
+                <Route path="assets" element={g('assets', <Assets />)} />
+                <Route path="liabilities" element={g('liabilities', <Liabilities />)} />
+                <Route path="lending" element={g('lending', <Lending />)} />
+                <Route path="zakat" element={g('zakat', <Zakat />)} />
+                <Route path="subscriptions" element={g('subscriptions', <Subscriptions />)} />
+                <Route path="insurance" element={g('insurance', <Insurance />)} />
+                <Route path="utility" element={g('utility', <Utility />)} />
+                <Route path="rent" element={g('rent', <Rent />)} />
+                <Route path="warranty" element={g('warranty', <Warranty />)} />
+                <Route path="backup" element={g('backup', <Backup />)} />
+                <Route path="activity" element={g('activity', <Activity />)} />
+                <Route path="splitter" element={g('splitter', <Splitter />)} />
+                <Route path="tax" element={g('tax', <Tax />)} />
+                <Route path="insights" element={g('insights', <Insights />)} />
+                <Route path="scan" element={g('scan', <ScanReceipt />)} />
+                <Route path="investments" element={g('investments', <Investments />)} />
+                <Route path="family" element={g('family', <FamilyMembers />)} />
                 <Route path="accounts" element={<Accounts />} />
-                <Route path="transfers" element={<Transfers />} />
-                <Route path="recurring" element={<Recurring />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="goals" element={<Goals />} />
-                <Route path="savings" element={<Savings />} />
+                <Route path="transfers" element={g('transfers', <Transfers />)} />
+                <Route path="recurring" element={g('recurring', <Recurring />)} />
+                <Route path="categories" element={g('categories', <Categories />)} />
+                <Route path="goals" element={g('goals', <Goals />)} />
+                <Route path="savings" element={g('savings', <Savings />)} />
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="admin" element={<Admin />} />
               </Route>
@@ -100,9 +106,11 @@ function App() {
                 path="/meals"
                 element={
                   <ProtectedRoute>
-                    <MealProvider>
-                      <MealLayout />
-                    </MealProvider>
+                    {g('meals',
+                      <MealProvider>
+                        <MealLayout />
+                      </MealProvider>
+                    )}
                   </ProtectedRoute>
                 }
               >
@@ -127,6 +135,7 @@ function App() {
           </BrowserRouter>
         </AccountProvider>
       </EntityProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }

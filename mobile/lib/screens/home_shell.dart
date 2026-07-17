@@ -7,6 +7,7 @@ import 'accounts_screen.dart';
 import 'bazar_screen.dart';
 import 'dashboard_screen.dart';
 import 'more_screen.dart';
+import 'premium_screen.dart';
 import 'transactions_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -70,7 +71,11 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
                     children: [
                       DashboardScreen(state: st),
                       TransactionsScreen(state: st),
-                      BazarScreen(state: st),
+                      // Bazar is premium-gateable; PremiumScreen brings its own
+                      // AppBar just like BazarScreen, so isBazar still applies.
+                      st.isLocked('bazar')
+                          ? PremiumScreen(state: st, lockedLabel: 'Bazar')
+                          : BazarScreen(state: st),
                       AccountsScreen(state: st),
                       MoreScreen(state: st),
                     ],

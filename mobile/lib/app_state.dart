@@ -16,7 +16,72 @@ class AppState extends ChangeNotifier {
   List<Category> categories = [];
   bool loading = true;
 
+  // ---- Premium gating (v39) — user-scoped, not entity-scoped ----
+  // module_key -> is_premium; a key missing from the map is FREE (same
+  // contract as the web client). Gating is UX-only; the RPCs enforce.
+  Map<String, bool> premiumModules = {};
+  Map<String, dynamic>? billing; // billing_settings row (prices, pay numbers)
+  bool subActive = false;
+  bool subLifetime = false;
+  DateTime? subExpiresAt;
+  bool isAdminUser = false;
+
   String get _uid => supabase.auth.currentUser!.id;
+
+  bool isLocked(String key) =>
+      !isAdminUser && !subActive && (premiumModules[key] ?? false);
+
+  Future<void> refreshBillingState() async {
+    try {
+      final results = await Future.wait<dynamic>([
+        supabase.from('module_access').select('module_key, is_premium'),
+        supabase.from('billing_settings').select().eq('id', 1).maybeSingle(),
+        supabase.rpc('get_my_subscription'),
+        supabase.from('profiles').select('is_admin').eq('id', _uid).maybeSingle(),
+      ]);
+      premiumModules = {
+        for (final r in results[0] as List)
+          r['module_key'] as String: r['is_premium'] == true,
+      };
+      billing = results[1] == null ? null : Map<String, dynamic>.from(results[1] as Map);
+      final subRows = results[2];
+      final sub = subRows is List
+          ? (subRows.isNotEmpty ? subRows.first : null)
+          : (subRows is Map ? subRows : null);
+      subActive = sub?['is_active'] == true;
+      subLifetime = sub?['is_lifetime'] == true;
+      subExpiresAt =
+          sub?['expires_at'] != null ? DateTime.parse(sub['expires_at']).toLocal() : null;
+      isAdminUser = (results[3] as Map?)?['is_admin'] == true;
+    } catch (_) {
+      // Fail-open: if v39 isn't applied yet, everything stays free.
+    }
+    notifyListeners();
+  }
+
+  Future<void> submitSubscriptionRequest({
+    required String duration,
+    required String method,
+    required String trxId,
+    required String senderNumber,
+    double? amount,
+  }) async {
+    await supabase.rpc('submit_subscription_request', params: {
+      'p_duration': duration,
+      'p_method': method,
+      'p_trx_id': trxId,
+      'p_sender_number': senderNumber,
+      'p_amount': amount,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> myPremiumRequests() async {
+    final rows = await supabase
+        .from('subscription_requests')
+        .select()
+        .order('created_at', ascending: false);
+    return rows.map((r) => Map<String, dynamic>.from(r)).toList();
+  }
 
   Future<void> load() async {
     loading = true;
@@ -34,6 +99,9 @@ class AppState extends ChangeNotifier {
     await _loadEntityData();
     loading = false;
     notifyListeners();
+    // Not entity-scoped and non-blocking: gating can arrive a moment later
+    // (fail-open, same as web).
+    refreshBillingState();
   }
 
   Future<void> _loadEntityData() async {

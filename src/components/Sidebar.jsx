@@ -4,11 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
+import { useSubscription } from '../context/SubscriptionContext';
+import { moduleKeyByPath } from '../lib/modules';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
   Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
-  Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine
+  Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock
 } from 'lucide-react';
 
 // Sections keep the long nav scannable; a null `to` renders a heading.
@@ -56,6 +58,7 @@ const navItems = [
 export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { isModuleLocked } = useSubscription();
   const { entities, currentEntity, switchEntity, addEntity, updateEntity, deleteEntity } = useEntity();
   const { notifications: financeNotifications } = useFinanceNotifications();
   const unreadAlerts = financeNotifications.filter(n => !n.is_read).length;
@@ -216,7 +219,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {[...navItems, ...(isAdmin ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }] : [])].map(({ to, icon: Icon, label, heading }) => (
+          {navItems.map(({ to, icon: Icon, label, heading }) => (
             heading ? (
               <p key={heading} className="pt-4 pb-1 px-4 text-[10px] uppercase tracking-widest text-white/25 select-none">{heading}</p>
             ) : (
@@ -239,12 +242,28 @@ export default function Sidebar({ isOpen, onClose }) {
                   {unreadAlerts}
                 </span>
               )}
+              {isModuleLocked?.(moduleKeyByPath[to]) && (
+                <Lock className="w-3.5 h-3.5 text-amber-400/70" />
+              )}
             </NavLink>
             )
           ))}
         </nav>
 
         <div className="p-4 border-t border-white/10">
+          {/* Admin panel: a distinct "switch" affordance, only for admins */}
+          {isAdmin && (
+            <NavLink
+              to="/admin"
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-500/15 to-purple-600/15 border border-cyan-500/20 text-cyan-300 hover:from-cyan-500/25 hover:to-purple-600/25 transition-all"
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span className="flex-1">Admin Panel</span>
+              <span className="text-[10px] uppercase tracking-wider text-cyan-400/60">Manage</span>
+            </NavLink>
+          )}
+
           {/* Meal workspace: a separate section of the app with its own layout */}
           <NavLink
             to="/meals"
@@ -253,7 +272,11 @@ export default function Sidebar({ isOpen, onClose }) {
           >
             <UtensilsCrossed className="w-5 h-5" />
             <span className="flex-1">Meal Manager</span>
-            <span className="text-[10px] uppercase tracking-wider text-emerald-400/60">Workspace</span>
+            {isModuleLocked?.('meals') ? (
+              <Lock className="w-3.5 h-3.5 text-amber-400/70" />
+            ) : (
+              <span className="text-[10px] uppercase tracking-wider text-emerald-400/60">Workspace</span>
+            )}
           </NavLink>
 
           <div className="relative">

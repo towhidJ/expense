@@ -20,6 +20,7 @@ import 'investments_screen.dart';
 import 'lending_screen.dart';
 import 'liabilities_screen.dart';
 import 'meals_screen.dart';
+import 'premium_screen.dart';
 import 'recurring_screen.dart';
 import 'rent_screen.dart';
 import 'reports_screen.dart';
@@ -179,34 +180,36 @@ class _MoreScreenState extends State<MoreScreen> {
     final user = supabase.auth.currentUser;
     final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
 
-    final features = <(IconData, String, Color, Widget Function())>[
-      (Icons.restaurant, 'Meals', kEmerald, () => MealsScreen(state: state)),
-      (Icons.pie_chart_outline, 'Reports', kPurple, () => ReportsScreen(state: state)),
-      (Icons.account_balance_wallet_outlined, 'Budgets', kCyan, () => BudgetsScreen(state: state)),
-      (Icons.notifications_active_outlined, 'Alerts', kRed, () => FinanceNotificationsScreen(state: state)),
-      (Icons.flag_outlined, 'Goals', kEmerald, () => GoalsScreen(state: state)),
-      (Icons.savings_outlined, 'Savings', kOrange, () => SavingsScreen(state: state)),
-      (Icons.swap_horiz, 'Transfers', kCyan, () => TransfersScreen(state: state)),
-      (Icons.repeat, 'Recurring', kPurple, () => RecurringScreen(state: state)),
-      (Icons.sell_outlined, 'Categories', kOrange, () => CategoriesScreen(state: state)),
-      (Icons.two_wheeler_outlined, 'Assets', kOrange, () => AssetsScreen(state: state)),
-      (Icons.shield_outlined, 'Liabilities', kRed, () => LiabilitiesScreen(state: state)),
-      (Icons.trending_up, 'Investments', kEmerald, () => InvestmentsScreen(state: state)),
-      (Icons.people_outline, 'Family', kCyan, () => FamilyScreen(state: state)),
-      (Icons.handshake_outlined, 'Dena-Paona', kOrange, () => LendingScreen(state: state)),
-      (Icons.query_stats, 'Forecast', kCyan, () => ForecastScreen(state: state)),
-      (Icons.mosque_outlined, 'Zakat', kEmerald, () => ZakatScreen(state: state)),
-      (Icons.subscriptions_outlined, 'Subscriptions', kPurple, () => SubscriptionsScreen(state: state)),
-      (Icons.health_and_safety_outlined, 'Insurance', kCyan, () => InsuranceScreen(state: state)),
-      (Icons.bolt_outlined, 'Utility Bills', kOrange, () => UtilityScreen(state: state)),
-      (Icons.apartment_outlined, 'Rent', kEmerald, () => RentScreen(state: state)),
-      (Icons.verified_outlined, 'Warranty', kPurple, () => WarrantyScreen(state: state)),
-      (Icons.call_split, 'Bill Splitter', kCyan, () => SplitterScreen(state: state)),
-      (Icons.receipt_long_outlined, 'Tax', kRed, () => TaxScreen(state: state)),
-      (Icons.auto_awesome_outlined, 'AI Insights', kPurple, () => InsightsScreen(state: state)),
-      (Icons.document_scanner_outlined, 'Scan Receipt', kEmerald, () => ScanReceiptScreen(state: state)),
-      (Icons.history, 'Activity Log', kOrange, () => ActivityScreen(state: state)),
-      (Icons.cloud_download_outlined, 'Backup', kCyan, () => BackupScreen(state: state)),
+    // Module keys are the shared premium-gating contract with the web app
+    // (module_access.module_key, v39). null key = never gated (e.g. Alerts).
+    final features = <(IconData, String, Color, Widget Function(), String?)>[
+      (Icons.restaurant, 'Meals', kEmerald, () => MealsScreen(state: state), 'meals'),
+      (Icons.pie_chart_outline, 'Reports', kPurple, () => ReportsScreen(state: state), 'reports'),
+      (Icons.account_balance_wallet_outlined, 'Budgets', kCyan, () => BudgetsScreen(state: state), 'budgets'),
+      (Icons.notifications_active_outlined, 'Alerts', kRed, () => FinanceNotificationsScreen(state: state), null),
+      (Icons.flag_outlined, 'Goals', kEmerald, () => GoalsScreen(state: state), 'goals'),
+      (Icons.savings_outlined, 'Savings', kOrange, () => SavingsScreen(state: state), 'savings'),
+      (Icons.swap_horiz, 'Transfers', kCyan, () => TransfersScreen(state: state), 'transfers'),
+      (Icons.repeat, 'Recurring', kPurple, () => RecurringScreen(state: state), 'recurring'),
+      (Icons.sell_outlined, 'Categories', kOrange, () => CategoriesScreen(state: state), 'categories'),
+      (Icons.two_wheeler_outlined, 'Assets', kOrange, () => AssetsScreen(state: state), 'assets'),
+      (Icons.shield_outlined, 'Liabilities', kRed, () => LiabilitiesScreen(state: state), 'liabilities'),
+      (Icons.trending_up, 'Investments', kEmerald, () => InvestmentsScreen(state: state), 'investments'),
+      (Icons.people_outline, 'Family', kCyan, () => FamilyScreen(state: state), 'family'),
+      (Icons.handshake_outlined, 'Dena-Paona', kOrange, () => LendingScreen(state: state), 'lending'),
+      (Icons.query_stats, 'Forecast', kCyan, () => ForecastScreen(state: state), 'forecast'),
+      (Icons.mosque_outlined, 'Zakat', kEmerald, () => ZakatScreen(state: state), 'zakat'),
+      (Icons.subscriptions_outlined, 'Subscriptions', kPurple, () => SubscriptionsScreen(state: state), 'subscriptions'),
+      (Icons.health_and_safety_outlined, 'Insurance', kCyan, () => InsuranceScreen(state: state), 'insurance'),
+      (Icons.bolt_outlined, 'Utility Bills', kOrange, () => UtilityScreen(state: state), 'utility'),
+      (Icons.apartment_outlined, 'Rent', kEmerald, () => RentScreen(state: state), 'rent'),
+      (Icons.verified_outlined, 'Warranty', kPurple, () => WarrantyScreen(state: state), 'warranty'),
+      (Icons.call_split, 'Bill Splitter', kCyan, () => SplitterScreen(state: state), 'splitter'),
+      (Icons.receipt_long_outlined, 'Tax', kRed, () => TaxScreen(state: state), 'tax'),
+      (Icons.auto_awesome_outlined, 'AI Insights', kPurple, () => InsightsScreen(state: state), 'insights'),
+      (Icons.document_scanner_outlined, 'Scan Receipt', kEmerald, () => ScanReceiptScreen(state: state), 'scan'),
+      (Icons.history, 'Activity Log', kOrange, () => ActivityScreen(state: state), 'activity'),
+      (Icons.cloud_download_outlined, 'Backup', kCyan, () => BackupScreen(state: state), 'backup'),
     ];
 
     return ListView(
@@ -237,36 +240,73 @@ class _MoreScreenState extends State<MoreScreen> {
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
           childAspectRatio: 1.05,
-          children: features
-              .map((f) => Card(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => _push(context, f.$4()),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: f.$3.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(f.$1, color: f.$3, size: 20),
+          children: features.map((f) {
+            final locked = f.$5 != null && state.isLocked(f.$5!);
+            return Card(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _push(
+                    context,
+                    locked
+                        ? PremiumScreen(state: state, lockedLabel: f.$2)
+                        : f.$4()),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: f.$3.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(height: 8),
-                          Text(f.$2, style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
+                          child: Icon(f.$1, color: f.$3, size: 20),
+                        ),
+                        if (locked)
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: kOrange,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.lock, size: 10, color: Colors.white),
+                            ),
+                          ),
+                      ],
                     ),
-                  ))
-              .toList(),
+                    const SizedBox(height: 8),
+                    Text(f.$2, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 16),
         Card(
           child: Column(
             children: [
+              ListTile(
+                leading: Icon(Icons.workspace_premium_outlined,
+                    color: state.subActive ? kEmerald : kOrange),
+                title: Text(state.subActive ? 'Premium active' : 'Go Premium',
+                    style: const TextStyle(fontSize: 14)),
+                subtitle: Text(
+                    state.subActive
+                        ? (state.subLifetime ? 'Lifetime' : 'Manage your subscription')
+                        : 'Unlock all Premium modules',
+                    style: TextStyle(fontSize: 11, color: kFg38)),
+                trailing: Icon(Icons.chevron_right, color: kFg24),
+                onTap: () => _push(context, PremiumScreen(state: state)),
+              ),
+              Divider(height: 1, color: kFg.withValues(alpha: 0.06)),
               SwitchListTile(
                 secondary: Icon(isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined, color: kOrange),
                 title: const Text('Light Mode', style: TextStyle(fontSize: 14)),
