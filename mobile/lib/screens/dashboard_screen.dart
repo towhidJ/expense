@@ -61,7 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     final st = widget.state;
     final txs = _monthTxs;
-    final cash = st.accounts.fold<double>(0, (s, a) => s + a.currentBalance);
+    final cash = sumBdt(st.accounts); // multi-currency: totals always in BDT
     final income = txs?.where((t) => t.type == 'income').fold<double>(0, (s, t) => s + t.amount) ?? 0;
     final expense = txs?.where((t) => t.type == 'expense').fold<double>(0, (s, t) => s + t.amount) ?? 0;
     final savingsRate = income > 0 ? ((income - expense) / income * 100) : 0.0;

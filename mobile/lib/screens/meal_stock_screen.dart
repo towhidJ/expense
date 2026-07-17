@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../theme.dart';
@@ -57,48 +58,75 @@ class _MealStockScreenState extends State<MealStockScreen> {
     final qty = TextEditingController();
     final unit = TextEditingController();
     final threshold = TextEditingController();
+    DateTime? expiry;
     final ok = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Add Stock Item', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              TextField(controller: name, decoration: const InputDecoration(labelText: 'Name', hintText: 'Rice / চাল')),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: qty,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Quantity'),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Add Stock Item', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 16),
+                TextField(controller: name, decoration: const InputDecoration(labelText: 'Name', hintText: 'Rice / চাল')),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: qty,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(labelText: 'Quantity'),
+                    ),
                   ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(controller: unit, decoration: const InputDecoration(labelText: 'Unit', hintText: 'kg')),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: threshold,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Low-stock alert below (optional)'),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(controller: unit, decoration: const InputDecoration(labelText: 'Unit', hintText: 'kg')),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.event_outlined, color: kCyan, size: 20),
+                  title: Text(
+                    expiry == null ? 'Expiry date (optional)' : 'Expires: ${DateFormat('d MMM yyyy').format(expiry!)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  trailing: expiry == null
+                      ? null
+                      : IconButton(
+                          icon: Icon(Icons.close, size: 16, color: kFg38),
+                          onPressed: () => setSheet(() => expiry = null),
+                        ),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: sheetContext,
+                      initialDate: expiry ?? DateTime.now().add(const Duration(days: 30)),
+                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                    );
+                    if (picked != null) setSheet(() => expiry = picked);
+                  },
                 ),
-              ]),
-              const SizedBox(height: 12),
-              TextField(
-                controller: threshold,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Low-stock alert below (optional)'),
-              ),
-              const SizedBox(height: 20),
-              GradientButton(
-                label: 'Save',
-                onPressed: () {
-                  if (name.text.trim().isNotEmpty) Navigator.pop(sheetContext, true);
-                },
-              ),
-            ],
+                const SizedBox(height: 20),
+                GradientButton(
+                  label: 'Save',
+                  onPressed: () {
+                    if (name.text.trim().isNotEmpty) Navigator.pop(sheetContext, true);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -110,6 +138,7 @@ class _MealStockScreenState extends State<MealStockScreen> {
           quantity: double.tryParse(qty.text) ?? 0,
           unit: unit.text.trim().isEmpty ? null : unit.text.trim(),
           lowStockThreshold: double.tryParse(threshold.text),
+          expiryDate: expiry,
         ));
   }
 
@@ -163,6 +192,15 @@ class _MealStockScreenState extends State<MealStockScreen> {
     await _run(() => state.adjustMealStock(item.id, sign * delta));
   }
 
+  Widget _badge(String text, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final items = _items;
@@ -184,6 +222,7 @@ class _MealStockScreenState extends State<MealStockScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
                     final item = items[i];
+                    final alert = item.isLow || item.isExpired;
                     return Card(
                       child: ListTile(
                         leading: Container(
@@ -191,19 +230,30 @@ class _MealStockScreenState extends State<MealStockScreen> {
                           height: 38,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: (item.isLow ? kRed : kCyan).withValues(alpha: 0.12),
+                            color: (alert ? kRed : kCyan).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(Icons.inventory_2_outlined, color: item.isLow ? kRed : kCyan, size: 18),
+                          child: Icon(Icons.inventory_2_outlined, color: alert ? kRed : kCyan, size: 18),
                         ),
                         title: Row(children: [
-                          Text(item.name, style: const TextStyle(fontSize: 14)),
+                          Flexible(child: Text(item.name, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis)),
                           if (item.isLow) ...[
                             const SizedBox(width: 6),
                             const Icon(Icons.warning_amber_rounded, size: 14, color: kRed),
                           ],
+                          if (item.isExpired) ...[
+                            const SizedBox(width: 6),
+                            _badge('Expired', kRed),
+                          ] else if (item.expiresSoon) ...[
+                            const SizedBox(width: 6),
+                            _badge(item.daysToExpiry == 0 ? 'Expires today' : '${item.daysToExpiry}d left', kOrange),
+                          ],
                         ]),
-                        subtitle: Text('${item.quantity} ${item.unit ?? ''}', style: TextStyle(fontSize: 11, color: kFg38)),
+                        subtitle: Text(
+                          '${item.quantity} ${item.unit ?? ''}'
+                          '${item.expiryDate == null ? '' : ' • exp ${DateFormat('d MMM yyyy').format(item.expiryDate!)}'}',
+                          style: TextStyle(fontSize: 11, color: kFg38),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

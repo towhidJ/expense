@@ -196,6 +196,8 @@ class AppState extends ChangeNotifier {
     required String type,
     required double openingBalance,
     String? accountNumber,
+    String currency = '৳',
+    double exchangeRate = 1,
   }) async {
     await supabase.from('accounts').insert({
       'user_id': _uid,
@@ -205,6 +207,8 @@ class AppState extends ChangeNotifier {
       'opening_balance': openingBalance,
       'current_balance': openingBalance,
       'account_number': (accountNumber == null || accountNumber.isEmpty) ? null : accountNumber,
+      'currency': currency,
+      'exchange_rate': currency == '৳' ? 1 : exchangeRate,
     });
     await refreshAccounts();
   }
@@ -593,7 +597,7 @@ class AppState extends ChangeNotifier {
     return rows.map<Recurring>(Recurring.fromMap).toList();
   }
 
-  Future<void> upsertRecurring({String? id, required String title, required String type, required String categoryId, required String accountId, required double amount, required String frequency, required DateTime nextRunDate, bool isActive = true}) async {
+  Future<void> upsertRecurring({String? id, required String title, required String type, required String categoryId, required String accountId, required double amount, required String frequency, required DateTime nextRunDate, bool isActive = true, bool isSubscription = false, String? utilityType}) async {
     final payload = {
       'title': title,
       'type': type,
@@ -603,6 +607,8 @@ class AppState extends ChangeNotifier {
       'frequency': frequency,
       'next_run_date': _d(nextRunDate),
       'is_active': isActive,
+      'is_subscription': isSubscription,
+      'utility_type': type == 'expense' ? utilityType : null,
     };
     if (id == null) {
       await supabase.from('recurring_transactions').insert({...payload, 'user_id': _uid, 'entity_id': currentEntity!.id});
@@ -858,12 +864,14 @@ class AppState extends ChangeNotifier {
     await refreshAccounts();
   }
 
-  Future<void> updateAccount({required String id, required String name, required String type, String? accountNumber, required double currentBalance}) async {
+  Future<void> updateAccount({required String id, required String name, required String type, String? accountNumber, required double currentBalance, String currency = '৳', double exchangeRate = 1}) async {
     await supabase.from('accounts').update({
       'name': name,
       'type': type,
       'account_number': (accountNumber == null || accountNumber.isEmpty) ? null : accountNumber,
       'current_balance': currentBalance,
+      'currency': currency,
+      'exchange_rate': currency == '৳' ? 1 : exchangeRate,
     }).eq('id', id).eq('user_id', _uid);
     await refreshAccounts();
   }
@@ -1373,6 +1381,7 @@ class AppState extends ChangeNotifier {
     double quantity = 0,
     String? unit,
     double? lowStockThreshold,
+    DateTime? expiryDate,
   }) async {
     await supabase.from('meal_stock_items').insert({
       'group_id': groupId,
@@ -1380,6 +1389,7 @@ class AppState extends ChangeNotifier {
       'quantity': quantity,
       'unit': unit,
       'low_stock_threshold': lowStockThreshold,
+      'expiry_date': expiryDate == null ? null : _d(expiryDate),
     });
   }
 
@@ -1664,6 +1674,632 @@ class AppState extends ChangeNotifier {
 
   Future<void> deleteMealNotification(String id) async {
     await supabase.from('meal_notifications').delete().eq('id', id);
+  }
+
+  // ============================================================
+  // v34–v38 module pack (web parity port)
+  // ============================================================
+
+  // ---- Recurring extras (subscription flag, utility link, run-due) ----
+
+  Future<void> setRecurringSubscription(String id, bool isSubscription) async {
+    await supabase.from('recurring_transactions').update({'is_subscription': isSubscription}).eq('id', id).eq('user_id', _uid);
+  }
+
+  Future<void> setRecurringUtilityType(String id, String? utilityType) async {
+    await supabase.from('recurring_transactions').update({'utility_type': utilityType}).eq('id', id).eq('user_id', _uid);
+  }
+
+  /// Posts every due recurring transaction (catching up missed periods);
+  /// returns the number of transactions created. Utility-tagged items also
+  /// record the month's bill as paid (v37, server-side).
+  Future<int> runDueRecurring() async {
+    final count = await supabase.rpc('run_due_recurring', params: {
+      'p_user_id': _uid,
+      'p_entity_id': currentEntity!.id,
+    });
+    await refreshAccounts();
+    return (count as num?)?.toInt() ?? 0;
+  }
+
+  // ---- Dena-Paona (person loans: liabilities with counterparty, v34) ----
+
+  Future<(List<Liability>, List<Repayment>)> fetchLending() async {
+    if (currentEntity == null) return (<Liability>[], <Repayment>[]);
+    final results = await Future.wait([
+      supabase
+          .from('liabilities')
+          .select()
+          .eq('user_id', _uid)
+          .eq('entity_id', currentEntity!.id)
+          .inFilter('type', ['loan_given', 'loan_taken'])
+          .not('counterparty', 'is', null)
+          .order('created_at', ascending: false),
+      supabase
+          .from('loan_repayments')
+          .select('*, accounts(name)')
+          .eq('user_id', _uid)
+          .eq('entity_id', currentEntity!.id)
+          .order('date', ascending: false),
+    ]);
+    return (
+      results[0].map<Liability>(Liability.fromMap).toList(),
+      results[1].map<Repayment>(Repayment.fromMap).toList(),
+    );
+  }
+
+  /// direction 'given' = ami dilam (cash out) | 'taken' = ami nilam (cash in).
+  /// With [accountId] the RPC moves the balance; without it the loan is an
+  /// opening-balance ledger entry only.
+  Future<void> addPersonLoan({
+    required String direction,
+    required String person,
+    String phone = '',
+    required double amount,
+    String? accountId,
+    DateTime? dueDate,
+    String notes = '',
+  }) async {
+    final type = direction == 'given' ? 'loan_given' : 'loan_taken';
+    if (accountId != null) {
+      final loanId = await supabase.rpc('process_new_loan', params: {
+        'p_user_id': _uid,
+        'p_entity_id': currentEntity!.id,
+        'p_name': person,
+        'p_type': type,
+        'p_principal': amount,
+        'p_interest_rate': 0,
+        'p_due_date': dueDate == null ? null : _d(dueDate),
+        'p_notes': notes,
+        'p_account_id': accountId,
+      });
+      // process_new_loan predates the counterparty column — tag after.
+      await supabase.from('liabilities').update({
+        'counterparty': person,
+        'phone': phone.isEmpty ? null : phone,
+      }).eq('id', loanId as String).eq('user_id', _uid);
+      await refreshAccounts();
+    } else {
+      await supabase.from('liabilities').insert({
+        'user_id': _uid,
+        'entity_id': currentEntity!.id,
+        'name': person,
+        'counterparty': person,
+        'phone': phone.isEmpty ? null : phone,
+        'type': type,
+        'principal': amount,
+        'interest_rate': 0,
+        'due_date': dueDate == null ? null : _d(dueDate),
+        'remaining_balance': amount,
+        'notes': notes,
+      });
+    }
+  }
+
+  // ---- Insurance policies (v35) ----
+
+  Future<List<InsurancePolicy>> fetchInsurance() async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('insurance_policies')
+        .select()
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order('created_at', ascending: false);
+    return rows.map<InsurancePolicy>(InsurancePolicy.fromMap).toList();
+  }
+
+  Future<void> upsertInsurance({
+    String? id,
+    required String name,
+    required String type,
+    String provider = '',
+    String policyNumber = '',
+    double coverageAmount = 0,
+    required double premiumAmount,
+    required String premiumFrequency,
+    DateTime? nextPremiumDate,
+    DateTime? maturityDate,
+    String notes = '',
+    bool isActive = true,
+  }) async {
+    final payload = {
+      'name': name,
+      'type': type,
+      'provider': provider.isEmpty ? null : provider,
+      'policy_number': policyNumber.isEmpty ? null : policyNumber,
+      'coverage_amount': coverageAmount,
+      'premium_amount': premiumAmount,
+      'premium_frequency': premiumFrequency,
+      'next_premium_date': nextPremiumDate == null ? null : _d(nextPremiumDate),
+      'maturity_date': maturityDate == null ? null : _d(maturityDate),
+      'notes': notes,
+      'is_active': isActive,
+    };
+    if (id == null) {
+      await supabase.from('insurance_policies').insert({...payload, 'user_id': _uid, 'entity_id': currentEntity!.id});
+    } else {
+      await supabase.from('insurance_policies').update(payload).eq('id', id).eq('user_id', _uid);
+    }
+  }
+
+  Future<void> deleteInsurance(String id) async {
+    await supabase.from('insurance_policies').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  // ---- Utility bills (v35 + v37 recurring link) ----
+
+  Future<List<UtilityBill>> fetchUtilityBills() async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('utility_bills')
+        .select()
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order('bill_month', ascending: false);
+    return rows.map<UtilityBill>(UtilityBill.fromMap).toList();
+  }
+
+  Future<void> addUtilityBill({
+    required String type,
+    required DateTime billMonth,
+    double? units,
+    required double amount,
+    DateTime? dueDate,
+    String notes = '',
+  }) async {
+    await supabase.from('utility_bills').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity!.id,
+      'type': type,
+      'bill_month': _d(DateTime(billMonth.year, billMonth.month, 1)),
+      'units': units,
+      'amount': amount,
+      'due_date': dueDate == null ? null : _d(dueDate),
+      'notes': notes,
+    });
+  }
+
+  /// Pays a bill through an account (process_transaction) and links the
+  /// transaction to the bill row so it shows as PAID.
+  Future<void> payUtilityBill({
+    required UtilityBill bill,
+    required String accountId,
+    required String categoryId,
+    required DateTime date,
+    required String description,
+  }) async {
+    final txId = await supabase.rpc('process_transaction', params: {
+      'p_user_id': _uid,
+      'p_entity_id': currentEntity!.id,
+      'p_account_id': accountId,
+      'p_category_id': categoryId,
+      'p_asset_id': null,
+      'p_type': 'expense',
+      'p_amount': bill.amount,
+      'p_date': _d(date),
+      'p_description': description,
+    });
+    await supabase.from('utility_bills').update({'transaction_id': txId}).eq('id', bill.id).eq('user_id', _uid);
+    await refreshAccounts();
+  }
+
+  Future<void> deleteUtilityBill(String id) async {
+    await supabase.from('utility_bills').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  // ---- Rent management (v35 + v38 expansion) ----
+
+  Future<(List<RentalUnit>, List<RentPayment>, List<RentRevision>, List<UnitTenancy>, List<RentUnitExpense>)>
+      fetchRentData() async {
+    if (currentEntity == null) {
+      return (<RentalUnit>[], <RentPayment>[], <RentRevision>[], <UnitTenancy>[], <RentUnitExpense>[]);
+    }
+    final results = await Future.wait([
+      supabase.from('rental_units').select().eq('user_id', _uid).eq('entity_id', currentEntity!.id).order('created_at'),
+      supabase.from('rent_payments').select().eq('user_id', _uid).eq('entity_id', currentEntity!.id).order('rent_month'),
+      supabase.from('rent_revisions').select().eq('user_id', _uid).eq('entity_id', currentEntity!.id).order('effective_from', ascending: false),
+      supabase.from('unit_tenancies').select().eq('user_id', _uid).eq('entity_id', currentEntity!.id).order('end_date', ascending: false),
+      supabase.from('rent_unit_expenses').select().eq('user_id', _uid).eq('entity_id', currentEntity!.id).order('date', ascending: false),
+    ]);
+    return (
+      results[0].map<RentalUnit>(RentalUnit.fromMap).toList(),
+      results[1].map<RentPayment>(RentPayment.fromMap).toList(),
+      results[2].map<RentRevision>(RentRevision.fromMap).toList(),
+      results[3].map<UnitTenancy>(UnitTenancy.fromMap).toList(),
+      results[4].map<RentUnitExpense>(RentUnitExpense.fromMap).toList(),
+    );
+  }
+
+  Future<String> upsertRentalUnit({
+    String? id,
+    required String name,
+    String? tenantName,
+    String? tenantPhone,
+    required double monthlyRent,
+    double advanceDeposit = 0,
+    DateTime? rentStart,
+    String notes = '',
+    bool isActive = true,
+  }) async {
+    final payload = {
+      'name': name,
+      'tenant_name': (tenantName == null || tenantName.isEmpty) ? null : tenantName,
+      'tenant_phone': (tenantPhone == null || tenantPhone.isEmpty) ? null : tenantPhone,
+      'monthly_rent': monthlyRent,
+      'advance_deposit': advanceDeposit,
+      'rent_start': rentStart == null ? null : _d(rentStart),
+      'notes': notes,
+      'is_active': isActive,
+    };
+    if (id == null) {
+      final row = await supabase
+          .from('rental_units')
+          .insert({...payload, 'user_id': _uid, 'entity_id': currentEntity!.id})
+          .select('id')
+          .single();
+      return row['id'] as String;
+    }
+    await supabase.from('rental_units').update(payload).eq('id', id).eq('user_id', _uid);
+    return id;
+  }
+
+  Future<void> deleteRentalUnit(String id) async {
+    await supabase.from('rental_units').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  /// Records a rent-increase revision ('YYYY-MM-01'); updates in place when a
+  /// revision for that month already exists.
+  Future<void> saveRentRevision({required String unitId, required String effectiveFrom, required double monthlyRent}) async {
+    final existing = await supabase
+        .from('rent_revisions')
+        .select('id')
+        .eq('unit_id', unitId)
+        .eq('effective_from', effectiveFrom)
+        .maybeSingle();
+    if (existing != null) {
+      await supabase.from('rent_revisions').update({'monthly_rent': monthlyRent}).eq('id', existing['id']);
+    } else {
+      await supabase.from('rent_revisions').insert({
+        'user_id': _uid,
+        'entity_id': currentEntity!.id,
+        'unit_id': unitId,
+        'effective_from': effectiveFrom,
+        'monthly_rent': monthlyRent,
+      });
+    }
+  }
+
+  /// Collects rent (partial amounts fine). With [accountId]+[categoryId] the
+  /// income posts through process_transaction; otherwise ledger-only.
+  Future<void> collectRent({
+    required RentalUnit unit,
+    required String rentMonth, // 'YYYY-MM-01'
+    required double amount,
+    double chargeAmount = 0,
+    String chargeNote = '',
+    required DateTime date,
+    String? accountId,
+    String? categoryId,
+    required String description,
+  }) async {
+    String? txId;
+    if (accountId != null && categoryId != null) {
+      txId = await supabase.rpc('process_transaction', params: {
+        'p_user_id': _uid,
+        'p_entity_id': currentEntity!.id,
+        'p_account_id': accountId,
+        'p_category_id': categoryId,
+        'p_asset_id': null,
+        'p_type': 'income',
+        'p_amount': amount,
+        'p_date': _d(date),
+        'p_description': description,
+      }) as String?;
+    }
+    await supabase.from('rent_payments').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity!.id,
+      'unit_id': unit.id,
+      'rent_month': rentMonth,
+      'amount': amount,
+      'charge_amount': chargeAmount,
+      'charge_note': chargeNote.isEmpty ? null : chargeNote,
+      'paid_date': _d(date),
+      'transaction_id': txId,
+      'notes': '',
+    });
+    if (txId != null) await refreshAccounts();
+  }
+
+  Future<void> deleteRentPayment(String id) async {
+    await supabase.from('rent_payments').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  Future<void> addRentUnitExpense({
+    required String unitId,
+    required String unitName,
+    required DateTime date,
+    required double amount,
+    String description = '',
+    String? accountId,
+    String? categoryId,
+  }) async {
+    String? txId;
+    if (accountId != null && categoryId != null) {
+      txId = await supabase.rpc('process_transaction', params: {
+        'p_user_id': _uid,
+        'p_entity_id': currentEntity!.id,
+        'p_account_id': accountId,
+        'p_category_id': categoryId,
+        'p_asset_id': null,
+        'p_type': 'expense',
+        'p_amount': amount,
+        'p_date': _d(date),
+        'p_description': '$unitName — ${description.isEmpty ? 'maintenance' : description}',
+      }) as String?;
+    }
+    await supabase.from('rent_unit_expenses').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity!.id,
+      'unit_id': unitId,
+      'date': _d(date),
+      'amount': amount,
+      'description': description,
+      'transaction_id': txId,
+    });
+    if (txId != null) await refreshAccounts();
+  }
+
+  Future<void> deleteRentUnitExpense(String id) async {
+    await supabase.from('rent_unit_expenses').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  /// Ends a tenancy: settles dues against the advance, archives the tenant to
+  /// unit_tenancies and vacates the unit. The refund optionally posts as an
+  /// expense; kept dues optionally post as account-less memo income (same
+  /// pattern as shop-due purchases).
+  Future<void> endTenancy({
+    required RentalUnit unit,
+    required DateTime endDate,
+    required double dues,
+    required double currentRent,
+    String? refundAccountId,
+    String? refundCategoryId,
+    String? duesIncomeCategoryId,
+    String notes = '',
+  }) async {
+    final advance = unit.advanceDeposit;
+    final deducted = dues < advance ? dues : advance;
+    final refund = (advance - dues) > 0 ? advance - dues : 0.0;
+    String? refundTxId;
+    if (refundAccountId != null && refundCategoryId != null && refund > 0) {
+      refundTxId = await supabase.rpc('process_transaction', params: {
+        'p_user_id': _uid,
+        'p_entity_id': currentEntity!.id,
+        'p_account_id': refundAccountId,
+        'p_category_id': refundCategoryId,
+        'p_asset_id': null,
+        'p_type': 'expense',
+        'p_amount': refund,
+        'p_date': _d(endDate),
+        'p_description': 'Advance refund — ${unit.name} (${unit.tenantName ?? 'tenant'})',
+      }) as String?;
+    }
+    if (duesIncomeCategoryId != null && deducted > 0) {
+      await supabase.from('transactions').insert({
+        'user_id': _uid,
+        'entity_id': currentEntity!.id,
+        'account_id': null,
+        'category_id': duesIncomeCategoryId,
+        'type': 'income',
+        'amount': deducted,
+        'date': _d(endDate),
+        'description': 'Rent dues kept from advance — ${unit.name} (${unit.tenantName ?? 'tenant'})',
+      });
+    }
+    await supabase.from('unit_tenancies').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity!.id,
+      'unit_id': unit.id,
+      'tenant_name': unit.tenantName ?? '—',
+      'tenant_phone': unit.tenantPhone,
+      'start_date': unit.rentStart == null ? null : _d(unit.rentStart!),
+      'end_date': _d(endDate),
+      'monthly_rent': currentRent,
+      'advance_deposit': advance,
+      'dues_deducted': deducted,
+      'advance_returned': refund,
+      'refund_transaction_id': refundTxId,
+      'notes': notes,
+    });
+    await supabase.from('rental_units').update({
+      'tenant_name': null,
+      'tenant_phone': null,
+      'advance_deposit': 0,
+      'is_active': false,
+      'rent_start': null,
+    }).eq('id', unit.id).eq('user_id', _uid);
+    if (refundTxId != null) await refreshAccounts();
+  }
+
+  // ---- Bill Splitter (v35) ----
+
+  Future<List<SplitEvent>> fetchSplitEvents() async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('split_events')
+        .select()
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order('event_date', ascending: false);
+    return rows.map<SplitEvent>(SplitEvent.fromMap).toList();
+  }
+
+  Future<SplitEvent> addSplitEvent(String name) async {
+    final row = await supabase
+        .from('split_events')
+        .insert({'user_id': _uid, 'entity_id': currentEntity!.id, 'name': name})
+        .select()
+        .single();
+    return SplitEvent.fromMap(row);
+  }
+
+  Future<void> deleteSplitEvent(String id) async {
+    await supabase.from('split_events').delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  Future<(List<SplitMember>, List<SplitExpense>)> fetchSplitDetail(String eventId) async {
+    final results = await Future.wait([
+      supabase.from('split_members').select().eq('event_id', eventId).order('created_at'),
+      supabase.from('split_expenses').select().eq('event_id', eventId).order('created_at', ascending: false),
+    ]);
+    return (
+      results[0].map<SplitMember>(SplitMember.fromMap).toList(),
+      results[1].map<SplitExpense>(SplitExpense.fromMap).toList(),
+    );
+  }
+
+  Future<void> addSplitMember(String eventId, String name, {bool isMe = false}) async {
+    await supabase.from('split_members').insert({
+      'user_id': _uid,
+      'event_id': eventId,
+      'name': name,
+      'is_me': isMe,
+    });
+  }
+
+  Future<void> addSplitExpense({
+    required String eventId,
+    required String payerMemberId,
+    required String description,
+    required double amount,
+    List<String> participantIds = const [],
+  }) async {
+    await supabase.from('split_expenses').insert({
+      'user_id': _uid,
+      'event_id': eventId,
+      'payer_member_id': payerMemberId,
+      'description': description,
+      'amount': amount,
+      'participant_ids': participantIds.isEmpty ? null : participantIds,
+    });
+  }
+
+  Future<void> deleteSplitRow(String table, String id) async {
+    await supabase.from(table).delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  // ---- Activity log (v35, trigger-fed, read-only) ----
+
+  Future<List<ActivityEntry>> fetchActivity({int limit = 100}) async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('activity_log')
+        .select()
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return rows.map<ActivityEntry>(ActivityEntry.fromMap).toList();
+  }
+
+  // ---- Warranty vault (v35: warranty fields live on assets) ----
+
+  Future<void> updateAssetWarranty(String assetId, {DateTime? warrantyExpiry, String warrantyNotes = ''}) async {
+    await supabase.from('assets').update({
+      'warranty_expiry': warrantyExpiry == null ? null : _d(warrantyExpiry),
+      'warranty_notes': warrantyNotes,
+    }).eq('id', assetId).eq('user_id', _uid);
+  }
+
+  // ---- Raw slices for Forecast / Insights / Tax / Zakat ----
+
+  /// type/amount/date rows since [start] (lightweight, for client-side stats).
+  Future<List<Map<String, dynamic>>> fetchTxSlice(DateTime start, {String select = 'type, amount, date'}) async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from('transactions')
+        .select(select)
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .gte('date', _d(start))
+        .order('date', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  /// Total tracked income for one BD fiscal year (Jul [fyStart] – Jun next).
+  Future<double> fetchFyIncome(int fyStart) async {
+    if (currentEntity == null) return 0;
+    final rows = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .eq('type', 'income')
+        .gte('date', '$fyStart-07-01')
+        .lte('date', '${fyStart + 1}-06-30');
+    return rows.fold<double>(0, (s, r) => s + ((r['amount'] as num?)?.toDouble() ?? 0));
+  }
+
+  /// Zakat inputs: (savingsBalance, investmentsValue, receivables, debts).
+  Future<(double, double, double, double)> fetchZakatParts() async {
+    if (currentEntity == null) return (0.0, 0.0, 0.0, 0.0);
+    final results = await Future.wait([
+      supabase.from('savings').select('type, amount').eq('user_id', _uid).eq('entity_id', currentEntity!.id),
+      supabase.from('investments').select('invested_amount, current_value').eq('user_id', _uid).eq('entity_id', currentEntity!.id),
+      supabase.from('liabilities').select('type, remaining_balance').eq('user_id', _uid).eq('entity_id', currentEntity!.id),
+    ]);
+    double savings = 0;
+    for (final r in results[0]) {
+      final amt = (r['amount'] as num?)?.toDouble() ?? 0;
+      savings += r['type'] == 'deposit' ? amt : -amt;
+    }
+    double investments = 0;
+    for (final r in results[1]) {
+      investments += (r['current_value'] as num?)?.toDouble() ?? (r['invested_amount'] as num?)?.toDouble() ?? 0;
+    }
+    double receivables = 0, debts = 0;
+    for (final r in results[2]) {
+      final rem = (r['remaining_balance'] as num?)?.toDouble() ?? 0;
+      if (rem <= 0) continue;
+      if (r['type'] == 'loan_given') {
+        receivables += rem;
+      } else {
+        debts += rem;
+      }
+    }
+    return (savings, investments, receivables, debts);
+  }
+
+  // ---- Backup export (v35) ----
+
+  static const backupTables = [
+    'accounts', 'categories', 'transactions', 'transfers', 'budgets', 'goals',
+    'savings', 'saving_heads', 'recurring_transactions', 'recurring_savings',
+    'assets', 'liabilities', 'loan_repayments', 'investments', 'family_members',
+    'bazar_purchases', 'insurance_policies', 'utility_bills', 'rental_units',
+    'rent_payments', 'rent_revisions', 'unit_tenancies', 'rent_unit_expenses',
+    'split_events', 'split_members', 'split_expenses',
+  ];
+
+  /// All rows per table for the current workspace; missing tables (unapplied
+  /// migrations) are skipped, mirroring the web Backup page.
+  Future<Map<String, List<Map<String, dynamic>>>> fetchBackupData() async {
+    final out = <String, List<Map<String, dynamic>>>{};
+    for (final table in backupTables) {
+      try {
+        var q = supabase.from(table).select().eq('user_id', _uid);
+        // split_members/expenses have no entity_id — scope via user only.
+        if (table != 'split_members' && table != 'split_expenses') {
+          q = q.eq('entity_id', currentEntity!.id);
+        }
+        out[table] = List<Map<String, dynamic>>.from(await q);
+      } catch (_) {
+        // table doesn't exist yet — skip
+      }
+    }
+    return out;
   }
 
   static String _d(DateTime d) =>

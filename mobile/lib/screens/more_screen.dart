@@ -5,19 +5,33 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../app_state.dart';
 import '../ota_update.dart';
 import '../theme.dart';
+import 'activity_screen.dart';
 import 'assets_screen.dart';
+import 'backup_screen.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
 import 'family_screen.dart';
 import 'finance_notifications_screen.dart';
+import 'forecast_screen.dart';
 import 'goals_screen.dart';
+import 'insights_screen.dart';
+import 'insurance_screen.dart';
 import 'investments_screen.dart';
+import 'lending_screen.dart';
 import 'liabilities_screen.dart';
 import 'meals_screen.dart';
 import 'recurring_screen.dart';
+import 'rent_screen.dart';
 import 'reports_screen.dart';
 import 'savings_screen.dart';
+import 'scan_receipt_screen.dart';
+import 'splitter_screen.dart';
+import 'subscriptions_screen.dart';
+import 'tax_screen.dart';
 import 'transfers_screen.dart';
+import 'utility_screen.dart';
+import 'warranty_screen.dart';
+import 'zakat_screen.dart';
 
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key, required this.state});
@@ -179,6 +193,20 @@ class _MoreScreenState extends State<MoreScreen> {
       (Icons.shield_outlined, 'Liabilities', kRed, () => LiabilitiesScreen(state: state)),
       (Icons.trending_up, 'Investments', kEmerald, () => InvestmentsScreen(state: state)),
       (Icons.people_outline, 'Family', kCyan, () => FamilyScreen(state: state)),
+      (Icons.handshake_outlined, 'Dena-Paona', kOrange, () => LendingScreen(state: state)),
+      (Icons.query_stats, 'Forecast', kCyan, () => ForecastScreen(state: state)),
+      (Icons.mosque_outlined, 'Zakat', kEmerald, () => ZakatScreen(state: state)),
+      (Icons.subscriptions_outlined, 'Subscriptions', kPurple, () => SubscriptionsScreen(state: state)),
+      (Icons.health_and_safety_outlined, 'Insurance', kCyan, () => InsuranceScreen(state: state)),
+      (Icons.bolt_outlined, 'Utility Bills', kOrange, () => UtilityScreen(state: state)),
+      (Icons.apartment_outlined, 'Rent', kEmerald, () => RentScreen(state: state)),
+      (Icons.verified_outlined, 'Warranty', kPurple, () => WarrantyScreen(state: state)),
+      (Icons.call_split, 'Bill Splitter', kCyan, () => SplitterScreen(state: state)),
+      (Icons.receipt_long_outlined, 'Tax', kRed, () => TaxScreen(state: state)),
+      (Icons.auto_awesome_outlined, 'AI Insights', kPurple, () => InsightsScreen(state: state)),
+      (Icons.document_scanner_outlined, 'Scan Receipt', kEmerald, () => ScanReceiptScreen(state: state)),
+      (Icons.history, 'Activity Log', kOrange, () => ActivityScreen(state: state)),
+      (Icons.cloud_download_outlined, 'Backup', kCyan, () => BackupScreen(state: state)),
     ];
 
     return ListView(

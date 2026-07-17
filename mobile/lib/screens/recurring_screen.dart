@@ -6,6 +6,16 @@ import '../theme.dart';
 
 const _frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
 
+const _utilityLabels = {
+  'electricity': '⚡ Electricity',
+  'gas': '🔥 Gas',
+  'water': '💧 Water',
+  'internet': '🌐 Internet',
+  'phone': '📱 Phone',
+  'tv': '📺 TV',
+  'other': '📋 Other',
+};
+
 class RecurringScreen extends StatefulWidget {
   const RecurringScreen({super.key, required this.state});
   final AppState state;
@@ -36,6 +46,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
     String? accountId = edit?.accountId;
     String frequency = edit?.frequency ?? 'monthly';
     DateTime nextRun = edit?.nextRunDate ?? DateTime.now().add(const Duration(days: 1));
+    bool isSubscription = edit?.isSubscription ?? false;
+    String? utilityType = edit?.utilityType;
 
     final ok = await showModalBottomSheet<bool>(
       context: context,
@@ -128,7 +140,34 @@ class _RecurringScreenState extends State<RecurringScreen> {
                       child: Text(DateFormat('MMM d, yyyy').format(nextRun)),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  if (type == 'expense') ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String?>(
+                      initialValue: utilityType,
+                      dropdownColor: kCard,
+                      decoration: const InputDecoration(
+                        labelText: 'Utility bill (optional)',
+                        helperText: 'Each auto-run records that month\'s bill as PAID on the Utility screen.',
+                        helperMaxLines: 2,
+                      ),
+                      items: [
+                        const DropdownMenuItem<String?>(value: null, child: Text('Not a utility bill')),
+                        ..._utilityLabels.entries
+                            .map((e) => DropdownMenuItem<String?>(value: e.key, child: Text(e.value))),
+                      ],
+                      onChanged: (v) => setSheet(() => utilityType = v),
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: const Text('Subscription (show on Subscriptions screen)',
+                          style: TextStyle(fontSize: 13)),
+                      value: isSubscription,
+                      activeColor: kCyan,
+                      onChanged: (v) => setSheet(() => isSubscription = v ?? false),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   GradientButton(
                     label: edit == null ? 'Add Recurring' : 'Save',
                     onPressed: () {
@@ -160,6 +199,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
         frequency: frequency,
         nextRunDate: nextRun,
         isActive: edit?.isActive ?? true,
+        isSubscription: isSubscription,
+        utilityType: utilityType,
       );
       _load();
     } catch (e) {
@@ -170,8 +211,32 @@ class _RecurringScreenState extends State<RecurringScreen> {
   @override
   Widget build(BuildContext context) {
     final items = _items;
+    final dueCount = (items ?? []).where((r) => r.isActive && !r.nextRunDate.isAfter(DateTime.now())).length;
     return Scaffold(
-      appBar: AppBar(title: const Text('Recurring', style: TextStyle(fontWeight: FontWeight.bold))),
+      appBar: AppBar(
+        title: const Text('Recurring', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          if (dueCount > 0)
+            TextButton.icon(
+              onPressed: () async {
+                try {
+                  final n = await widget.state.runDueRecurring();
+                  _load();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('$n transaction(s) posted.')));
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
+              },
+              icon: const Icon(Icons.bolt, size: 18, color: kEmerald),
+              label: Text('Run $dueCount due', style: const TextStyle(color: kEmerald, fontSize: 13)),
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openForm(),
         backgroundColor: kCyan,

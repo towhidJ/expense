@@ -11,6 +11,9 @@ const _accountTypes = {
   'credit_card': ('💳', 'Credit Card'),
 };
 
+// Multi-currency (v35): manual exchange_rate, 1 unit = X BDT.
+const _currencies = ['৳', '\$', '€', '£', '﷼', 'د.إ', 'RM', '₹'];
+
 class AccountsScreen extends StatelessWidget {
   const AccountsScreen({super.key, required this.state});
   final AppState state;
@@ -19,7 +22,9 @@ class AccountsScreen extends StatelessWidget {
     final name = TextEditingController(text: edit?.name ?? '');
     final opening = TextEditingController(text: edit == null ? '' : edit.currentBalance.toString());
     final accountNumber = TextEditingController(text: edit?.accountNumber ?? '');
+    final rate = TextEditingController(text: edit == null || edit.exchangeRate == 1 ? '' : edit.exchangeRate.toString());
     String type = edit != null && _accountTypes.containsKey(edit.type) ? edit.type : 'cash';
+    String currency = edit != null && _currencies.contains(edit.currency) ? edit.currency : '৳';
     final saved = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -50,8 +55,31 @@ class AccountsScreen extends StatelessWidget {
                 controller: opening,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                    labelText: edit == null ? 'Opening Balance (৳)' : 'Current Balance (৳)', hintText: '0'),
+                    labelText: edit == null ? 'Opening Balance' : 'Current Balance', hintText: '0'),
               ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: currency,
+                    dropdownColor: kCard,
+                    decoration: const InputDecoration(labelText: 'Currency'),
+                    items: _currencies.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                    onChanged: (v) => setState(() => currency = v ?? '৳'),
+                  ),
+                ),
+                if (currency != '৳') ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: rate,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(labelText: 'Rate (1 = X ৳)', hintText: 'e.g. 120'),
+                    ),
+                  ),
+                ],
+              ]),
             ],
           ),
           actions: [

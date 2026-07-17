@@ -17,14 +17,25 @@ class Account {
         type = m['type'] ?? 'cash',
         currentBalance = (m['current_balance'] as num?)?.toDouble() ?? 0,
         currency = m['currency'] ?? '৳',
+        exchangeRate = (m['exchange_rate'] as num?)?.toDouble() ?? 1,
         accountNumber = m['account_number'] ?? '';
   final String id;
   final String name;
   final String type;
   final double currentBalance;
   final String currency;
+  final double exchangeRate; // 1 unit of currency = X BDT (manual, v35)
   final String accountNumber; // bank a/c no, bKash number, etc.
+
+  bool get isForeign => currency != '৳';
+
+  /// Balance converted to BDT — all app-wide totals must use this.
+  double get balanceBdt => currentBalance * exchangeRate;
 }
+
+/// Sum of account balances in BDT (mirrors the web app's sumBDT).
+double sumBdt(Iterable<Account> accounts) =>
+    accounts.fold(0.0, (s, a) => s + a.balanceBdt);
 
 class SavingHead {
   SavingHead.fromMap(Map<String, dynamic> m)
@@ -197,6 +208,8 @@ class Asset {
         purchaseDate = m['purchase_date'] != null ? DateTime.parse(m['purchase_date']) : null,
         quantity = (m['quantity'] as num?)?.toDouble(),
         unit = m['unit'] ?? '',
+        warrantyExpiry = m['warranty_expiry'] != null ? DateTime.parse(m['warranty_expiry']) : null,
+        warrantyNotes = m['warranty_notes'] ?? '',
         notes = m['notes'] ?? '';
   final String id;
   final String name;
@@ -207,6 +220,8 @@ class Asset {
   final DateTime? purchaseDate;
   final double? quantity; // e.g. 5.5 bhori of gold, 10 katha of land
   final String unit;
+  final DateTime? warrantyExpiry; // Warranty Vault (v35)
+  final String warrantyNotes;
   final String notes;
 }
 
@@ -251,6 +266,8 @@ class Liability {
         dueDate = m['due_date'] != null ? DateTime.parse(m['due_date']) : null,
         remainingBalance = (m['remaining_balance'] as num?)?.toDouble() ?? 0,
         phone = m['phone'] ?? '',
+        counterparty = m['counterparty'],
+        createdAt = DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now(),
         notes = m['notes'] ?? '';
   final String id;
   final String name;
@@ -260,6 +277,8 @@ class Liability {
   final DateTime? dueDate;
   final double remainingBalance;
   final String phone; // shop contact for type shop_due
+  final String? counterparty; // set = Dena-Paona person loan (v34)
+  final DateTime createdAt;
   final String notes;
 
   /// loan_given is money owed TO the user (a receivable), not a debt.
@@ -322,6 +341,8 @@ class Recurring {
         frequency = m['frequency'] ?? 'monthly',
         nextRunDate = DateTime.parse(m['next_run_date']),
         isActive = m['is_active'] ?? true,
+        isSubscription = m['is_subscription'] ?? false,
+        utilityType = m['utility_type'],
         categoryId = m['category_id'],
         accountId = m['account_id'],
         categoryName = m['categories']?['name'] ?? '',
@@ -334,11 +355,16 @@ class Recurring {
   final String frequency;
   final DateTime nextRunDate;
   final bool isActive;
+  final bool isSubscription; // shows on the Subscriptions page (v35)
+  final String? utilityType; // auto-records the month's utility bill as paid (v37)
   final String? categoryId;
   final String? accountId;
   final String categoryName;
   final String categoryIcon;
   final String accountName;
+
+  /// Normalized monthly cost (matches the web's MONTHLY_FACTOR).
+  double get monthlyAmount => amount * (const {'daily': 30.44, 'weekly': 4.35, 'monthly': 1.0, 'yearly': 1 / 12}[frequency] ?? 1);
 }
 
 class Transfer {
@@ -735,14 +761,25 @@ class MealStockItem {
         name = m['name'] ?? '',
         quantity = (m['quantity'] as num?)?.toDouble() ?? 0,
         unit = m['unit'],
-        lowStockThreshold = (m['low_stock_threshold'] as num?)?.toDouble();
+        lowStockThreshold = (m['low_stock_threshold'] as num?)?.toDouble(),
+        expiryDate = m['expiry_date'] != null ? DateTime.parse(m['expiry_date']) : null;
   final String id;
   final String name;
   final double quantity;
   final String? unit;
   final double? lowStockThreshold;
+  final DateTime? expiryDate; // v35: expiry tracking
 
   bool get isLow => lowStockThreshold != null && quantity <= lowStockThreshold!;
+
+  int? get daysToExpiry {
+    if (expiryDate == null) return null;
+    final today = DateTime.now();
+    return expiryDate!.difference(DateTime(today.year, today.month, today.day)).inDays;
+  }
+
+  bool get isExpired => daysToExpiry != null && daysToExpiry! < 0;
+  bool get expiresSoon => daysToExpiry != null && daysToExpiry! >= 0 && daysToExpiry! <= 7;
 }
 
 class MealDutyRotationOrder {
@@ -859,5 +896,214 @@ class FinanceNotification {
   final String body;
   final String? link;
   final bool isRead;
+  final DateTime createdAt;
+}
+
+// ---- v35 module pack (insurance / utility / rent / splitter / activity) ----
+
+class InsurancePolicy {
+  InsurancePolicy.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        type = m['type'] ?? 'other',
+        provider = m['provider'] ?? '',
+        policyNumber = m['policy_number'] ?? '',
+        coverageAmount = (m['coverage_amount'] as num?)?.toDouble() ?? 0,
+        premiumAmount = (m['premium_amount'] as num?)?.toDouble() ?? 0,
+        premiumFrequency = m['premium_frequency'] ?? 'yearly',
+        nextPremiumDate = m['next_premium_date'] != null ? DateTime.parse(m['next_premium_date']) : null,
+        maturityDate = m['maturity_date'] != null ? DateTime.parse(m['maturity_date']) : null,
+        notes = m['notes'] ?? '',
+        isActive = m['is_active'] ?? true;
+  final String id;
+  final String name;
+  final String type; // life | health | vehicle | property | other
+  final String provider;
+  final String policyNumber;
+  final double coverageAmount;
+  final double premiumAmount;
+  final String premiumFrequency; // monthly | quarterly | half_yearly | yearly
+  final DateTime? nextPremiumDate;
+  final DateTime? maturityDate;
+  final String notes;
+  final bool isActive;
+
+  double get yearlyPremium =>
+      premiumAmount * (const {'monthly': 12.0, 'quarterly': 4.0, 'half_yearly': 2.0, 'yearly': 1.0}[premiumFrequency] ?? 1);
+}
+
+class UtilityBill {
+  UtilityBill.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        type = m['type'] ?? 'other',
+        billMonth = DateTime.parse(m['bill_month']),
+        units = (m['units'] as num?)?.toDouble(),
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        dueDate = m['due_date'] != null ? DateTime.parse(m['due_date']) : null,
+        transactionId = m['transaction_id'],
+        notes = m['notes'] ?? '';
+  final String id;
+  final String type; // electricity | gas | water | internet | phone | tv | other
+  final DateTime billMonth; // always the 1st of the month
+  final double? units;
+  final double amount;
+  final DateTime? dueDate;
+  final String? transactionId; // set = paid
+  final String notes;
+
+  bool get isPaid => transactionId != null;
+}
+
+class RentalUnit {
+  RentalUnit.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        tenantName = m['tenant_name'],
+        tenantPhone = m['tenant_phone'],
+        monthlyRent = (m['monthly_rent'] as num?)?.toDouble() ?? 0,
+        advanceDeposit = (m['advance_deposit'] as num?)?.toDouble() ?? 0,
+        rentStart = m['rent_start'] != null ? DateTime.parse(m['rent_start']) : null,
+        notes = m['notes'] ?? '',
+        isActive = m['is_active'] ?? true;
+  final String id;
+  final String name;
+  final String? tenantName;
+  final String? tenantPhone;
+  final double monthlyRent;
+  final double advanceDeposit;
+  final DateTime? rentStart;
+  final String notes;
+  final bool isActive;
+}
+
+class RentPayment {
+  RentPayment.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        unitId = m['unit_id'],
+        rentMonth = m['rent_month'] as String, // 'YYYY-MM-01'
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        chargeAmount = (m['charge_amount'] as num?)?.toDouble() ?? 0,
+        chargeNote = m['charge_note'] ?? '',
+        paidDate = DateTime.parse(m['paid_date']),
+        transactionId = m['transaction_id'];
+  final String id;
+  final String unitId;
+  final String rentMonth;
+  final double amount; // total received (rent + charges)
+  final double chargeAmount; // itemized service/utility part of amount (v38)
+  final String chargeNote;
+  final DateTime paidDate;
+  final String? transactionId;
+}
+
+class RentRevision {
+  RentRevision.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        unitId = m['unit_id'],
+        effectiveFrom = m['effective_from'] as String, // 'YYYY-MM-01'
+        monthlyRent = (m['monthly_rent'] as num?)?.toDouble() ?? 0;
+  final String id;
+  final String unitId;
+  final String effectiveFrom;
+  final double monthlyRent;
+}
+
+class UnitTenancy {
+  UnitTenancy.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        unitId = m['unit_id'],
+        tenantName = m['tenant_name'] ?? '',
+        tenantPhone = m['tenant_phone'] ?? '',
+        startDate = m['start_date'] != null ? DateTime.parse(m['start_date']) : null,
+        endDate = DateTime.parse(m['end_date']),
+        monthlyRent = (m['monthly_rent'] as num?)?.toDouble() ?? 0,
+        advanceDeposit = (m['advance_deposit'] as num?)?.toDouble() ?? 0,
+        duesDeducted = (m['dues_deducted'] as num?)?.toDouble() ?? 0,
+        advanceReturned = (m['advance_returned'] as num?)?.toDouble() ?? 0,
+        notes = m['notes'] ?? '';
+  final String id;
+  final String unitId;
+  final String tenantName;
+  final String tenantPhone;
+  final DateTime? startDate;
+  final DateTime endDate;
+  final double monthlyRent;
+  final double advanceDeposit;
+  final double duesDeducted;
+  final double advanceReturned;
+  final String notes;
+}
+
+class RentUnitExpense {
+  RentUnitExpense.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        unitId = m['unit_id'],
+        date = DateTime.parse(m['date']),
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        description = m['description'] ?? '',
+        transactionId = m['transaction_id'];
+  final String id;
+  final String unitId;
+  final DateTime date;
+  final double amount;
+  final String description;
+  final String? transactionId;
+}
+
+class SplitEvent {
+  SplitEvent.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        eventDate = m['event_date'] != null ? DateTime.parse(m['event_date']) : null,
+        isSettled = m['is_settled'] ?? false;
+  final String id;
+  final String name;
+  final DateTime? eventDate;
+  final bool isSettled;
+}
+
+class SplitMember {
+  SplitMember.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        name = m['name'] ?? '',
+        isMe = m['is_me'] ?? false;
+  final String id;
+  final String name;
+  final bool isMe;
+}
+
+class SplitExpense {
+  SplitExpense.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        payerMemberId = m['payer_member_id'],
+        description = m['description'] ?? '',
+        amount = (m['amount'] as num?)?.toDouble() ?? 0,
+        participantIds = (m['participant_ids'] as List?)?.cast<String>() ?? const [];
+  final String id;
+  final String payerMemberId;
+  final String description;
+  final double amount;
+  final List<String> participantIds; // empty = everyone in the event
+}
+
+/// One "X pays Y" move from the greedy settlement.
+class SettleMove {
+  SettleMove(this.from, this.to, this.amount);
+  final String from;
+  final String to;
+  final double amount;
+}
+
+class ActivityEntry {
+  ActivityEntry.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        action = m['action'] ?? '',
+        tableName = m['table_name'] ?? '',
+        summary = m['summary'] ?? '',
+        createdAt = DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now();
+  final String id;
+  final String action; // created | updated | deleted
+  final String tableName;
+  final String summary;
   final DateTime createdAt;
 }
