@@ -10,7 +10,8 @@ const EXPORT_TABLES = [
   'savings', 'saving_heads', 'recurring_transactions', 'recurring_savings',
   'assets', 'liabilities', 'loan_repayments', 'investments', 'family_members',
   'bazar_purchases', 'insurance_policies', 'utility_bills', 'rental_units',
-  'rent_payments', 'split_events', 'split_members', 'split_expenses'
+  'rent_payments', 'rent_revisions', 'unit_tenancies', 'rent_unit_expenses',
+  'split_events', 'split_members', 'split_expenses'
 ];
 
 function downloadBlob(content, filename, type) {

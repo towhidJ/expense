@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
-import { AlertTriangle, CalendarClock, Trash2, Bell, Repeat, PieChart, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Trash2, Bell, Repeat, PieChart, Target, TrendingUp, Home } from 'lucide-react';
 
 const TYPE_ICONS = {
   budget_overspend: AlertTriangle,
@@ -10,6 +10,7 @@ const TYPE_ICONS = {
   weekly_digest: PieChart,
   goal_milestone: Target,
   large_expense: TrendingUp,
+  rent_due: Home,
 };
 
 const TYPE_COLORS = {
@@ -19,6 +20,7 @@ const TYPE_COLORS = {
   weekly_digest: 'bg-purple-500/15 text-purple-400',
   goal_milestone: 'bg-emerald-500/15 text-emerald-400',
   large_expense: 'bg-red-500/15 text-red-400',
+  rent_due: 'bg-teal-500/15 text-teal-400',
 };
 
 function timeAgo(ts) {

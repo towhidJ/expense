@@ -43,9 +43,15 @@ export default function Recurring() {
     frequency: 'monthly',
     next_run_date: new Date().toISOString().split('T')[0],
     is_active: true,
-    is_subscription: false
+    is_subscription: false,
+    utility_type: ''
   };
   const [form, setForm] = useState(initialForm);
+
+  const UTILITY_TYPES = {
+    electricity: '⚡ Electricity', gas: '🔥 Gas', water: '💧 Water',
+    internet: '🌐 Internet', phone: '📱 Phone', tv: '📺 TV', other: '📋 Other'
+  };
 
   const filteredCategories = categories.filter(c => c.type === form.type);
 
@@ -58,7 +64,8 @@ export default function Recurring() {
       delete cleanForm.accounts;
       const payload = {
         ...cleanForm,
-        amount: parseFloat(form.amount)
+        amount: parseFloat(form.amount),
+        utility_type: form.type === 'expense' ? (form.utility_type || null) : null
       };
       if (editingItem) {
         await updateRecurring(editingItem.id, payload);
@@ -79,7 +86,7 @@ export default function Recurring() {
     setRunningId(item.id);
     try {
       // Create the transaction
-      await addTransaction({
+      const txId = await addTransaction({
         account_id: item.account_id,
         category_id: item.category_id,
         type: item.type,
@@ -87,6 +94,31 @@ export default function Recurring() {
         date: new Date().toISOString().split('T')[0],
         description: `${item.title} (Recurring - Manual Run)`
       });
+      // Utility-linked item: record this month's bill as paid (same as run_due_recurring)
+      if (item.utility_type && item.type === 'expense' && txId) {
+        const billMonth = `${new Date().toISOString().slice(0, 7)}-01`;
+        const { data: existing } = await supabase
+          .from('utility_bills')
+          .select('id, transaction_id')
+          .eq('entity_id', currentEntity.id)
+          .eq('type', item.utility_type)
+          .eq('bill_month', billMonth)
+          .maybeSingle();
+        if (existing) {
+          if (!existing.transaction_id) {
+            await supabase.from('utility_bills').update({ transaction_id: txId }).eq('id', existing.id);
+          }
+        } else {
+          await supabase.from('utility_bills').insert({
+            user_id: user.id,
+            entity_id: currentEntity.id,
+            type: item.utility_type,
+            bill_month: billMonth,
+            amount: item.amount,
+            transaction_id: txId
+          });
+        }
+      }
       // Advance the next_run_date (strip joined relations before writing)
       const nextDate = getNextRunDate(item.frequency, item.next_run_date);
       const cleanItem = { ...item };
@@ -240,6 +272,17 @@ export default function Recurring() {
               <input required type="date" value={form.next_run_date} onChange={e => setForm({...form, next_run_date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50" />
             </div>
 
+            {form.type === 'expense' && (
+              <div>
+                <label className="block text-sm text-white/60 mb-1">Utility Bill (optional)</label>
+                <select value={form.utility_type || ''} onChange={e => setForm({...form, utility_type: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50">
+                  <option value="">Not a utility bill</option>
+                  {Object.entries(UTILITY_TYPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                </select>
+                <p className="text-xs text-white/35 mt-1">Each auto-run records that month's bill as PAID on the Utility page.</p>
+              </div>
+            )}
+
             <div className="sm:col-span-2 flex items-center gap-2 mt-2">
               <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({...form, is_active: e.target.checked})} className="w-4 h-4 rounded border-white/10 bg-[#12122a] text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
               <label htmlFor="is_active" className="text-sm text-white/80">Active (Will run automatically)</label>
@@ -286,7 +329,14 @@ export default function Recurring() {
                           {item.categories?.icon || <CalendarClock size={16} />}
                         </div>
                         <div>
-                          <p className="text-white font-medium">{item.title}</p>
+                          <p className="text-white font-medium">
+                            {item.title}
+                            {item.utility_type && (
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 align-middle">
+                                {UTILITY_TYPES[item.utility_type] || item.utility_type}
+                              </span>
+                            )}
+                          </p>
                           <p className="text-white/40 text-xs">{item.accounts?.name}</p>
                         </div>
                       </div>

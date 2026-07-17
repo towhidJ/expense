@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router';
 import { useEntityTable } from '../hooks/useEntityTable';
+import { useRecurring } from '../hooks/useRecurring';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import { supabase } from '../lib/supabase';
 import ChartCard from '../components/ChartCard';
-import { Zap, Plus, Trash2 } from 'lucide-react';
+import { Zap, Plus, Trash2, Repeat } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const fmt = (n) => `৳${Math.round(Number(n || 0)).toLocaleString()}`;
@@ -26,6 +28,7 @@ export default function Utility() {
   const { user } = useAuth();
   const { currentEntity } = useEntity();
   const { rows: bills, loading, addRow, updateRow, deleteRow, fetchRows } = useEntityTable('utility_bills', { orderBy: 'bill_month' });
+  const { recurring } = useRecurring();
   const { accounts, fetchAccounts } = useAccounts();
   const { categories } = useCategories();
   const expenseCategories = categories?.filter(c => c.type === 'expense') || [];
@@ -52,6 +55,11 @@ export default function Utility() {
   );
 
   const unpaidTotal = bills.filter(b => !b.transaction_id).reduce((s, b) => s + Number(b.amount), 0);
+
+  const linkedRecurring = useMemo(
+    () => recurring.find(r => r.is_active && r.type === 'expense' && r.utility_type === activeType),
+    [recurring, activeType]
+  );
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -133,6 +141,25 @@ export default function Utility() {
           );
         })}
       </div>
+
+      {linkedRecurring ? (
+        <div className="flex items-center gap-3 bg-emerald-500/[0.07] border border-emerald-500/20 rounded-2xl px-4 py-3 text-sm">
+          <Repeat size={16} className="text-emerald-400 shrink-0" />
+          <p className="text-white/70">
+            Auto-pay on: <strong className="text-white">{linkedRecurring.title}</strong> ({fmt(linkedRecurring.amount)}/{linkedRecurring.frequency.replace('ly', '')})
+            {' '}posts the payment and marks each month's bill PAID here. Next run: {new Date(linkedRecurring.next_run_date).toLocaleDateString()}.
+          </p>
+          <Link to="/recurring" className="ml-auto shrink-0 text-emerald-400 hover:underline text-xs font-medium">Manage</Link>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 text-sm">
+          <Repeat size={16} className="text-white/30 shrink-0" />
+          <p className="text-white/40">
+            Fixed monthly {TYPES[activeType].label.toLowerCase()} bill? Add a recurring expense and set its "Utility Bill" type — bills will then appear here as PAID automatically.
+          </p>
+          <Link to="/recurring" className="ml-auto shrink-0 text-cyan-400 hover:underline text-xs font-medium">Set up</Link>
+        </div>
+      )}
 
       {isAdding && (
         <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
