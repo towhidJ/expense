@@ -5,7 +5,7 @@
 All 16 planned modules are DONE on web and pushed to main: Dena-Paona, Forecast, Zakat (v34 batch), then Subscriptions, Insurance, Utility, Rent, Warranty, Backup, Activity Log, Bill Splitter, Tax, AI Insights, Receipt OCR, Multi-currency, and meal-stock expiry (v35 batch). Every page was verified with a headless-Chrome render audit (no console errors, mobile-safe).
 
 **Pending / next steps:**
-1. USER ACTION: run `supabase_migration_v34.sql` then `supabase_migration_v35.sql` in the Supabase SQL Editor — nothing DB-backed works until then (Forecast/Zakat/Tax/Insights/Scan/Backup work without them).
+1. USER ACTION: run `supabase_migration_v34.sql` then `supabase_migration_v35.sql` in the Supabase SQL Editor — nothing DB-backed works until then (Forecast/Zakat/Tax/Insights/Scan/Backup work without them). If v35 was already run, ALSO run `supabase_migration_v36.sql` — it hotfixes the `log_activity()` trigger that broke every transaction insert with `record "v_row" has no field "name"` (plpgsql validates record field refs in ALL CASE branches; fix reads fields via `to_jsonb()`). The v35 file itself is already patched for fresh installs.
 2. The Flutter app (`mobile/`) has NONE of the 16 new modules — porting them is the natural next task.
 3. Optional: Vite build warns the main chunk is >2.3 MB — code-splitting via route-level `React.lazy` would help load time.
 
@@ -15,7 +15,7 @@ Expense tracker "TakaKhata": React 19 + Vite 6 + Tailwind 4 + Supabase (BDT ৳ 
 
 - **Money movements must go through Postgres RPCs** (`process_transaction`, `process_transfer`, `process_loan_repayment`, `process_new_loan`, `process_saving`, `process_bazar_purchase`, `update/delete_transaction_with_balance`) — never plain inserts/updates, or `accounts.current_balance` silently corrupts.
 - **Every table is scoped by `entity_id`** (personal/family/business workspaces). `EntityContext.currentEntity` drives all hooks — a missing `currentEntity` in a `useCallback` dep array is the classic bug here (stale data after workspace switch).
-- **Migrations are manual**: schema lives in numbered `supabase_migration_v*.sql` files at repo root; each new one must be pasted into the Supabase SQL Editor by the user. Latest: **v35** (split/insurance/utility/rent/activity-log tables + subscription/warranty/exchange-rate/stock-expiry columns; v34 = Dena-Paona `liabilities.counterparty`). If a feature "doesn't work", first suspect an unapplied migration.
+- **Migrations are manual**: schema lives in numbered `supabase_migration_v*.sql` files at repo root; each new one must be pasted into the Supabase SQL Editor by the user. Latest: **v36** (hotfix: `log_activity()` trigger reads fields via jsonb; v35 = split/insurance/utility/rent/activity-log tables + subscription/warranty/exchange-rate/stock-expiry columns; v34 = Dena-Paona `liabilities.counterparty`). If a feature "doesn't work", first suspect an unapplied migration.
 - **Touch-visible actions**: edit/delete buttons must be visible without hover. Web: `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` (hover-reveal desktop only). Flutter: visible trailing `PopupMenuButton` (⋮), never long-press-only. The user considers hidden actions to be missing features.
 - `npm run lint` reports ~29 pre-existing errors (react-hooks v7 strict rules like `set-state-in-effect` on the standard fetch-in-effect hook pattern, unused React imports in vendored `src/components/ui/*`) — not regressions, don't chase them.
 
