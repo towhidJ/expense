@@ -24,9 +24,11 @@ export default function PremiumGate({ module, children }) {
   return <Paywall module={module} />;
 }
 
-function Paywall({ module }) {
+// Also used standalone for sub-module gating (e.g. individual report
+// statements inside /reports) — pass labelOverride for keys not in MODULES.
+export function Paywall({ module, labelOverride }) {
   const { billing, refresh } = useSubscription();
-  const label = MODULES.find(m => m.key === module)?.label || module;
+  const label = labelOverride || MODULES.find(m => m.key === module)?.label || module;
 
   const [requests, setRequests] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);

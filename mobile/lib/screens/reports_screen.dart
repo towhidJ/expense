@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../pdf_export.dart';
 import '../theme.dart';
+import 'premium_screen.dart';
 
 /// Reports with 6 tabs mirroring the web app:
 /// Overview • Income Statement • Cash Flow • Balance Sheet • Trial Balance • Bazar Report.
@@ -79,6 +80,39 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return map;
   }
 
+  // Per-statement premium gating: same report_* keys as web (missing = free).
+  Widget _gated(String key, String label, Widget Function() builder) {
+    final st = widget.state;
+    if (!st.isLocked(key)) return builder();
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.workspace_premium_outlined, color: kOrange, size: 40),
+            const SizedBox(height: 12),
+            Text('$label is a Premium report',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 6),
+            Text('Subscribe once and unlock every Premium module & report.',
+                style: TextStyle(fontSize: 12.5, color: kFg54), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            GradientButton(
+              label: 'Go Premium',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => PremiumScreen(state: st, lockedLabel: label)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -133,12 +167,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ? const Center(child: CircularProgressIndicator(color: kCyan))
                   : TabBarView(
                       children: [
-                        _overview(),
-                        _incomeStatement(),
-                        _cashFlow(),
-                        _balanceSheet(),
-                        _trialBalance(),
-                        _bazarReport(),
+                        _overview(), // always free (no report_* key)
+                        _gated('report_income_statement', 'Income Statement', _incomeStatement),
+                        _gated('report_cash_flow', 'Cash Flow', _cashFlow),
+                        _gated('report_balance_sheet', 'Balance Sheet', _balanceSheet),
+                        _gated('report_trial_balance', 'Trial Balance', _trialBalance),
+                        _gated('report_bazar', 'Bazar Report', _bazarReport),
                       ],
                     ),
             ),

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 import { useIsAdmin } from '../hooks/useIsAdmin';
@@ -10,50 +10,104 @@ import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
   LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
   Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
-  Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock
+  Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock,
+  ChevronDown, Wallet2, CalendarClock, Gem, HousePlus, Settings2
 } from 'lucide-react';
 
-// Sections keep the long nav scannable; a null `to` renders a heading.
-const navItems = [
+// Core links always visible; everything else lives in collapsible accordion
+// groups (open state persisted, the active route's group auto-opens).
+const coreItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/accounts', icon: Landmark, label: 'Accounts' },
-  { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
-  { to: '/scan', icon: ScanLine, label: 'Scan Receipt' },
-  { to: '/bazar', icon: ShoppingBasket, label: 'Bazar' },
-  { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
-  { to: '/recurring', icon: Repeat, label: 'Recurring' },
-  { to: '/categories', icon: Tags, label: 'Categories' },
-
-  { heading: 'Planning' },
-  { to: '/reports', icon: PieChart, label: 'Reports' },
-  { to: '/insights', icon: Sparkles, label: 'Insights' },
-  { to: '/forecast', icon: TrendingUp, label: 'Forecast' },
-  { to: '/budgets', icon: Wallet, label: 'Budgets' },
-  { to: '/alerts', icon: Bell, label: 'Alerts' },
-  { to: '/goals', icon: Target, label: 'Goals' },
-  { to: '/savings', icon: PiggyBank, label: 'Savings' },
-  { to: '/tax', icon: Scale, label: 'Tax' },
-  { to: '/zakat', icon: Moon, label: 'Zakat' },
-
-  { heading: 'Wealth & Debts' },
-  { to: '/assets', icon: Bike, label: 'Assets' },
-  { to: '/investments', icon: TrendingUp, label: 'Investments' },
-  { to: '/liabilities', icon: Shield, label: 'Liabilities' },
-  { to: '/lending', icon: HandCoins, label: 'Dena-Paona' },
-  { to: '/insurance', icon: Umbrella, label: 'Insurance' },
-  { to: '/warranty', icon: BadgeCheck, label: 'Warranty' },
-
-  { heading: 'Household' },
-  { to: '/utility', icon: Zap, label: 'Utility Bills' },
-  { to: '/rent', icon: Home, label: 'Rent' },
-  { to: '/subscriptions', icon: Tv, label: 'Subscriptions' },
-  { to: '/splitter', icon: Split, label: 'Bill Splitter' },
-  { to: '/family', icon: Users, label: 'Family' },
-
-  { heading: 'System' },
-  { to: '/activity', icon: History, label: 'Activity Log' },
-  { to: '/backup', icon: DatabaseBackup, label: 'Backup' }
+  { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' }
 ];
+
+const navGroups = [
+  {
+    id: 'daily', label: 'Daily Money', icon: Wallet2,
+    items: [
+      { to: '/scan', icon: ScanLine, label: 'Scan Receipt' },
+      { to: '/bazar', icon: ShoppingBasket, label: 'Bazar' },
+      { to: '/transfers', icon: ArrowLeftRight, label: 'Transfers' },
+      { to: '/recurring', icon: Repeat, label: 'Recurring' },
+      { to: '/categories', icon: Tags, label: 'Categories' }
+    ]
+  },
+  {
+    id: 'planning', label: 'Planning & Reports', icon: CalendarClock,
+    items: [
+      { to: '/reports', icon: PieChart, label: 'Reports' },
+      { to: '/insights', icon: Sparkles, label: 'Insights' },
+      { to: '/forecast', icon: TrendingUp, label: 'Forecast' },
+      { to: '/budgets', icon: Wallet, label: 'Budgets' },
+      { to: '/alerts', icon: Bell, label: 'Alerts' },
+      { to: '/goals', icon: Target, label: 'Goals' },
+      { to: '/savings', icon: PiggyBank, label: 'Savings' },
+      { to: '/tax', icon: Scale, label: 'Tax' },
+      { to: '/zakat', icon: Moon, label: 'Zakat' }
+    ]
+  },
+  {
+    id: 'wealth', label: 'Wealth & Debts', icon: Gem,
+    items: [
+      { to: '/assets', icon: Bike, label: 'Assets' },
+      { to: '/investments', icon: TrendingUp, label: 'Investments' },
+      { to: '/liabilities', icon: Shield, label: 'Liabilities' },
+      { to: '/lending', icon: HandCoins, label: 'Dena-Paona' },
+      { to: '/insurance', icon: Umbrella, label: 'Insurance' },
+      { to: '/warranty', icon: BadgeCheck, label: 'Warranty' }
+    ]
+  },
+  {
+    id: 'household', label: 'Household', icon: HousePlus,
+    items: [
+      { to: '/utility', icon: Zap, label: 'Utility Bills' },
+      { to: '/rent', icon: Home, label: 'Rent' },
+      { to: '/subscriptions', icon: Tv, label: 'Subscriptions' },
+      { to: '/splitter', icon: Split, label: 'Bill Splitter' },
+      { to: '/family', icon: Users, label: 'Family' }
+    ]
+  },
+  {
+    id: 'system', label: 'System', icon: Settings2,
+    items: [
+      { to: '/activity', icon: History, label: 'Activity Log' },
+      { to: '/backup', icon: DatabaseBackup, label: 'Backup' }
+    ]
+  }
+];
+
+const OPEN_GROUPS_KEY = 'sidebar_open_groups_v1';
+
+function SidebarLink({ item, onClose, nested = false, unreadAlerts, isModuleLocked }) {
+  const { to, icon: Icon, label } = item;
+  return (
+    <NavLink
+      to={to}
+      onClick={onClose}
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
+          nested ? 'px-3 py-2' : 'px-4 py-2.5'
+        } ${
+          isActive
+            ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-cyan-400 border border-cyan-500/20 shadow-lg shadow-cyan-500/5'
+            : 'text-white/50 hover:text-white hover:bg-white/5'
+        }`
+      }
+    >
+      <Icon className={`${nested ? 'w-4 h-4' : 'w-5 h-5'} transition-transform group-hover:scale-110`} />
+      <span className="flex-1">{label}</span>
+      {label === 'Alerts' && unreadAlerts > 0 && (
+        <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center">
+          {unreadAlerts}
+        </span>
+      )}
+      {isModuleLocked?.(moduleKeyByPath[to]) && (
+        <Lock className="w-3.5 h-3.5 text-amber-400/70" />
+      )}
+    </NavLink>
+  );
+}
 
 export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
@@ -71,6 +125,29 @@ export default function Sidebar({ isOpen, onClose }) {
   const [wsConfirmName, setWsConfirmName] = useState('');
   const [wsSubmitting, setWsSubmitting] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(OPEN_GROUPS_KEY));
+      if (Array.isArray(saved)) return saved;
+    } catch { /* first run */ }
+    return ['daily'];
+  });
+
+  // The group holding the current page always opens (so a refresh or a
+  // direct link never lands on a collapsed active item).
+  useEffect(() => {
+    const g = navGroups.find(gr => gr.items.some(i => i.to === location.pathname));
+    if (g) setOpenGroups(prev => (prev.includes(g.id) ? prev : [...prev, g.id]));
+  }, [location.pathname]);
+
+  const toggleGroup = (id) => {
+    setOpenGroups(prev => {
+      const next = prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id];
+      localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -161,8 +238,10 @@ export default function Sidebar({ isOpen, onClose }) {
           onClick={onClose}
         />
       )}
+      {/* h-dvh (not h-full): mobile browsers' collapsing URL bar makes 100%
+          taller than the visible viewport, which pushed the footer offscreen. */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] bg-white/5 backdrop-blur-2xl border-r border-white/10 z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-dvh w-[280px] bg-white/5 backdrop-blur-2xl border-r border-white/10 z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -219,46 +298,54 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label, heading }) => (
-            heading ? (
-              <p key={heading} className="pt-4 pb-1 px-4 text-[10px] uppercase tracking-widest text-white/25 select-none">{heading}</p>
-            ) : (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  isActive
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-cyan-400 border border-cyan-500/20 shadow-lg shadow-cyan-500/5'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                }`
-              }
-            >
-              <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-              <span className="flex-1">{label}</span>
-              {label === 'Alerts' && unreadAlerts > 0 && (
-                <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center">
-                  {unreadAlerts}
-                </span>
-              )}
-              {isModuleLocked?.(moduleKeyByPath[to]) && (
-                <Lock className="w-3.5 h-3.5 text-amber-400/70" />
-              )}
-            </NavLink>
-            )
+          {coreItems.map(item => (
+            <SidebarLink key={item.to} item={item} onClose={onClose}
+              unreadAlerts={unreadAlerts} isModuleLocked={isModuleLocked} />
           ))}
+
+          {navGroups.map(group => {
+            const GroupIcon = group.icon;
+            const open = openGroups.includes(group.id);
+            const hasActive = group.items.some(i => i.to === location.pathname);
+            const lockedCount = group.items.filter(i => isModuleLocked?.(moduleKeyByPath[i.to])).length;
+            return (
+              <div key={group.id} className="pt-1.5">
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
+                    hasActive && !open
+                      ? 'text-cyan-400 bg-cyan-500/5'
+                      : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                  }`}
+                >
+                  <GroupIcon className="w-4 h-4" />
+                  <span className="flex-1 text-left uppercase tracking-wider text-[11px]">{group.label}</span>
+                  {lockedCount > 0 && !open && <Lock className="w-3 h-3 text-amber-400/50" />}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="ml-3 pl-2 border-l border-white/10 space-y-0.5 py-1">
+                    {group.items.map(item => (
+                      <SidebarLink key={item.to} item={item} onClose={onClose} nested
+                        unreadAlerts={unreadAlerts} isModuleLocked={isModuleLocked} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        {/* Pinned footer: shrink-0 keeps it visible however long the nav gets */}
+        <div className="p-3 border-t border-white/10 shrink-0">
           {/* Admin panel: a distinct "switch" affordance, only for admins */}
           {isAdmin && (
             <NavLink
               to="/admin"
               onClick={onClose}
-              className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-500/15 to-purple-600/15 border border-cyan-500/20 text-cyan-300 hover:from-cyan-500/25 hover:to-purple-600/25 transition-all"
+              className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-500/15 to-purple-600/15 border border-cyan-500/20 text-cyan-300 hover:from-cyan-500/25 hover:to-purple-600/25 transition-all"
             >
-              <ShieldCheck className="w-5 h-5" />
+              <ShieldCheck className="w-4.5 h-4.5" />
               <span className="flex-1">Admin Panel</span>
               <span className="text-[10px] uppercase tracking-wider text-cyan-400/60">Manage</span>
             </NavLink>
@@ -268,9 +355,9 @@ export default function Sidebar({ isOpen, onClose }) {
           <NavLink
             to="/meals"
             onClick={onClose}
-            className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500/15 to-cyan-600/15 border border-emerald-500/20 text-emerald-300 hover:from-emerald-500/25 hover:to-cyan-600/25 transition-all"
+            className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500/15 to-cyan-600/15 border border-emerald-500/20 text-emerald-300 hover:from-emerald-500/25 hover:to-cyan-600/25 transition-all"
           >
-            <UtensilsCrossed className="w-5 h-5" />
+            <UtensilsCrossed className="w-4.5 h-4.5" />
             <span className="flex-1">Meal Manager</span>
             {isModuleLocked?.('meals') ? (
               <Lock className="w-3.5 h-3.5 text-amber-400/70" />

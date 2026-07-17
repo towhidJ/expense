@@ -39,3 +39,16 @@ export const MODULES = [
 ];
 
 export const moduleKeyByPath = Object.fromEntries(MODULES.map(m => [m.path, m.key]));
+
+// Sub-module gating inside /reports: each statement view can be individually
+// free/premium. Same module_access table, `report_` prefixed keys (missing =
+// free, same contract). The Overview view is always free.
+export const REPORT_SUBMODULES = [
+  { key: 'report_income_statement', view: 'income_statement', label: 'Income Statement' },
+  { key: 'report_cash_flow', view: 'cash_flow', label: 'Cash Flow' },
+  { key: 'report_balance_sheet', view: 'balance_sheet', label: 'Balance Sheet' },
+  { key: 'report_trial_balance', view: 'trial_balance', label: 'Trial Balance' },
+  { key: 'report_bazar', view: 'bazar_report', label: 'Bazar Report' }
+];
+
+export const reportKeyByView = Object.fromEntries(REPORT_SUBMODULES.map(r => [r.view, r.key]));

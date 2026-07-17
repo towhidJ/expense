@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MODULES, ALWAYS_FREE } from '../../lib/modules';
-import { Loader2, Lock, Unlock } from 'lucide-react';
+import { MODULES, ALWAYS_FREE, REPORT_SUBMODULES } from '../../lib/modules';
+import { Loader2, Lock, Unlock, PieChart } from 'lucide-react';
 
 // Which modules are free vs Premium. Missing row = free; the core trio
 // (dashboard/transactions/accounts) is never in module_access at all.
@@ -50,36 +50,62 @@ export default function AdminModules() {
             <span className="text-[10px] uppercase tracking-wide bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">Always free</span>
           </div>
         ))}
-        {MODULES.map(m => {
-          const premium = !!access[m.key];
-          return (
-            <button
-              key={m.key}
-              onClick={() => toggle(m.key)}
-              disabled={busyKey === m.key}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all border ${
-                premium
-                  ? 'bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/15'
-                  : 'bg-white/5 border-white/10 hover:bg-white/10'
-              } disabled:opacity-50`}
-            >
-              {busyKey === m.key ? (
-                <Loader2 className="w-4 h-4 text-white/40 animate-spin shrink-0" />
-              ) : premium ? (
-                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-              ) : (
-                <Unlock className="w-4 h-4 text-white/30 shrink-0" />
-              )}
-              <span className="flex-1 text-sm text-white">{m.label}</span>
-              <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
-                premium ? 'bg-amber-500/15 text-amber-400' : 'bg-white/10 text-white/40'
-              }`}>
-                {premium ? 'Premium' : 'Free'}
-              </span>
-            </button>
-          );
-        })}
+        {MODULES.map(m => (
+          <ModuleToggle key={m.key} module={m} premium={!!access[m.key]}
+            busy={busyKey === m.key} onToggle={() => toggle(m.key)} />
+        ))}
+      </div>
+
+      {/* Per-report gating inside /reports (report_* keys, Overview always free) */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+          <PieChart className="w-5 h-5 text-cyan-400" /> Reports — individual statements
+        </h2>
+        <p className="text-sm text-white/40 mt-1">
+          Fine-grained control inside the Reports module: each statement can be free or Premium
+          on its own (the Overview tab is always free). Only matters when the Reports module
+          itself is Free — a Premium Reports module locks everything inside it anyway.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 opacity-60">
+          <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="flex-1 text-sm text-white">Overview</span>
+          <span className="text-[10px] uppercase tracking-wide bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">Always free</span>
+        </div>
+        {REPORT_SUBMODULES.map(m => (
+          <ModuleToggle key={m.key} module={m} premium={!!access[m.key]}
+            busy={busyKey === m.key} onToggle={() => toggle(m.key)} />
+        ))}
       </div>
     </div>
+  );
+}
+
+function ModuleToggle({ module: m, premium, busy, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      disabled={busy}
+      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all border ${
+        premium
+          ? 'bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/15'
+          : 'bg-white/5 border-white/10 hover:bg-white/10'
+      } disabled:opacity-50`}
+    >
+      {busy ? (
+        <Loader2 className="w-4 h-4 text-white/40 animate-spin shrink-0" />
+      ) : premium ? (
+        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+      ) : (
+        <Unlock className="w-4 h-4 text-white/30 shrink-0" />
+      )}
+      <span className="flex-1 text-sm text-white">{m.label}</span>
+      <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
+        premium ? 'bg-amber-500/15 text-amber-400' : 'bg-white/10 text-white/40'
+      }`}>
+        {premium ? 'Premium' : 'Free'}
+      </span>
+    </button>
   );
 }

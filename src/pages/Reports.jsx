@@ -12,7 +12,10 @@ import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
 import { IncomeStatement, CashFlowStatement, TrialBalance, BalanceSheet, BazarReport } from '../components/Statements';
 import { useBazar } from '../hooks/useBazar';
-import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet, LayoutGrid, Receipt, ArrowDownUp, Scale, Landmark, ShoppingBasket } from 'lucide-react';
+import { useSubscription } from '../context/SubscriptionContext';
+import { Paywall } from '../components/PremiumGate';
+import { reportKeyByView } from '../lib/modules';
+import { TrendingUp, TrendingDown, PiggyBank, BarChart3, FileText, FileSpreadsheet, LayoutGrid, Receipt, ArrowDownUp, Scale, Landmark, ShoppingBasket, Lock } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend, Area, AreaChart,
@@ -66,7 +69,11 @@ export default function Reports() {
   const { transfers } = useTransfers();
   const { shops, purchases: bazarPurchases, payments: bazarPayments } = useBazar();
   const { currentEntity } = useEntity();
+  const { isModuleLocked } = useSubscription();
   const [view, setView] = useState('overview');
+  // Per-statement premium gating (report_* keys in module_access); the
+  // Overview view has no key so it can never lock.
+  const viewLocked = (id) => !!isModuleLocked?.(reportKeyByView[id]);
   const now = new Date();
   const [filterType, setFilterType] = useState('monthly'); // 'monthly' or 'custom'
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -502,14 +509,22 @@ export default function Reports() {
             }`}
           >
             <Icon size={15} /> {label}
+            {viewLocked(id) && <Lock size={12} className="text-amber-400/70" />}
           </button>
         ))}
       </div>
 
-      {view === 'income_statement' && (
+      {viewLocked(view) && (
+        <Paywall
+          module={reportKeyByView[view]}
+          labelOverride={`${VIEWS.find(v => v.id === view)?.label} report`}
+        />
+      )}
+
+      {view === 'income_statement' && !viewLocked(view) && (
         <IncomeStatement periodTx={statementTx} periodLabel={periodLabel} entityName={currentEntity?.name} />
       )}
-      {view === 'cash_flow' && (
+      {view === 'cash_flow' && !viewLocked(view) && (
         <CashFlowStatement
           periodTx={statementTx}
           savings={savings}
@@ -522,7 +537,7 @@ export default function Reports() {
           inPeriod={inPeriod}
         />
       )}
-      {view === 'balance_sheet' && (
+      {view === 'balance_sheet' && !viewLocked(view) && (
         <BalanceSheet
           accounts={accounts}
           assets={assets}
@@ -532,7 +547,7 @@ export default function Reports() {
           entityName={currentEntity?.name}
         />
       )}
-      {view === 'trial_balance' && (
+      {view === 'trial_balance' && !viewLocked(view) && (
         <TrialBalance
           accounts={accounts}
           assets={assets}
@@ -544,7 +559,7 @@ export default function Reports() {
           entityName={currentEntity?.name}
         />
       )}
-      {view === 'bazar_report' && (
+      {view === 'bazar_report' && !viewLocked(view) && (
         <BazarReport
           shops={shops}
           purchases={bazarPurchases}
