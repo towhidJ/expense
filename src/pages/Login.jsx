@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
-import { DollarSign, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -53,9 +53,7 @@ export default function Login() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-cyan-500/25 mb-4">
-            <DollarSign className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo.png" alt="TakaKhata" className="w-16 h-16 rounded-2xl shadow-2xl shadow-cyan-500/25 mb-4" />
           <h1 className="text-3xl font-bold text-white tracking-tight">TakaKhata</h1>
           <p className="text-white/40 text-sm mt-1">Manage your finances with ease</p>
         </div>

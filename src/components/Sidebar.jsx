@@ -8,7 +8,7 @@ import { useSubscription } from '../context/SubscriptionContext';
 import { moduleKeyByPath } from '../lib/modules';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
-  LogOut, X, DollarSign, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
+  LogOut, X, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
   Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
   Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock,
   ChevronDown, Wallet2, CalendarClock, Gem, HousePlus, Settings2
@@ -247,9 +247,7 @@ export default function Sidebar({ isOpen, onClose }) {
       >
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-              <DollarSign className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="TakaKhata" className="w-10 h-10 rounded-xl shadow-lg shadow-cyan-500/25" />
             <div>
               <h1 className="text-lg font-bold text-white tracking-tight">TakaKhata</h1>
               <p className="text-xs text-white/40">Finance Manager</p>
