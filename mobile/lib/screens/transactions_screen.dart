@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../ai_service.dart';
 import '../app_state.dart';
@@ -317,6 +318,9 @@ class _TxFormSheetState extends State<TxFormSheet> {
   final _aiText = TextEditingController();
   bool _aiBusy = false;
   String? _aiError;
+  // Attachments: files picked but not yet uploaded, and already-saved ones.
+  final List<XFile> _newFiles = [];
+  List<AttachmentInfo> _existing = [];
 
   @override
   void initState() {
@@ -324,6 +328,84 @@ class _TxFormSheetState extends State<TxFormSheet> {
     widget.state.fetchFamilyMembers().then((rows) {
       if (mounted) setState(() => _familyMembers = rows);
     });
+    final editId = widget.edit?.id;
+    if (editId != null) {
+      widget.state.fetchTransactionAttachments(editId).then((rows) {
+        if (mounted) setState(() => _existing = rows);
+      });
+    }
+  }
+
+  Future<void> _pickAttachment() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(c, ImageSource.camera)),
+          ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(c, ImageSource.gallery)),
+        ]),
+      ),
+    );
+    if (source == null) return;
+    final img = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 80);
+    if (img != null && mounted) setState(() => _newFiles.add(img));
+  }
+
+  Future<void> _removeExisting(AttachmentInfo a) async {
+    try {
+      await widget.state.deleteAttachment(a);
+      if (mounted) setState(() => _existing.removeWhere((x) => x.id == a.id));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  void _viewAttachment(AttachmentInfo a) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: kCard,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: InteractiveViewer(
+                  child: Image.network(
+                    a.fileUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (c, child, progress) => progress == null
+                        ? child
+                        : const Padding(
+                            padding: EdgeInsets.all(48),
+                            child: CircularProgressIndicator(color: kCyan),
+                          ),
+                    errorBuilder: (c, err, st) => Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text('Could not display "${a.fileName}" — it may not be an image.',
+                          style: TextStyle(color: kFg54)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _aiFill() async {
@@ -376,8 +458,9 @@ class _TxFormSheetState extends State<TxFormSheet> {
     }
     setState(() => _busy = true);
     try {
+      String? txId;
       if (widget.edit == null) {
-        await widget.state.addTransaction(
+        txId = await widget.state.addTransaction(
           accountId: _accountId!,
           categoryId: _categoryId!,
           type: _type,
@@ -387,6 +470,7 @@ class _TxFormSheetState extends State<TxFormSheet> {
           familyMemberId: _familyMemberId,
         );
       } else {
+        txId = widget.edit!.id;
         await widget.state.updateTransaction(
           id: widget.edit!.id,
           accountId: _accountId!,
@@ -397,6 +481,18 @@ class _TxFormSheetState extends State<TxFormSheet> {
           description: _description.text.trim(),
           familyMemberId: _familyMemberId,
         );
+      }
+      // Upload any newly-attached documents against the saved transaction.
+      if (txId != null && _newFiles.isNotEmpty) {
+        for (final f in _newFiles) {
+          final bytes = await f.readAsBytes();
+          await widget.state.uploadTransactionAttachment(
+            transactionId: txId,
+            bytes: bytes,
+            filename: f.name,
+            contentType: f.mimeType ?? 'image/jpeg',
+          );
+        }
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -576,6 +672,39 @@ class _TxFormSheetState extends State<TxFormSheet> {
                 child: Text(DateFormat('EEE, MMM d, yyyy').format(_date)),
               ),
             ),
+            const SizedBox(height: 14),
+            // ---- Attachments (invoice / receipt) ----
+            Text('Documents (optional)',
+                style: TextStyle(fontSize: 12.5, color: kFg54)),
+            const SizedBox(height: 6),
+            ..._existing.map((a) => _AttachmentRow(
+                  icon: a.isImage ? Icons.image_outlined : Icons.description_outlined,
+                  label: a.fileName,
+                  color: kCyan,
+                  onTap: () => _viewAttachment(a),
+                  onRemove: () => _removeExisting(a),
+                )),
+            ..._newFiles.map((f) => _AttachmentRow(
+                  icon: Icons.attach_file,
+                  label: f.name,
+                  color: kEmerald,
+                  onRemove: () => setState(() => _newFiles.remove(f)),
+                )),
+            const SizedBox(height: 6),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kCyan,
+                side: BorderSide(color: kCyan.withValues(alpha: 0.4)),
+                minimumSize: const Size.fromHeight(44),
+              ),
+              icon: const Icon(Icons.attach_file, size: 16),
+              label: Text(
+                  (_existing.isEmpty && _newFiles.isEmpty)
+                      ? 'Attach a document'
+                      : 'Add another file',
+                  style: const TextStyle(fontSize: 12.5)),
+              onPressed: _pickAttachment,
+            ),
             const SizedBox(height: 20),
             GradientButton(
               label: widget.edit == null ? 'Add Transaction' : 'Update Transaction',
@@ -583,6 +712,61 @@ class _TxFormSheetState extends State<TxFormSheet> {
               onPressed: _save,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One attachment row inside the transaction form — tap to view (existing
+/// image), X to remove. `onTap` null for a not-yet-uploaded pending file.
+class _AttachmentRow extends StatelessWidget {
+  const _AttachmentRow({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onRemove,
+    this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onRemove;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12.5)),
+              ),
+              if (onTap != null)
+                Icon(Icons.visibility_outlined, size: 15, color: kFg38),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: onRemove,
+                child: Icon(Icons.close, size: 16, color: kFg54),
+              ),
+            ],
+          ),
         ),
       ),
     );

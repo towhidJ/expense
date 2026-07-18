@@ -396,10 +396,12 @@ class AttachmentInfo {
       : id = m['id'],
         fileName = m['file_name'] ?? '',
         fileUrl = m['file_url'] ?? '',
+        storagePath = m['storage_path'],
         contentType = m['content_type'] ?? '';
   final String id;
   final String fileName;
   final String fileUrl;
+  final String? storagePath;
   final String contentType;
 
   bool get isImage => contentType.startsWith('image/');

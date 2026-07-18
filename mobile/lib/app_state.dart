@@ -157,7 +157,9 @@ class AppState extends ChangeNotifier {
     return rows.map<Tx>(Tx.fromMap).toList();
   }
 
-  Future<void> addTransaction({
+  /// Returns the new transaction's id (process_transaction returns it), so the
+  /// caller can link attachments to it — same as the web's addTransaction.
+  Future<String?> addTransaction({
     required String accountId,
     required String categoryId,
     required String type,
@@ -166,7 +168,7 @@ class AppState extends ChangeNotifier {
     String description = '',
     String? familyMemberId,
   }) async {
-    await supabase.rpc('process_transaction', params: {
+    final newId = await supabase.rpc('process_transaction', params: {
       'p_user_id': _uid,
       'p_entity_id': currentEntity!.id,
       'p_account_id': accountId,
@@ -179,6 +181,7 @@ class AppState extends ChangeNotifier {
       'p_family_member_id': familyMemberId,
     });
     await refreshAccounts();
+    return newId as String?;
   }
 
   Future<void> updateTransaction({
@@ -937,6 +940,17 @@ class AppState extends ChangeNotifier {
         .eq('transaction_id', transactionId)
         .order('created_at', ascending: false);
     return rows.map<AttachmentInfo>(AttachmentInfo.fromMap).toList();
+  }
+
+  /// Remove an attachment: delete the stored file (if any) then the row.
+  Future<void> deleteAttachment(AttachmentInfo a) async {
+    final path = a.storagePath;
+    if (path != null && path.isNotEmpty) {
+      try {
+        await supabase.storage.from('documents').remove([path]);
+      } catch (_) {/* file already gone — still drop the row */}
+    }
+    await supabase.from('attachments').delete().eq('id', a.id).eq('user_id', _uid);
   }
 
   Future<void> deleteBazarPurchase(String id) async {
