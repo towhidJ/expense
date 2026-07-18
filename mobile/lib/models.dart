@@ -44,12 +44,19 @@ class SavingHead {
         savingType = m['saving_type'] ?? 'general',
         institution = m['institution'] ?? '',
         accountNumber = m['account_number'] ?? '',
+        interestRate = (m['interest_rate'] as num?)?.toDouble(),
+        tenureMonths = m['tenure_months'] as int?,
+        startDate = m['start_date'] != null ? DateTime.parse(m['start_date']) : null,
         notes = m['notes'] ?? '';
   final String id;
   final String name;
   final String savingType;
   final String institution;
   final String accountNumber;
+  // v41 DPS/FDR maturity fields — null for other head types.
+  final double? interestRate;
+  final int? tenureMonths;
+  final DateTime? startDate;
   final String notes;
 }
 

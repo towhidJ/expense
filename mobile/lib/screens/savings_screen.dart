@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../app_state.dart';
@@ -57,10 +59,43 @@ class _SavingsScreenState extends State<SavingsScreen> {
     return map;
   }
 
+  /// v41 DPS/FDR maturity: (maturityDate, projectedValue?). FDR = simple
+  /// interest on the current balance; DPS = monthly-compounded annuity off
+  /// the linked recurring plan's amount (null value without one). Same math
+  /// as the web Savings page.
+  (DateTime, double?)? _headMaturity(SavingHead h, double balance) {
+    if ((h.savingType != 'dps' && h.savingType != 'fdr') ||
+        h.tenureMonths == null ||
+        h.startDate == null) {
+      return null;
+    }
+    final r = (h.interestRate ?? 0) / 100;
+    final t = h.tenureMonths!;
+    final maturityDate = DateTime(h.startDate!.year, h.startDate!.month + t, h.startDate!.day);
+    double? value;
+    if (h.savingType == 'fdr') {
+      value = balance * (1 + r * (t / 12));
+    } else {
+      final plan = _recurring.where((p) => p.headId == h.id).firstOrNull;
+      if (plan != null) {
+        final mr = r / 12;
+        value = mr == 0
+            ? plan.amount * t
+            : plan.amount * ((math.pow(1 + mr, t) - 1) / mr);
+      }
+    }
+    return (maturityDate, value);
+  }
+
   Future<void> _openHeadForm({SavingHead? edit}) async {
     final name = TextEditingController(text: edit?.name ?? '');
     final institution = TextEditingController(text: edit?.institution ?? '');
     final accountNumber = TextEditingController(text: edit?.accountNumber ?? '');
+    final interestRate = TextEditingController(
+        text: edit?.interestRate == null ? '' : edit!.interestRate!.toString());
+    final tenureMonths =
+        TextEditingController(text: edit?.tenureMonths == null ? '' : '${edit!.tenureMonths}');
+    DateTime? startDate = edit?.startDate;
     String savingType = edit?.savingType ?? 'dps';
 
     final ok = await showModalBottomSheet<bool>(
@@ -98,6 +133,40 @@ class _SavingsScreenState extends State<SavingsScreen> {
                     controller: accountNumber,
                     decoration: const InputDecoration(
                         labelText: 'Account Number (optional)', hintText: 'DPS/FDR A/C no')),
+                // v41: rate/tenure/start unlock the maturity projection on the head card
+                if (savingType == 'dps' || savingType == 'fdr') ...[
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(
+                        child: TextField(
+                            controller: interestRate,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(labelText: 'Rate (%/yr)'))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: TextField(
+                            controller: tenureMonths,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'Tenure (months)'))),
+                  ]),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Start date', style: TextStyle(fontSize: 13, color: kFg54)),
+                    trailing: Text(
+                        startDate == null ? 'Not set' : DateFormat('MMM d, yyyy').format(startDate!),
+                        style: TextStyle(fontSize: 13, color: startDate == null ? kFg38 : kFg)),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                          context: sheetContext,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100));
+                      if (picked != null) setSheet(() => startDate = picked);
+                    },
+                  ),
+                  Text('Fill these in to see maturity date + projected value on the head card.',
+                      style: TextStyle(fontSize: 11, color: kFg38)),
+                ],
                 const SizedBox(height: 20),
                 GradientButton(
                   label: edit == null ? 'Create Head' : 'Save',
@@ -114,12 +183,16 @@ class _SavingsScreenState extends State<SavingsScreen> {
     );
     if (ok != true) return;
     try {
+      final maturing = savingType == 'dps' || savingType == 'fdr';
       await widget.state.upsertSavingHead(
         id: edit?.id,
         name: name.text.trim(),
         savingType: savingType,
         institution: institution.text.trim(),
         accountNumber: accountNumber.text.trim(),
+        interestRate: maturing ? double.tryParse(interestRate.text.trim()) : null,
+        tenureMonths: maturing ? int.tryParse(tenureMonths.text.trim()) : null,
+        startDate: maturing ? startDate : null,
       );
       _load();
     } catch (e) {
@@ -510,6 +583,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                   const SizedBox(height: 8),
                   ..._heads.map((h) {
                     final balance = _headBalances[h.id] ?? 0;
+                    final maturity = _headMaturity(h, balance);
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Card(
@@ -518,11 +592,13 @@ class _SavingsScreenState extends State<SavingsScreen> {
                           leading: const Icon(Icons.account_balance_outlined, color: kEmerald, size: 20),
                           title: Text(h.name,
                               maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
+                          isThreeLine: maturity != null,
                           subtitle: Text(
                             '${savingTypes[h.savingType] ?? h.savingType}'
                             '${h.institution.isNotEmpty ? ' • ${h.institution}' : ''}'
-                            '${h.accountNumber.isNotEmpty ? ' • A/C: ${h.accountNumber}' : ''}',
-                            maxLines: 1,
+                            '${h.accountNumber.isNotEmpty ? ' • A/C: ${h.accountNumber}' : ''}'
+                            '${maturity != null ? '\n📆 Matures ${DateFormat('MMM yyyy').format(maturity.$1)}${maturity.$2 != null ? ' • projected ${taka(maturity.$2!)}' : ''}' : ''}',
+                            maxLines: maturity != null ? 2 : 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 11, color: kFg.withValues(alpha: 0.35)),
                           ),

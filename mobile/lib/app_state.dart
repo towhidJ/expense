@@ -444,12 +444,25 @@ class AppState extends ChangeNotifier {
     return rows.map<SavingHead>(SavingHead.fromMap).toList();
   }
 
-  Future<void> upsertSavingHead({String? id, required String name, required String savingType, String? institution, String? accountNumber, String notes = ''}) async {
+  Future<void> upsertSavingHead(
+      {String? id,
+      required String name,
+      required String savingType,
+      String? institution,
+      String? accountNumber,
+      double? interestRate,
+      int? tenureMonths,
+      DateTime? startDate,
+      String notes = ''}) async {
     final payload = {
       'name': name,
       'saving_type': savingType,
       'institution': (institution == null || institution.isEmpty) ? null : institution,
       'account_number': (accountNumber == null || accountNumber.isEmpty) ? null : accountNumber,
+      // v41 DPS/FDR maturity fields
+      'interest_rate': interestRate,
+      'tenure_months': tenureMonths,
+      'start_date': startDate == null ? null : _d(startDate),
       'notes': notes,
     };
     if (id == null) {
@@ -2351,6 +2364,9 @@ class AppState extends ChangeNotifier {
     'bazar_purchases', 'insurance_policies', 'utility_bills', 'rental_units',
     'rent_payments', 'rent_revisions', 'unit_tenancies', 'rent_unit_expenses',
     'split_events', 'split_members', 'split_expenses',
+    'emi_scenarios', 'vehicles', 'vehicle_logs', 'committees',
+    'committee_payments', 'family_allowances', 'charity_donations',
+    'invoices', 'inventory_items', 'inventory_movements',
   ];
 
   /// All rows per table for the current workspace; missing tables (unapplied
@@ -2370,6 +2386,157 @@ class AppState extends ChangeNotifier {
       }
     }
     return out;
+  }
+
+  // ---- Generic entity-scoped CRUD (v41 modules) ----
+  // Mirrors the web's useEntityTable: simple record-keeping tables get raw
+  // map rows; anything that moves money still goes through the RPCs below.
+
+  Future<List<Map<String, dynamic>>> entityRows(
+    String table, {
+    String select = '*',
+    String orderBy = 'created_at',
+    bool ascending = false,
+  }) async {
+    if (currentEntity == null) return [];
+    final rows = await supabase
+        .from(table)
+        .select(select)
+        .eq('user_id', _uid)
+        .eq('entity_id', currentEntity!.id)
+        .order(orderBy, ascending: ascending);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  Future<Map<String, dynamic>> insertEntityRow(String table, Map<String, dynamic> row) async {
+    final inserted = await supabase
+        .from(table)
+        .insert({...row, 'user_id': _uid, 'entity_id': currentEntity!.id})
+        .select()
+        .single();
+    return Map<String, dynamic>.from(inserted);
+  }
+
+  Future<void> updateEntityRow(String table, String id, Map<String, dynamic> patch) async {
+    await supabase.from(table).update(patch).eq('id', id).eq('user_id', _uid);
+  }
+
+  Future<void> deleteEntityRow(String table, String id) async {
+    await supabase.from(table).delete().eq('id', id).eq('user_id', _uid);
+  }
+
+  /// process_transaction that RETURNS the new transaction id, for modules
+  /// that link a ledger row to the payment (vehicle_logs, charity_donations,
+  /// committee_payments, invoices...). addTransaction() stays void.
+  Future<String> processTransactionId({
+    required String accountId,
+    required String categoryId,
+    required String type,
+    required double amount,
+    required DateTime date,
+    String description = '',
+  }) async {
+    final txId = await supabase.rpc('process_transaction', params: {
+      'p_user_id': _uid,
+      'p_entity_id': currentEntity!.id,
+      'p_account_id': accountId,
+      'p_category_id': categoryId,
+      'p_asset_id': null,
+      'p_type': type,
+      'p_amount': amount,
+      'p_date': _d(date),
+      'p_description': description,
+    });
+    await refreshAccounts();
+    return txId as String;
+  }
+
+  /// Inventory stock in/out — quantity is a running balance, so it must go
+  /// through this RPC (never a plain update), same rule as account balances.
+  Future<void> processInventoryMovement({
+    required String itemId,
+    required String movementType, // 'in' | 'out'
+    required double quantity,
+    double unitPrice = 0,
+    required DateTime date,
+    String? notes,
+    String? accountId,
+    String? categoryId,
+  }) async {
+    await supabase.rpc('process_inventory_movement', params: {
+      'p_user_id': _uid,
+      'p_entity_id': currentEntity!.id,
+      'p_item_id': itemId,
+      'p_movement_type': movementType,
+      'p_quantity': quantity,
+      'p_unit_price': unitPrice,
+      'p_date': _d(date),
+      'p_notes': notes,
+      'p_account_id': accountId,
+      'p_category_id': categoryId,
+    });
+    if (accountId != null) await refreshAccounts();
+  }
+
+  /// Bulk transaction import (Bank Reconciliation) — one atomic batch via
+  /// process_transactions_bulk, same as the web Import/Reconcile pages.
+  Future<int> importTransactionsBulk(List<Map<String, dynamic>> rows) async {
+    final ids = await supabase.rpc('process_transactions_bulk', params: {
+      'p_entity_id': currentEntity!.id,
+      'p_rows': rows,
+    });
+    await refreshAccounts();
+    return (ids as List).length;
+  }
+
+  // ---- Document Vault (v41) — attachments rows with doc_category set ----
+
+  Future<List<Map<String, dynamic>>> fetchVaultDocuments() async {
+    final rows = await supabase
+        .from('attachments')
+        .select()
+        .eq('user_id', _uid)
+        .not('doc_category', 'is', null)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  Future<void> uploadVaultDocument({
+    required List<int> bytes,
+    required String filename,
+    required String docCategory,
+    String? title,
+    DateTime? expiryDate,
+    String contentType = 'image/jpeg',
+  }) async {
+    final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final path = '$_uid/${DateTime.now().millisecondsSinceEpoch}_$safe';
+    await supabase.storage.from('documents').uploadBinary(
+        path, Uint8List.fromList(bytes),
+        fileOptions: FileOptions(cacheControl: '3600', contentType: contentType));
+    final url = supabase.storage.from('documents').getPublicUrl(path);
+    await supabase.from('attachments').insert({
+      'user_id': _uid,
+      'entity_id': currentEntity?.id,
+      'doc_category': docCategory,
+      'title': title,
+      'expiry_date': expiryDate == null ? null : _d(expiryDate),
+      'file_name': filename,
+      'file_url': url,
+      'storage_path': path,
+      'file_size': bytes.length,
+      'content_type': contentType,
+    });
+  }
+
+  Future<void> deleteVaultDocument(Map<String, dynamic> doc) async {
+    final path = doc['storage_path'] as String?;
+    if (path != null) {
+      try {
+        await supabase.storage.from('documents').remove([path]);
+      } catch (_) {/* row cleanup still proceeds */}
+    }
+    await supabase.from('attachments').delete().eq('id', doc['id']).eq('user_id', _uid);
   }
 
   static String _d(DateTime d) =>
