@@ -11,6 +11,10 @@
 -- unaffected by this policy.
 
 DROP POLICY IF EXISTS "Users can manage their own entities" ON entities;
+DROP POLICY IF EXISTS "Users can view own entities" ON entities;
+DROP POLICY IF EXISTS "Users can update own entities" ON entities;
+DROP POLICY IF EXISTS "Users can delete own entities" ON entities;
+DROP POLICY IF EXISTS "Free accounts get one workspace, Premium unlocks more" ON entities;
 
 CREATE POLICY "Users can view own entities" ON entities
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
