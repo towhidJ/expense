@@ -126,7 +126,7 @@ export default function AdminUsers() {
                     {u.sub?.active ? (
                       <span className="flex items-center gap-1.5 text-amber-400">
                         <Crown className="w-3.5 h-3.5" />
-                        {u.sub.lifetime ? 'Lifetime' : `Until ${fmtDate(u.sub.expires_at)}`}
+                        {u.sub.lifetime ? 'Lifetime' : `${u.sub.is_trial ? 'Trial until ' : 'Until '}${fmtDate(u.sub.expires_at)}`}
                       </span>
                     ) : u.sub ? (
                       <span className="text-red-400/70">Expired {fmtDate(u.sub.expires_at)}</span>
@@ -226,10 +226,19 @@ export default function AdminUsers() {
               <p className="text-sm text-white/50">
                 <span className="text-white">{subTarget.email}</span> —{' '}
                 {subTarget.sub?.active
-                  ? subTarget.sub.lifetime ? 'Lifetime premium' : `premium until ${fmtDate(subTarget.sub.expires_at)}`
+                  ? subTarget.sub.lifetime
+                    ? 'Lifetime premium'
+                    : `${subTarget.sub.is_trial ? 'trial' : 'premium'} until ${fmtDate(subTarget.sub.expires_at)}`
                   : 'no active subscription'}.
-                Extending adds to the current expiry.
+                Extending adds to the current expiry (a trial grant resets to a fresh 3 days).
               </p>
+              <button
+                onClick={() => handleSetSub('trial')}
+                disabled={busyId === subTarget.id}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm hover:bg-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-50"
+              >
+                <Check className="w-4 h-4 text-amber-400" /> Grant 3-day trial
+              </button>
               {['monthly', 'yearly', 'lifetime'].map(d => (
                 <button
                   key={d}

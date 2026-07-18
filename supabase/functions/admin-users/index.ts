@@ -48,7 +48,7 @@ async function listUsers(service: SupabaseClient) {
 
   const [{ data: profiles }, { data: subs }] = await Promise.all([
     service.from("profiles").select("id, full_name, is_admin, created_at"),
-    service.from("user_subscriptions").select("user_id, expires_at, started_at"),
+    service.from("user_subscriptions").select("user_id, expires_at, started_at, is_trial"),
   ]);
   const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p]));
   const subById = new Map((subs ?? []).map((s: any) => [s.user_id, s]));
@@ -66,7 +66,7 @@ async function listUsers(service: SupabaseClient) {
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
         sub: s
-          ? { active, lifetime: active && s.expires_at === null, expires_at: s.expires_at }
+          ? { active, lifetime: active && s.expires_at === null, expires_at: s.expires_at, is_trial: !!s.is_trial }
           : null,
       };
     })

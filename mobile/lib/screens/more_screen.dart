@@ -296,7 +296,10 @@ class _MoreScreenState extends State<MoreScreen> {
               ListTile(
                 leading: Icon(Icons.workspace_premium_outlined,
                     color: state.subActive ? kEmerald : kOrange),
-                title: Text(state.subActive ? 'Premium active' : 'Go Premium',
+                title: Text(
+                    state.subActive
+                        ? (state.subIsTrial ? 'Free trial active' : 'Premium active')
+                        : 'Go Premium',
                     style: const TextStyle(fontSize: 14)),
                 subtitle: Text(
                     state.subActive

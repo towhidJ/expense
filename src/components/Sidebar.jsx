@@ -112,7 +112,7 @@ function SidebarLink({ item, onClose, nested = false, unreadAlerts, isModuleLock
 export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { isModuleLocked } = useSubscription();
+  const { isModuleLocked, isPremiumActive, isTrial, isLifetime, expiresAt } = useSubscription();
   const { entities, currentEntity, switchEntity, addEntity, updateEntity, deleteEntity } = useEntity();
   const { notifications: financeNotifications } = useFinanceNotifications();
   const unreadAlerts = financeNotifications.filter(n => !n.is_read).length;
@@ -348,6 +348,25 @@ export default function Sidebar({ isOpen, onClose }) {
               <span className="text-[10px] uppercase tracking-wider text-cyan-400/60">Manage</span>
             </NavLink>
           )}
+
+          {/* My Subscription: status badge doubles as the entry point to upgrade */}
+          <NavLink
+            to="/subscription"
+            onClick={onClose}
+            className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-amber-500/15 to-orange-600/15 border border-amber-500/20 text-amber-300 hover:from-amber-500/25 hover:to-orange-600/25 transition-all"
+          >
+            <Gem className="w-4.5 h-4.5" />
+            <span className="flex-1">My Subscription</span>
+            <span className="text-[10px] uppercase tracking-wider text-amber-400/60">
+              {isLifetime
+                ? 'Lifetime'
+                : isTrial
+                  ? `Trial · ${Math.max(0, Math.ceil((new Date(expiresAt) - Date.now()) / 86400000))}d left`
+                  : isPremiumActive
+                    ? 'Premium'
+                    : 'Upgrade'}
+            </span>
+          </NavLink>
 
           {/* Meal workspace: a separate section of the app with its own layout */}
           <NavLink

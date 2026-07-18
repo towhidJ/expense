@@ -25,9 +25,10 @@ export default function PremiumGate({ module, children }) {
 }
 
 // Also used standalone for sub-module gating (e.g. individual report
-// statements inside /reports) — pass labelOverride for keys not in MODULES.
+// statements inside /reports) and for the always-visible /subscription page
+// — pass labelOverride for keys not in MODULES.
 export function Paywall({ module, labelOverride }) {
-  const { billing, refresh } = useSubscription();
+  const { billing, refresh, isPremiumActive, isTrial, isLifetime, expiresAt } = useSubscription();
   const label = labelOverride || MODULES.find(m => m.key === module)?.label || module;
 
   const [requests, setRequests] = useState(null);
@@ -112,10 +113,27 @@ export function Paywall({ module, labelOverride }) {
         <div className="w-14 h-14 rounded-2xl bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
           <Crown className="w-7 h-7 text-amber-400" />
         </div>
-        <h1 className="text-xl font-bold text-white">{label} is a Premium module</h1>
-        <p className="text-sm text-white/50 mt-2">
-          Subscribe once and unlock every Premium module in TakaKhata.
-        </p>
+        {isPremiumActive ? (
+          <>
+            <h1 className="text-xl font-bold text-white">
+              {isTrial ? "You're on a free trial" : 'You have Premium'}
+            </h1>
+            <p className="text-sm text-white/50 mt-2">
+              {isLifetime
+                ? 'Lifetime access — every Premium module is unlocked for good.'
+                : isTrial
+                  ? `Your trial ends ${fmtDate(expiresAt)}. Subscribe below to keep Premium after it ends.`
+                  : `Active until ${fmtDate(expiresAt)}. Subscribe below to extend.`}
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-xl font-bold text-white">{label} is a Premium module</h1>
+            <p className="text-sm text-white/50 mt-2">
+              Subscribe once and unlock every Premium module in TakaKhata.
+            </p>
+          </>
+        )}
       </div>
 
       {pending ? (

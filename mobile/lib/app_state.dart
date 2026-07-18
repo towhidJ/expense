@@ -23,6 +23,7 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic>? billing; // billing_settings row (prices, pay numbers)
   bool subActive = false;
   bool subLifetime = false;
+  bool subIsTrial = false;
   DateTime? subExpiresAt;
   bool isAdminUser = false;
 
@@ -50,6 +51,7 @@ class AppState extends ChangeNotifier {
           : (subRows is Map ? subRows : null);
       subActive = sub?['is_active'] == true;
       subLifetime = sub?['is_lifetime'] == true;
+      subIsTrial = sub?['is_trial'] == true;
       subExpiresAt =
           sub?['expires_at'] != null ? DateTime.parse(sub['expires_at']).toLocal() : null;
       isAdminUser = (results[3] as Map?)?['is_admin'] == true;

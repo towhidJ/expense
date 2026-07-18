@@ -30,6 +30,7 @@ import Liabilities from './pages/Liabilities';
 import Lending from './pages/Lending';
 import Zakat from './pages/Zakat';
 import Subscriptions from './pages/Subscriptions';
+import Subscription from './pages/Subscription';
 import Insurance from './pages/Insurance';
 import Utility from './pages/Utility';
 import Rent from './pages/Rent';
@@ -80,6 +81,7 @@ function App() {
                 <Route path="lending" element={g('lending', <Lending />)} />
                 <Route path="zakat" element={g('zakat', <Zakat />)} />
                 <Route path="subscriptions" element={g('subscriptions', <Subscriptions />)} />
+                <Route path="subscription" element={<Subscription />} />
                 <Route path="insurance" element={g('insurance', <Insurance />)} />
                 <Route path="utility" element={g('utility', <Utility />)} />
                 <Route path="rent" element={g('rent', <Rent />)} />
