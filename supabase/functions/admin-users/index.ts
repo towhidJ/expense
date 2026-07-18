@@ -5,6 +5,10 @@
 //   set_password - set a temporary password for a user (admin support flow;
 //                  manual bKash/Nagad market, email resets are unreliable)
 //   toggle_admin - grant/revoke the is_admin flag
+//   toggle_ban   - block (long ban) / unblock an account; blocked users
+//                  cannot sign in but their data stays intact
+//   delete_user  - permanently delete an account from auth.users (cascades
+//                  to profiles and all entity data via FK)
 //
 // Auth: the caller's JWT is verified via auth.getUser(), then profiles.is_admin
 // is re-checked with the service-role client before any auth.admin call.
@@ -48,7 +52,7 @@ async function listUsers(service: SupabaseClient) {
 
   const [{ data: profiles }, { data: subs }] = await Promise.all([
     service.from("profiles").select("id, full_name, is_admin, created_at"),
-    service.from("user_subscriptions").select("user_id, expires_at, started_at"),
+    service.from("user_subscriptions").select("user_id, expires_at, started_at, is_trial"),
   ]);
   const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p]));
   const subById = new Map((subs ?? []).map((s: any) => [s.user_id, s]));
@@ -65,8 +69,9 @@ async function listUsers(service: SupabaseClient) {
         is_admin: p?.is_admin ?? false,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
+        banned: !!u.banned_until && new Date(u.banned_until) > new Date(),
         sub: s
-          ? { active, lifetime: active && s.expires_at === null, expires_at: s.expires_at }
+          ? { active, lifetime: active && s.expires_at === null, expires_at: s.expires_at, is_trial: !!s.is_trial }
           : null,
       };
     })
@@ -117,6 +122,49 @@ async function toggleAdmin(
   return { ok: true };
 }
 
+// Ban/delete both refuse to target the caller or any other admin —
+// demote an admin first if their account really has to go.
+async function assertNotAdminTarget(
+  service: SupabaseClient,
+  callerId: string,
+  userId: string,
+  verb: string,
+) {
+  if (!userId) throw new Error("user_id is required");
+  if (userId === callerId) throw new Error(`You cannot ${verb} your own account`);
+  const { data: target } = await service
+    .from("profiles").select("is_admin").eq("id", userId).maybeSingle();
+  if (target?.is_admin) throw new Error(`Cannot ${verb} an admin account — remove admin first`);
+}
+
+async function toggleBan(
+  service: SupabaseClient,
+  callerId: string,
+  body: any,
+) {
+  const userId = String(body.user_id ?? "");
+  const ban = !!body.ban;
+  await assertNotAdminTarget(service, callerId, userId, ban ? "block" : "unblock");
+  // ~100 years = effectively permanent until an admin unblocks.
+  const { error } = await service.auth.admin.updateUserById(userId, {
+    ban_duration: ban ? "876000h" : "none",
+  });
+  if (error) throw error;
+  return { ok: true };
+}
+
+async function deleteUser(
+  service: SupabaseClient,
+  callerId: string,
+  body: any,
+) {
+  const userId = String(body.user_id ?? "");
+  await assertNotAdminTarget(service, callerId, userId, "delete");
+  const { error } = await service.auth.admin.deleteUser(userId);
+  if (error) throw error;
+  return { ok: true };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -150,6 +198,10 @@ Deno.serve(async (req) => {
         return json(await setPassword(service, user.id, body));
       case "toggle_admin":
         return json(await toggleAdmin(service, user.id, body));
+      case "toggle_ban":
+        return json(await toggleBan(service, user.id, body));
+      case "delete_user":
+        return json(await deleteUser(service, user.id, body));
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }

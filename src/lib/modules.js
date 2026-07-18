@@ -35,7 +35,17 @@ export const MODULES = [
   { key: 'family', label: 'Family', path: '/family' },
   { key: 'meals', label: 'Meal Manager', path: '/meals' },
   { key: 'activity', label: 'Activity Log', path: '/activity' },
-  { key: 'backup', label: 'Backup', path: '/backup' }
+  { key: 'backup', label: 'Backup', path: '/backup' },
+  { key: 'emi', label: 'EMI Calculator', path: '/emi' },
+  { key: 'debt-payoff', label: 'Debt Payoff Planner', path: '/debt-payoff' },
+  { key: 'vehicle', label: 'Vehicle Expense', path: '/vehicle' },
+  { key: 'committee', label: 'Committee / Samity', path: '/committee' },
+  { key: 'pocket-money', label: 'Pocket Money', path: '/pocket-money' },
+  { key: 'charity', label: 'Charity / Sadaqah', path: '/charity' },
+  { key: 'invoicing', label: 'Invoicing', path: '/invoicing' },
+  { key: 'inventory', label: 'Inventory', path: '/inventory' },
+  { key: 'reconcile', label: 'Bank Reconciliation', path: '/reconcile' },
+  { key: 'documents', label: 'Document Vault', path: '/documents' }
 ];
 
 export const moduleKeyByPath = Object.fromEntries(MODULES.map(m => [m.path, m.key]));

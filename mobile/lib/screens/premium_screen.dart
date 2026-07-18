@@ -144,7 +144,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     const SizedBox(height: 12),
                     Text(
                       state.subActive
-                          ? (state.subLifetime ? 'Lifetime Premium active' : 'Premium active')
+                          ? (state.subLifetime
+                              ? 'Lifetime Premium active'
+                              : state.subIsTrial
+                                  ? "You're on a free trial"
+                                  : 'Premium active')
                           : widget.lockedLabel != null
                               ? '${widget.lockedLabel} is a Premium module'
                               : 'Go Premium',
@@ -156,7 +160,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       state.subActive
                           ? (state.subLifetime
                               ? 'Enjoy every Premium module forever.'
-                              : 'Active until ${DateFormat('d MMM yyyy').format(state.subExpiresAt!)}')
+                              : state.subIsTrial
+                                  ? 'Your trial ends ${DateFormat('d MMM yyyy').format(state.subExpiresAt!)}. Subscribe below to keep Premium after it ends.'
+                                  : 'Active until ${DateFormat('d MMM yyyy').format(state.subExpiresAt!)}')
                           : 'One subscription unlocks every Premium module in TakaKhata.',
                       style: TextStyle(fontSize: 12.5, color: kFg54),
                       textAlign: TextAlign.center,
@@ -166,7 +172,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               ),
             ),
 
-            if (!state.subActive && pending == null) ...[
+            if ((!state.subActive || state.subIsTrial) && pending == null) ...[
               const SizedBox(height: 12),
               // Pricing cards
               if (durations.isNotEmpty)

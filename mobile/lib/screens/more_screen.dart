@@ -10,17 +10,26 @@ import 'assets_screen.dart';
 import 'backup_screen.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
+import 'charity_screen.dart';
+import 'committee_screen.dart';
+import 'debt_payoff_screen.dart';
+import 'documents_screen.dart';
+import 'emi_screen.dart';
 import 'family_screen.dart';
 import 'finance_notifications_screen.dart';
 import 'forecast_screen.dart';
 import 'goals_screen.dart';
 import 'insights_screen.dart';
 import 'insurance_screen.dart';
+import 'inventory_screen.dart';
 import 'investments_screen.dart';
+import 'invoicing_screen.dart';
 import 'lending_screen.dart';
 import 'liabilities_screen.dart';
 import 'meals_screen.dart';
+import 'pocket_money_screen.dart';
 import 'premium_screen.dart';
+import 'reconcile_screen.dart';
 import 'recurring_screen.dart';
 import 'rent_screen.dart';
 import 'reports_screen.dart';
@@ -31,6 +40,7 @@ import 'subscriptions_screen.dart';
 import 'tax_screen.dart';
 import 'transfers_screen.dart';
 import 'utility_screen.dart';
+import 'vehicle_screen.dart';
 import 'warranty_screen.dart';
 import 'zakat_screen.dart';
 
@@ -208,6 +218,16 @@ class _MoreScreenState extends State<MoreScreen> {
       (Icons.receipt_long_outlined, 'Tax', kRed, () => TaxScreen(state: state), 'tax'),
       (Icons.auto_awesome_outlined, 'AI Insights', kPurple, () => InsightsScreen(state: state), 'insights'),
       (Icons.document_scanner_outlined, 'Scan Receipt', kEmerald, () => ScanReceiptScreen(state: state), 'scan'),
+      (Icons.calculate_outlined, 'EMI Calculator', kCyan, () => EmiScreen(state: state), 'emi'),
+      (Icons.trending_down, 'Debt Payoff', kRed, () => DebtPayoffScreen(state: state), 'debt-payoff'),
+      (Icons.local_gas_station_outlined, 'Vehicle', kOrange, () => VehicleScreen(state: state), 'vehicle'),
+      (Icons.groups_outlined, 'Committee', kPurple, () => CommitteeScreen(state: state), 'committee'),
+      (Icons.child_care_outlined, 'Pocket Money', kPurple, () => PocketMoneyScreen(state: state), 'pocket-money'),
+      (Icons.volunteer_activism_outlined, 'Charity', kEmerald, () => CharityScreen(state: state), 'charity'),
+      (Icons.receipt_outlined, 'Invoicing', kCyan, () => InvoicingScreen(state: state), 'invoicing'),
+      (Icons.inventory_2_outlined, 'Inventory', kOrange, () => InventoryScreen(state: state), 'inventory'),
+      (Icons.manage_search_outlined, 'Reconcile', kCyan, () => ReconcileScreen(state: state), 'reconcile'),
+      (Icons.folder_special_outlined, 'Documents', kEmerald, () => DocumentsScreen(state: state), 'documents'),
       (Icons.history, 'Activity Log', kOrange, () => ActivityScreen(state: state), 'activity'),
       (Icons.cloud_download_outlined, 'Backup', kCyan, () => BackupScreen(state: state), 'backup'),
     ];
@@ -296,7 +316,10 @@ class _MoreScreenState extends State<MoreScreen> {
               ListTile(
                 leading: Icon(Icons.workspace_premium_outlined,
                     color: state.subActive ? kEmerald : kOrange),
-                title: Text(state.subActive ? 'Premium active' : 'Go Premium',
+                title: Text(
+                    state.subActive
+                        ? (state.subIsTrial ? 'Free trial active' : 'Premium active')
+                        : 'Go Premium',
                     style: const TextStyle(fontSize: 14)),
                 subtitle: Text(
                     state.subActive

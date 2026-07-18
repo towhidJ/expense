@@ -51,8 +51,9 @@ export default function Savings() {
     head_id: ''
   };
   const [recurringForm, setRecurringForm] = useState(initialRecurringForm);
-  const initialHeadForm = { name: '', saving_type: 'dps', institution: '', account_number: '', notes: '' };
+  const initialHeadForm = { name: '', saving_type: 'dps', institution: '', account_number: '', notes: '', interest_rate: '', tenure_months: '', start_date: '' };
   const [headForm, setHeadForm] = useState(initialHeadForm);
+  const isMaturingType = headForm.saving_type === 'dps' || headForm.saving_type === 'fdr';
 
   // Net balance sitting in each head (deposits - withdrawals)
   const headBalances = useMemo(() => {
@@ -63,6 +64,34 @@ export default function Savings() {
     });
     return map;
   }, [savings]);
+
+  // DPS/FDR maturity projection for heads that have interest_rate + tenure_months set.
+  // FDR: current balance is treated as the lump-sum principal (simple interest).
+  // DPS: the linked recurring plan's amount is the monthly installment
+  // (monthly-compounded annuity); without one, there's nothing to project from.
+  const headMaturity = useMemo(() => {
+    const map = {};
+    savingHeads.forEach(h => {
+      if ((h.saving_type !== 'dps' && h.saving_type !== 'fdr') || !h.tenure_months || !h.start_date) return;
+      const r = Number(h.interest_rate || 0) / 100;
+      const t = Number(h.tenure_months);
+      const maturityDate = new Date(h.start_date);
+      maturityDate.setMonth(maturityDate.getMonth() + t);
+      let value = null;
+      if (h.saving_type === 'fdr') {
+        value = (headBalances[h.id] || 0) * (1 + r * (t / 12));
+      } else {
+        const plan = recurringSavings.find(rs => rs.head_id === h.id);
+        if (plan) {
+          const mr = r / 12;
+          const installment = Number(plan.amount);
+          value = mr === 0 ? installment * t : installment * ((Math.pow(1 + mr, t) - 1) / mr);
+        }
+      }
+      map[h.id] = { maturityDate, value };
+    });
+    return map;
+  }, [savingHeads, headBalances, recurringSavings]);
 
   const now = new Date();
   const stats = useMemo(() => {
@@ -126,7 +155,10 @@ export default function Savings() {
         ...headForm,
         institution: headForm.institution || null,
         account_number: headForm.account_number || null,
-        notes: headForm.notes || null
+        notes: headForm.notes || null,
+        interest_rate: headForm.interest_rate === '' ? null : parseFloat(headForm.interest_rate),
+        tenure_months: headForm.tenure_months === '' ? null : parseInt(headForm.tenure_months),
+        start_date: headForm.start_date || null
       };
       if (editHead) await updateSavingHead(editHead.id, payload);
       else await addSavingHead(payload);
@@ -146,7 +178,10 @@ export default function Savings() {
       saving_type: head.saving_type || 'general',
       institution: head.institution || '',
       account_number: head.account_number || '',
-      notes: head.notes || ''
+      notes: head.notes || '',
+      interest_rate: head.interest_rate ?? '',
+      tenure_months: head.tenure_months ?? '',
+      start_date: head.start_date || ''
     } : initialHeadForm);
     setShowHeadForm(true);
   };
@@ -203,7 +238,7 @@ export default function Savings() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Savings</h1>
-          <p className="text-white/40 text-sm mt-1">Track money you set aside, separate from your goals</p>
+          <p className="text-white/40 text-sm mt-1">Track money you set aside, separate from your goals — including DPS/FDR with maturity projections via "New Head"</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {dueRecurring > 0 && (
@@ -309,6 +344,20 @@ export default function Savings() {
                 <p className={`text-lg font-bold mt-2 ${(headBalances[h.id] || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   ৳{(headBalances[h.id] || 0).toLocaleString()}
                 </p>
+                {headMaturity[h.id] && (
+                  <div className="mt-2 pt-2 border-t border-white/5 text-xs">
+                    <div className="flex justify-between text-white/40">
+                      <span>Maturity</span>
+                      <span>{headMaturity[h.id].maturityDate.toLocaleDateString()}</span>
+                    </div>
+                    {headMaturity[h.id].value != null && (
+                      <div className="flex justify-between mt-0.5">
+                        <span className="text-white/40">Projected</span>
+                        <span className="text-cyan-400 font-medium">৳{Math.round(headMaturity[h.id].value).toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -672,6 +721,23 @@ export default function Savings() {
                 <label className="block text-sm text-white/50 mb-1.5">Account Number (Optional)</label>
                 <input type="text" value={headForm.account_number} onChange={e => setHeadForm(f => ({ ...f, account_number: e.target.value }))} placeholder="e.g. 123.456.789 / DPS A/C no" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 placeholder:text-white/20" />
               </div>
+              {isMaturingType && (
+                <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/15">
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Rate (%/yr)</label>
+                    <input type="number" step="0.01" value={headForm.interest_rate} onChange={e => setHeadForm(f => ({ ...f, interest_rate: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Tenure (mo)</label>
+                    <input type="number" value={headForm.tenure_months} onChange={e => setHeadForm(f => ({ ...f, tenure_months: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Start Date</label>
+                    <input type="date" value={headForm.start_date} onChange={e => setHeadForm(f => ({ ...f, start_date: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
+                  </div>
+                  <p className="col-span-3 text-[11px] text-white/35">Fill these in to see a projected maturity value below. DPS projects off the linked recurring plan's amount — add one via "Recurring".</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-white/50 mb-1.5">Notes (Optional)</label>
                 <input type="text" value={headForm.notes} onChange={e => setHeadForm(f => ({ ...f, notes: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50" />

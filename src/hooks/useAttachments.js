@@ -16,8 +16,9 @@ export function useAttachments() {
   const [uploading, setUploading] = useState(false);
 
   // Upload one file to storage and record it in the attachments table.
-  // Pass exactly one of { transactionId, liabilityId, assetId } to link it.
-  const uploadAttachment = useCallback(async (file, { transactionId = null, liabilityId = null, assetId = null } = {}) => {
+  // Pass exactly one of { transactionId, liabilityId, assetId } to link it,
+  // or docCategory (Document Vault) for a standalone, unlinked document.
+  const uploadAttachment = useCallback(async (file, { transactionId = null, liabilityId = null, assetId = null, docCategory = null, expiryDate = null, title = null } = {}) => {
     if (!file || !user) return null;
     setUploading(true);
     try {
@@ -37,6 +38,9 @@ export function useAttachments() {
           transaction_id: transactionId,
           liability_id: liabilityId,
           asset_id: assetId,
+          doc_category: docCategory,
+          expiry_date: expiryDate,
+          title,
           file_name: file.name,
           file_url: urlData.publicUrl,
           storage_path: path,
@@ -62,12 +66,13 @@ export function useAttachments() {
     return results;
   }, [uploadAttachment]);
 
-  const fetchAttachments = useCallback(async ({ transactionId = null, liabilityId = null, assetId = null } = {}) => {
+  const fetchAttachments = useCallback(async ({ transactionId = null, liabilityId = null, assetId = null, vaultOnly = false } = {}) => {
     if (!user) return [];
     let query = supabase.from('attachments').select('*').eq('user_id', user.id);
     if (transactionId) query = query.eq('transaction_id', transactionId);
     if (liabilityId) query = query.eq('liability_id', liabilityId);
     if (assetId) query = query.eq('asset_id', assetId);
+    if (vaultOnly) query = query.not('doc_category', 'is', null);
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching attachments:', error);

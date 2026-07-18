@@ -62,6 +62,7 @@ export function SubscriptionProvider({ children }) {
     isAdmin,
     isPremiumActive,
     isLifetime: !!sub?.is_lifetime,
+    isTrial: !!sub?.is_trial,
     expiresAt: sub?.expires_at || null,
     isModuleLocked,
     refresh
