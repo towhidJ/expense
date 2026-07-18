@@ -11,7 +11,8 @@ import {
   LogOut, X, Bike, Landmark, Target, Shield, TrendingUp, Users, Repeat, Tags, Briefcase, PiggyBank, KeyRound, ShoppingBasket, ShieldCheck, UtensilsCrossed,
   Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
   Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock,
-  ChevronDown, Wallet2, CalendarClock, Gem, HousePlus, Settings2
+  ChevronDown, Wallet2, CalendarClock, Gem, HousePlus, Settings2,
+  Calculator, TrendingDown, Fuel, HandHeart, Receipt, Boxes, ScanSearch, FileText
 } from 'lucide-react';
 
 // Core links always visible; everything else lives in collapsible accordion
@@ -55,7 +56,9 @@ const navGroups = [
       { to: '/liabilities', icon: Shield, label: 'Liabilities' },
       { to: '/lending', icon: HandCoins, label: 'Dena-Paona' },
       { to: '/insurance', icon: Umbrella, label: 'Insurance' },
-      { to: '/warranty', icon: BadgeCheck, label: 'Warranty' }
+      { to: '/warranty', icon: BadgeCheck, label: 'Warranty' },
+      { to: '/emi', icon: Calculator, label: 'EMI Calculator' },
+      { to: '/debt-payoff', icon: TrendingDown, label: 'Debt Payoff Planner' }
     ]
   },
   {
@@ -65,7 +68,20 @@ const navGroups = [
       { to: '/rent', icon: Home, label: 'Rent' },
       { to: '/subscriptions', icon: Tv, label: 'Subscriptions' },
       { to: '/splitter', icon: Split, label: 'Bill Splitter' },
-      { to: '/family', icon: Users, label: 'Family' }
+      { to: '/family', icon: Users, label: 'Family' },
+      { to: '/pocket-money', icon: PiggyBank, label: 'Pocket Money' },
+      { to: '/vehicle', icon: Fuel, label: 'Vehicle Expense' },
+      { to: '/committee', icon: Users, label: 'Committee / Samity' },
+      { to: '/charity', icon: HandHeart, label: 'Charity / Sadaqah' }
+    ]
+  },
+  {
+    id: 'business', label: 'Business & Tools', icon: Briefcase,
+    items: [
+      { to: '/invoicing', icon: Receipt, label: 'Invoicing' },
+      { to: '/inventory', icon: Boxes, label: 'Inventory' },
+      { to: '/reconcile', icon: ScanSearch, label: 'Bank Reconciliation' },
+      { to: '/documents', icon: FileText, label: 'Document Vault' }
     ]
   },
   {
@@ -178,6 +194,15 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const handleEntityChange = async (e) => {
     if (e.target.value === '__new__') {
+      // Free accounts get one workspace (the "Personal" one from signup) —
+      // the server enforces this too (v42 RLS), this just avoids a raw
+      // error round-trip and points free users at the upgrade page.
+      if (!isPremiumActive && !isAdmin && entities.length >= 1) {
+        if (window.confirm('Free accounts get one workspace. Upgrade to Premium to add Family or Business workspaces?')) {
+          navigate('/subscription');
+        }
+        return;
+      }
       const name = window.prompt('New workspace name (e.g. Family, Business):');
       if (!name?.trim()) return;
       let type = (window.prompt('Type: personal / family / business', 'personal') || 'personal').toLowerCase().trim();
@@ -273,7 +298,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 {e.name} ({e.type})
               </option>
             ))}
-            <option value="__new__" className="bg-[#12122a]">＋ New workspace...</option>
+            <option value="__new__" className="bg-[#12122a]">
+              {!isPremiumActive && !isAdmin && entities.length >= 1 ? '🔒 New workspace (Premium)' : '＋ New workspace...'}
+            </option>
           </select>
           {currentEntity && (
             <div className="flex gap-1.5 mt-1.5">
@@ -334,54 +361,50 @@ export default function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        {/* Pinned footer: shrink-0 keeps it visible however long the nav gets */}
+        {/* Pinned footer: shrink-0 keeps it visible however long the nav gets.
+            Admin/Subscription/Meal are a single icon row (was 3 stacked full
+            pills) — same shortcuts, a fraction of the height. */}
         <div className="p-3 border-t border-white/10 shrink-0">
-          {/* Admin panel: a distinct "switch" affordance, only for admins */}
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              onClick={onClose}
-              className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-500/15 to-purple-600/15 border border-cyan-500/20 text-cyan-300 hover:from-cyan-500/25 hover:to-purple-600/25 transition-all"
-            >
-              <ShieldCheck className="w-4.5 h-4.5" />
-              <span className="flex-1">Admin Panel</span>
-              <span className="text-[10px] uppercase tracking-wider text-cyan-400/60">Manage</span>
-            </NavLink>
-          )}
-
-          {/* My Subscription: status badge doubles as the entry point to upgrade */}
-          <NavLink
-            to="/subscription"
-            onClick={onClose}
-            className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-amber-500/15 to-orange-600/15 border border-amber-500/20 text-amber-300 hover:from-amber-500/25 hover:to-orange-600/25 transition-all"
-          >
-            <Gem className="w-4.5 h-4.5" />
-            <span className="flex-1">My Subscription</span>
-            <span className="text-[10px] uppercase tracking-wider text-amber-400/60">
-              {isLifetime
-                ? 'Lifetime'
-                : isTrial
-                  ? `Trial · ${Math.max(0, Math.ceil((new Date(expiresAt) - Date.now()) / 86400000))}d left`
-                  : isPremiumActive
-                    ? 'Premium'
-                    : 'Upgrade'}
-            </span>
-          </NavLink>
-
-          {/* Meal workspace: a separate section of the app with its own layout */}
-          <NavLink
-            to="/meals"
-            onClick={onClose}
-            className="flex items-center gap-3 px-4 py-2.5 mb-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500/15 to-cyan-600/15 border border-emerald-500/20 text-emerald-300 hover:from-emerald-500/25 hover:to-cyan-600/25 transition-all"
-          >
-            <UtensilsCrossed className="w-4.5 h-4.5" />
-            <span className="flex-1">Meal Manager</span>
-            {isModuleLocked?.('meals') ? (
-              <Lock className="w-3.5 h-3.5 text-amber-400/70" />
-            ) : (
-              <span className="text-[10px] uppercase tracking-wider text-emerald-400/60">Workspace</span>
+          <div className="flex gap-1.5 mb-2">
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                onClick={onClose}
+                title="Admin Panel"
+                className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-gradient-to-r from-cyan-500/15 to-purple-600/15 border border-cyan-500/20 text-cyan-300 hover:from-cyan-500/25 hover:to-purple-600/25 transition-all"
+              >
+                <ShieldCheck className="w-4.5 h-4.5" />
+              </NavLink>
             )}
-          </NavLink>
+
+            {/* My Subscription: trial countdown surfaces as a corner badge */}
+            <NavLink
+              to="/subscription"
+              onClick={onClose}
+              title={isLifetime ? 'Lifetime Premium' : isTrial ? 'Free trial' : isPremiumActive ? 'Premium active' : 'Upgrade to Premium'}
+              className="flex-1 relative flex items-center justify-center py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-600/15 border border-amber-500/20 text-amber-300 hover:from-amber-500/25 hover:to-orange-600/25 transition-all"
+            >
+              <Gem className="w-4.5 h-4.5" />
+              {isTrial && (
+                <span className="absolute -top-1.5 -right-1.5 px-1 h-4 min-w-4 rounded-full bg-amber-500 text-[9px] font-bold text-black flex items-center justify-center">
+                  {Math.max(0, Math.ceil((new Date(expiresAt) - Date.now()) / 86400000))}d
+                </span>
+              )}
+            </NavLink>
+
+            {/* Meal workspace: a separate section of the app with its own layout */}
+            <NavLink
+              to="/meals"
+              onClick={onClose}
+              title="Meal Manager"
+              className="flex-1 relative flex items-center justify-center py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/15 to-cyan-600/15 border border-emerald-500/20 text-emerald-300 hover:from-emerald-500/25 hover:to-cyan-600/25 transition-all"
+            >
+              <UtensilsCrossed className="w-4.5 h-4.5" />
+              {isModuleLocked?.('meals') && (
+                <Lock className="w-3 h-3 text-amber-400 absolute -top-1.5 -right-1.5 bg-[#12122a] rounded-full p-0.5" />
+              )}
+            </NavLink>
+          </div>
 
           <div className="relative">
             <button

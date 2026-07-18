@@ -36,6 +36,9 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ---------- 3. get_my_subscription reports is_trial ----------
+-- Adding a column to the OUT parameters changes the function's return type,
+-- which CREATE OR REPLACE cannot do — drop first.
+DROP FUNCTION IF EXISTS get_my_subscription();
 CREATE OR REPLACE FUNCTION get_my_subscription()
 RETURNS TABLE (is_active BOOLEAN, is_lifetime BOOLEAN, expires_at TIMESTAMPTZ, is_trial BOOLEAN) AS $$
   SELECT

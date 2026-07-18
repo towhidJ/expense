@@ -48,6 +48,16 @@ import Categories from './pages/Categories';
 import Admin from './pages/Admin';
 import Alerts from './pages/Alerts';
 import ImportTransactions from './pages/ImportTransactions';
+import Emi from './pages/Emi';
+import DebtPayoff from './pages/DebtPayoff';
+import Vehicle from './pages/Vehicle';
+import Committee from './pages/Committee';
+import PocketMoney from './pages/PocketMoney';
+import Charity from './pages/Charity';
+import Invoicing from './pages/Invoicing';
+import Inventory from './pages/Inventory';
+import Reconcile from './pages/Reconcile';
+import Documents from './pages/Documents';
 
 // Wrap a route element in the premium gate for its module key (v39 gating).
 const g = (key, el) => <PremiumGate module={key}>{el}</PremiumGate>;
@@ -102,6 +112,16 @@ function App() {
                 <Route path="savings" element={g('savings', <Savings />)} />
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="admin" element={<Admin />} />
+                <Route path="emi" element={g('emi', <Emi />)} />
+                <Route path="debt-payoff" element={g('debt-payoff', <DebtPayoff />)} />
+                <Route path="vehicle" element={g('vehicle', <Vehicle />)} />
+                <Route path="committee" element={g('committee', <Committee />)} />
+                <Route path="pocket-money" element={g('pocket-money', <PocketMoney />)} />
+                <Route path="charity" element={g('charity', <Charity />)} />
+                <Route path="invoicing" element={g('invoicing', <Invoicing />)} />
+                <Route path="inventory" element={g('inventory', <Inventory />)} />
+                <Route path="reconcile" element={g('reconcile', <Reconcile />)} />
+                <Route path="documents" element={g('documents', <Documents />)} />
               </Route>
               {/* Meal workspace: its own layout + sidebar, separate from the expense tracker */}
               <Route
