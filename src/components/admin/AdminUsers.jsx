@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Search, KeyRound, ShieldCheck, ShieldOff, Crown, X, Check } from 'lucide-react';
+import { Loader2, Search, KeyRound, ShieldCheck, ShieldOff, Crown, X, Check, Ban, Trash2 } from 'lucide-react';
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -38,6 +38,31 @@ export default function AdminUsers() {
     setBusyId(u.id);
     try {
       await call({ action: 'toggle_admin', user_id: u.id, make_admin: !u.is_admin });
+      await fetchUsers();
+    } catch (err) { alert(err.message); }
+    setBusyId(null);
+  };
+
+  const handleToggleBan = async (u) => {
+    const msg = u.banned
+      ? `Unblock ${u.email}? They will be able to sign in again.`
+      : `Block ${u.email}? They cannot sign in until unblocked, but their data stays intact.`;
+    if (!window.confirm(msg)) return;
+    setBusyId(u.id);
+    try {
+      await call({ action: 'toggle_ban', user_id: u.id, ban: !u.banned });
+      await fetchUsers();
+    } catch (err) { alert(err.message); }
+    setBusyId(null);
+  };
+
+  const handleDelete = async (u) => {
+    if (!window.confirm(`PERMANENTLY delete ${u.email}? All their workspaces, transactions and documents are erased. This cannot be undone.`)) return;
+    const typed = window.prompt(`Type the user's email to confirm deletion:`);
+    if (typed !== u.email) { if (typed !== null) alert('Email did not match — nothing deleted.'); return; }
+    setBusyId(u.id);
+    try {
+      await call({ action: 'delete_user', user_id: u.id }, `${u.email} deleted.`);
       await fetchUsers();
     } catch (err) { alert(err.message); }
     setBusyId(null);
@@ -117,6 +142,9 @@ export default function AdminUsers() {
                       {u.is_admin && (
                         <span className="text-[10px] uppercase tracking-wide bg-cyan-500/15 text-cyan-400 px-2 py-0.5 rounded-full">admin</span>
                       )}
+                      {u.banned && (
+                        <span className="text-[10px] uppercase tracking-wide bg-red-500/15 text-red-400 px-2 py-0.5 rounded-full">blocked</span>
+                      )}
                     </p>
                     <p className="text-xs text-white/40">{u.email}</p>
                   </td>
@@ -161,6 +189,22 @@ export default function AdminUsers() {
                         {busyId === u.id
                           ? <Loader2 className="w-4 h-4 animate-spin" />
                           : u.is_admin ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => handleToggleBan(u)}
+                        disabled={busyId === u.id}
+                        className={`p-2 transition-colors disabled:opacity-40 ${u.banned ? 'text-red-400 hover:text-emerald-400' : 'text-white/40 hover:text-orange-400'}`}
+                        title={u.banned ? 'Unblock user' : 'Block user (cannot sign in)'}
+                      >
+                        <Ban className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(u)}
+                        disabled={busyId === u.id}
+                        className="p-2 text-white/40 hover:text-red-400 transition-colors disabled:opacity-40"
+                        title="Delete user permanently"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

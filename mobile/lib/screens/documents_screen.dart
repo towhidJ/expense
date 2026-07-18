@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -42,10 +43,39 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     }
   }
 
-  Future<void> _upload(ImageSource source) async {
+  Future<void> _uploadImage(ImageSource source) async {
     final picked = await ImagePicker().pickImage(source: source, maxWidth: 2400, imageQuality: 88);
     if (picked == null || !mounted) return;
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    await _saveWithMetadata(bytes, picked.name, picked.mimeType ?? 'image/jpeg');
+  }
 
+  Future<void> _uploadFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
+      withData: true,
+    );
+    final file = result?.files.firstOrNull;
+    if (file == null || file.bytes == null || !mounted) return;
+    final ext = (file.extension ?? '').toLowerCase();
+    const mimes = {
+      'pdf': 'application/pdf',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'webp': 'image/webp',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'txt': 'text/plain',
+    };
+    await _saveWithMetadata(file.bytes!, file.name, mimes[ext] ?? 'application/octet-stream');
+  }
+
+  Future<void> _saveWithMetadata(List<int> fileBytes, String filename, String contentType) async {
     final title = TextEditingController();
     String category = 'other';
     DateTime? expiry;
@@ -100,14 +130,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   onPressed: () async {
                     setSheet(() => busy = true);
                     try {
-                      final bytes = await picked.readAsBytes();
                       await widget.state.uploadVaultDocument(
-                        bytes: bytes,
-                        filename: picked.name,
+                        bytes: fileBytes,
+                        filename: filename,
                         docCategory: category,
                         title: title.text.trim().isEmpty ? null : title.text.trim(),
                         expiryDate: expiry,
-                        contentType: picked.mimeType ?? 'image/jpeg',
+                        contentType: contentType,
                       );
                       if (sheetContext.mounted) Navigator.pop(sheetContext, true);
                     } catch (e) {
@@ -139,7 +168,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               title: const Text('Take photo'),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _upload(ImageSource.camera);
+                _uploadImage(ImageSource.camera);
               },
             ),
             ListTile(
@@ -147,7 +176,15 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               title: const Text('Choose from gallery'),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _upload(ImageSource.gallery);
+                _uploadImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined, color: kRed),
+              title: const Text('Pick a file (PDF, etc.)'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _uploadFile();
               },
             ),
           ],
