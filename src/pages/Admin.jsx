@@ -41,15 +41,15 @@ export default function Admin() {
   }, [isAdmin]);
 
   if (checking) {
-    return <div className="flex items-center justify-center py-20 text-white/40"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20 text-foreground/40"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="max-w-lg mx-auto mt-16 text-center bg-white/5 border border-white/10 rounded-2xl p-10">
+      <div className="max-w-lg mx-auto mt-16 text-center bg-foreground/5 border border-foreground/10 rounded-2xl p-10">
         <ShieldCheck className="w-10 h-10 text-red-400 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-white mb-2">Admin only</h2>
-        <p className="text-sm text-white/50">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Admin only</h2>
+        <p className="text-sm text-foreground/50">
           This page is restricted. Ask the administrator to enable admin access for your account
           (run migration v15 and set <code className="text-cyan-400">profiles.is_admin</code>).
         </p>
@@ -60,10 +60,10 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-cyan-400" /> Admin Panel
         </h1>
-        <p className="text-sm text-white/40 mt-1">
+        <p className="text-sm text-foreground/40 mt-1">
           Users, subscriptions, payment verification, module access, app releases.
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function Admin() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all border ${
                 active
                   ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-cyan-400 border-cyan-500/20'
-                  : 'bg-white/5 text-white/50 border-white/10 hover:text-white'
+                  : 'bg-foreground/5 text-foreground/50 border-foreground/10 hover:text-foreground'
               }`}
             >
               <Icon className="w-4 h-4" /> {t.label}

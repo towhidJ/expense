@@ -145,10 +145,10 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">{editData ? 'Edit' : 'Add'} Transaction</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+      <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+          <h2 className="text-lg font-semibold text-foreground">{editData ? 'Edit' : 'Add'} Transaction</h2>
+          <button onClick={onClose} className="text-foreground/40 hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
                     if (e.key === 'Enter') { e.preventDefault(); handleAiFill(); }
                   }}
                   placeholder="e.g. gtokal Agora te 500 taka bazar korlam"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/25"
+                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-foreground/25"
                 />
                 <button
                   type="button"
@@ -193,7 +193,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
                     ? type === 'expense'
                       ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                       : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'
+                    : 'bg-foreground/5 text-foreground/40 border border-foreground/10 hover:bg-foreground/10'
                 }`}
               >
                 {type === 'expense' ? '💸 Expense' : '💰 Income'}
@@ -202,23 +202,23 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
           </div>
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Category</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Category</label>
             <select
               required
               value={form.category_id}
               onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
             >
-              <option value="" className="bg-[#12122a]">Select category...</option>
+              <option value="" className="bg-muted">Select category...</option>
               {filteredCategories.map(c => (
-                <option key={c.id} value={c.id} className="bg-[#12122a]">{c.icon} {c.name}</option>
+                <option key={c.id} value={c.id} className="bg-muted">{c.icon} {c.name}</option>
               ))}
             </select>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm text-white/50">{split ? 'Account 1' : 'Account (Source/Destination)'}</label>
+              <label className="block text-sm text-foreground/50">{split ? 'Account 1' : 'Account (Source/Destination)'}</label>
               {!editData && (
                 <button
                   type="button"
@@ -226,7 +226,7 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
                   className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all ${
                     split
                       ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                      : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                      : 'bg-foreground/5 text-foreground/40 border-foreground/10 hover:bg-foreground/10'
                   }`}
                 >
                   <Split className="w-3 h-3" /> Split into 2 accounts
@@ -237,26 +237,26 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
               required
               value={form.account_id}
               onChange={e => setForm(f => ({ ...f, account_id: e.target.value }))}
-              className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
+              className="w-full bg-foreground/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
             >
-              <option value="" className="bg-[#12122a]">Select account...</option>
+              <option value="" className="bg-muted">Select account...</option>
               {accounts.map(a => (
-                <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name} ({a.currency}{a.current_balance})</option>
+                <option key={a.id} value={a.id} className="bg-muted">{a.name} ({a.currency}{a.current_balance})</option>
               ))}
             </select>
           </div>
 
           {familyMembers && familyMembers.length > 0 && (
             <div>
-              <label className="block text-sm text-white/50 mb-1.5">Family Member (Optional)</label>
+              <label className="block text-sm text-foreground/50 mb-1.5">Family Member (Optional)</label>
               <select
                 value={form.family_member_id}
                 onChange={e => setForm(f => ({ ...f, family_member_id: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
               >
-                <option value="" className="bg-[#12122a]">Household (no member)</option>
+                <option value="" className="bg-muted">Household (no member)</option>
                 {familyMembers.map(m => (
-                  <option key={m.id} value={m.id} className="bg-[#12122a]">{m.name}</option>
+                  <option key={m.id} value={m.id} className="bg-muted">{m.name}</option>
                 ))}
               </select>
             </div>
@@ -264,22 +264,22 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
 
           {form.type === 'expense' && assets && assets.length > 0 && (
             <div>
-              <label className="block text-sm text-white/50 mb-1.5">Asset (Optional)</label>
+              <label className="block text-sm text-foreground/50 mb-1.5">Asset (Optional)</label>
               <select
                 value={form.asset_id}
                 onChange={e => setForm(f => ({ ...f, asset_id: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
               >
-                <option value="" className="bg-[#12122a]">None</option>
+                <option value="" className="bg-muted">None</option>
                 {assets.map(a => (
-                  <option key={a.id} value={a.id} className="bg-[#12122a]">🏍️ {a.name}</option>
+                  <option key={a.id} value={a.id} className="bg-muted">🏍️ {a.name}</option>
                 ))}
               </select>
             </div>
           )}
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">{split ? 'Amount 1 (৳)' : 'Amount (৳)'}</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">{split ? 'Amount 1 (৳)' : 'Amount (৳)'}</label>
             <input
               type="number"
               required
@@ -288,28 +288,28 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
               value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-foreground/20"
             />
           </div>
 
           {split && !editData && (
             <>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Account 2</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Account 2</label>
                 <select
                   required
                   value={splitForm.account_id_2}
                   onChange={e => setSplitForm(f => ({ ...f, account_id_2: e.target.value }))}
-                  className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
+                  className="w-full bg-foreground/5 border border-emerald-500/30 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
                 >
-                  <option value="" className="bg-[#12122a]">Select account...</option>
+                  <option value="" className="bg-muted">Select account...</option>
                   {accounts.filter(a => a.id !== form.account_id).map(a => (
-                    <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name} ({a.currency}{a.current_balance})</option>
+                    <option key={a.id} value={a.id} className="bg-muted">{a.name} ({a.currency}{a.current_balance})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Amount 2 (৳)</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Amount 2 (৳)</label>
                 <input
                   type="number"
                   required
@@ -318,35 +318,35 @@ export default function TransactionForm({ isOpen, onClose, onSubmit, categories,
                   value={splitForm.amount_2}
                   onChange={e => setSplitForm(f => ({ ...f, amount_2: e.target.value }))}
                   placeholder="0.00"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-foreground/20"
                 />
               </div>
               <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 px-4 py-2.5 flex items-center justify-between">
-                <span className="text-xs text-white/50">Total</span>
+                <span className="text-xs text-foreground/50">Total</span>
                 <span className="text-sm font-semibold text-cyan-400">৳{splitTotal.toLocaleString()}</span>
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Description</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Description</label>
             <input
               type="text"
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder="What was this for?"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-white/20"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-foreground/20"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Date</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Date</label>
             <input
               type="date"
               required
               value={form.date}
               onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
             />
           </div>
 

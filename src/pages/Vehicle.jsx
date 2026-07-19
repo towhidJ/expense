@@ -15,7 +15,7 @@ const today = () => new Date().toISOString().split('T')[0];
 const LOG_META = {
   fuel: { label: 'Fuel', icon: Fuel, color: 'text-amber-400' },
   service: { label: 'Maintenance', icon: Wrench, color: 'text-cyan-400' },
-  other: { label: 'Other', icon: Gauge, color: 'text-white/50' }
+  other: { label: 'Other', icon: Gauge, color: 'text-foreground/50' }
 };
 
 export default function Vehicle() {
@@ -120,14 +120,14 @@ export default function Vehicle() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading vehicles...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading vehicles...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Vehicle Expense</h1>
-          <p className="text-white/40 text-sm mt-1">Fuel, maintenance and running costs per vehicle.</p>
+          <h1 className="text-2xl font-bold text-foreground">Vehicle Expense</h1>
+          <p className="text-foreground/40 text-sm mt-1">Fuel, maintenance and running costs per vehicle.</p>
         </div>
         <button onClick={() => setAddingVehicle(true)} className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-cyan-500/20">
           <Plus size={18} /> Add Vehicle
@@ -135,16 +135,16 @@ export default function Vehicle() {
       </div>
 
       {vehicles.length === 0 && !addingVehicle ? (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Bike className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No vehicles yet</h3>
-          <p className="text-white/40 text-sm mt-1">Add a bike or car to start tracking fuel and maintenance costs.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Bike className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No vehicles yet</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add a bike or car to start tracking fuel and maintenance costs.</p>
         </div>
       ) : (
         <>
           <div className="flex gap-2 flex-wrap">
             {vehicles.map(v => (
-              <button key={v.id} onClick={() => setActiveVehicle(v.id)} className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${shownVehicle === v.id ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'}`}>
+              <button key={v.id} onClick={() => setActiveVehicle(v.id)} className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${shownVehicle === v.id ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' : 'bg-foreground/5 text-white/40 border-foreground/10 hover:bg-foreground/10'}`}>
                 🏍️ {v.name} {v.asset_id && <Link2 size={12} className="opacity-60" title="Linked to Assets" />}
               </button>
             ))}
@@ -160,7 +160,7 @@ export default function Vehicle() {
               </div>
 
               <div className="flex justify-end">
-                <button onClick={() => setAddingLog(true)} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl transition-colors text-sm">
+                <button onClick={() => setAddingLog(true)} className="flex items-center gap-2 bg-foreground/5 hover:bg-foreground/10 text-foreground px-4 py-2 rounded-xl transition-colors text-sm">
                   <Plus size={16} /> Add Log
                 </button>
               </div>
@@ -170,37 +170,37 @@ export default function Vehicle() {
       )}
 
       {addingVehicle && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New Vehicle</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New Vehicle</h2>
           {linkableAssets.length > 0 && (
             <div className="mb-4 bg-cyan-500/[0.07] border border-cyan-500/20 rounded-xl p-4">
               <label className="flex items-center gap-1.5 text-sm text-cyan-400 mb-1.5"><Link2 size={14} /> Already in Assets?</label>
-              <select value={vForm.asset_id} onChange={e => pickAsset(e.target.value)} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <select value={vForm.asset_id} onChange={e => pickAsset(e.target.value)} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 <option value="">Don't link — enter details manually</option>
                 {linkableAssets.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
-              <p className="text-xs text-white/40 mt-1.5">Linking fills in the name from <Link to="/assets" className="text-cyan-400 hover:underline">Assets</Link> so it's not entered twice.</p>
+              <p className="text-xs text-foreground/40 mt-1.5">Linking fills in the name from <Link to="/assets" className="text-cyan-400 hover:underline">Assets</Link> so it's not entered twice.</p>
             </div>
           )}
           <form onSubmit={handleAddVehicle} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Name</label>
-              <input required type="text" value={vForm.name} onChange={e => setVForm({ ...vForm, name: e.target.value })} placeholder="e.g. Yamaha FZ" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Name</label>
+              <input required type="text" value={vForm.name} onChange={e => setVForm({ ...vForm, name: e.target.value })} placeholder="e.g. Yamaha FZ" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Type</label>
-              <input type="text" value={vForm.vehicle_type} onChange={e => setVForm({ ...vForm, vehicle_type: e.target.value })} placeholder="Bike / Car" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Type</label>
+              <input type="text" value={vForm.vehicle_type} onChange={e => setVForm({ ...vForm, vehicle_type: e.target.value })} placeholder="Bike / Car" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Registration Number</label>
-              <input type="text" value={vForm.reg_number} onChange={e => setVForm({ ...vForm, reg_number: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Registration Number</label>
+              <input type="text" value={vForm.reg_number} onChange={e => setVForm({ ...vForm, reg_number: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Purchase Date</label>
-              <input type="date" value={vForm.purchase_date} onChange={e => setVForm({ ...vForm, purchase_date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Purchase Date</label>
+              <input type="date" value={vForm.purchase_date} onChange={e => setVForm({ ...vForm, purchase_date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div className="sm:col-span-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setAddingVehicle(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setAddingVehicle(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Vehicle</button>
             </div>
           </form>
@@ -208,53 +208,53 @@ export default function Vehicle() {
       )}
 
       {addingLog && shownVehicle && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New Log</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New Log</h2>
           <form onSubmit={handleAddLog} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Type</label>
-              <select value={lForm.log_type} onChange={e => setLForm({ ...lForm, log_type: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Type</label>
+              <select value={lForm.log_type} onChange={e => setLForm({ ...lForm, log_type: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 {Object.entries(LOG_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Date</label>
-              <input required type="date" value={lForm.log_date} onChange={e => setLForm({ ...lForm, log_date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Date</label>
+              <input required type="date" value={lForm.log_date} onChange={e => setLForm({ ...lForm, log_date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Odometer (km)</label>
-              <input type="number" step="0.1" value={lForm.odometer} onChange={e => setLForm({ ...lForm, odometer: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Odometer (km)</label>
+              <input type="number" step="0.1" value={lForm.odometer} onChange={e => setLForm({ ...lForm, odometer: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             {lForm.log_type === 'fuel' && (
               <div>
-                <label className="block text-sm text-white/60 mb-1">Liters</label>
-                <input type="number" step="0.01" value={lForm.liters} onChange={e => setLForm({ ...lForm, liters: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Liters</label>
+                <input type="number" step="0.01" value={lForm.liters} onChange={e => setLForm({ ...lForm, liters: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
               </div>
             )}
             <div>
-              <label className="block text-sm text-white/60 mb-1">Amount</label>
-              <input required type="number" step="0.01" value={lForm.amount} onChange={e => setLForm({ ...lForm, amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+              <input required type="number" step="0.01" value={lForm.amount} onChange={e => setLForm({ ...lForm, amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Pay From Account</label>
-              <select required value={lForm.account_id} onChange={e => setLForm({ ...lForm, account_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Pay From Account</label>
+              <select required value={lForm.account_id} onChange={e => setLForm({ ...lForm, account_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 <option value="">Select...</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Category</label>
-              <select required value={lForm.category_id} onChange={e => setLForm({ ...lForm, category_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Category</label>
+              <select required value={lForm.category_id} onChange={e => setLForm({ ...lForm, category_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 <option value="">Select...</option>
                 {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2 lg:col-span-3">
-              <label className="block text-sm text-white/60 mb-1">Notes</label>
-              <input type="text" value={lForm.notes} onChange={e => setLForm({ ...lForm, notes: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+              <input type="text" value={lForm.notes} onChange={e => setLForm({ ...lForm, notes: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div className="sm:col-span-2 lg:col-span-3 flex justify-end gap-3">
-              <button type="button" onClick={() => setAddingLog(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setAddingLog(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Log</button>
             </div>
           </form>
@@ -262,16 +262,16 @@ export default function Vehicle() {
       )}
 
       {shownVehicle && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+        <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Date</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Type</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Odometer</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Amount</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Actions</th>
+                <tr className="bg-foreground/5 border-b border-foreground/10">
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Date</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Type</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Odometer</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Amount</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,13 +279,13 @@ export default function Vehicle() {
                   const meta = LOG_META[l.log_type];
                   const Icon = meta.icon;
                   return (
-                    <tr key={l.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="py-3 px-5 text-white/70">{new Date(l.log_date).toLocaleDateString()}</td>
+                    <tr key={l.id} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                      <td className="py-3 px-5 text-foreground/70">{new Date(l.log_date).toLocaleDateString()}</td>
                       <td className="py-3 px-5">
                         <span className={`flex items-center gap-1.5 ${meta.color}`}><Icon size={14} /> {meta.label}{l.liters ? ` (${l.liters}L)` : ''}</span>
                       </td>
-                      <td className="py-3 px-5 text-right text-white/60">{l.odometer ?? '—'}</td>
-                      <td className="py-3 px-5 text-right text-white font-medium">{fmt(l.amount)}</td>
+                      <td className="py-3 px-5 text-right text-foreground/60">{l.odometer ?? '—'}</td>
+                      <td className="py-3 px-5 text-right text-foreground font-medium">{fmt(l.amount)}</td>
                       <td className="py-3 px-5 text-right">
                         <button onClick={() => { if (confirm('Delete this log? (Linked transaction stays.)')) deleteLog(l.id).catch(err => alert(err.message)); }} className="text-white/30 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
                           <Trash2 size={14} />
@@ -299,11 +299,11 @@ export default function Vehicle() {
           </div>
           {vehicleLogs.length === 0 && (
             <div className="text-center py-10">
-              <Fuel className="mx-auto text-white/20 mb-3" size={40} />
-              <p className="text-white/40 text-sm">No logs yet — add the first fuel or maintenance entry.</p>
+              <Fuel className="mx-auto text-foreground/20 mb-3" size={40} />
+              <p className="text-foreground/40 text-sm">No logs yet — add the first fuel or maintenance entry.</p>
             </div>
           )}
-          <div className="px-5 py-3 border-t border-white/5 flex justify-end">
+          <div className="px-5 py-3 border-t border-foreground/5 flex justify-end">
             <button onClick={() => { if (confirm('Delete this vehicle and all its logs?')) deleteVehicle(shownVehicle).then(() => setActiveVehicle(null)).catch(err => alert(err.message)); }} className="text-xs text-red-400/70 hover:text-red-400">
               Delete vehicle
             </button>

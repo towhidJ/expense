@@ -65,14 +65,14 @@ export default function Categories() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading categories...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading categories...</div>;
 
   return (
     <div className="space-y-6 animate-in relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Categories</h1>
-          <p className="text-white/40 text-sm mt-1">Manage custom income and expense categories.</p>
+          <h1 className="text-2xl font-bold text-foreground">Categories</h1>
+          <p className="text-foreground/40 text-sm mt-1">Manage custom income and expense categories.</p>
         </div>
         <button
           onClick={() => { setIsAdding(true); setEditingCategory(null); setForm({ name: '', type: activeTab, icon: '💸', color: '#ef4444' }); }}
@@ -82,7 +82,7 @@ export default function Categories() {
         </button>
       </div>
 
-      <div className="flex bg-[#12122a] border border-white/5 p-1 rounded-xl w-fit">
+      <div className="flex bg-muted border border-foreground/5 p-1 rounded-xl w-fit">
         {['expense', 'income'].map(type => (
           <button
             key={type}
@@ -90,7 +90,7 @@ export default function Categories() {
             className={`px-6 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
               activeTab === type
                 ? type === 'expense' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
-                : 'text-white/40 hover:text-white hover:bg-white/5'
+                : 'text-foreground/40 hover:text-foreground hover:bg-foreground/5'
             }`}
           >
             {type}s
@@ -99,10 +99,10 @@ export default function Categories() {
       </div>
 
       {(isAdding || editingCategory) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 mb-6">
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">{editingCategory ? 'Edit Category' : 'New Category'}</h2>
-            <button onClick={() => { setIsAdding(false); setEditingCategory(null); }} className="text-white/40 hover:text-white p-1">
+            <h2 className="text-lg font-semibold text-foreground">{editingCategory ? 'Edit Category' : 'New Category'}</h2>
+            <button onClick={() => { setIsAdding(false); setEditingCategory(null); }} className="text-foreground/40 hover:text-foreground p-1">
               <X size={20} />
             </button>
           </div>
@@ -110,26 +110,26 @@ export default function Categories() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm text-white/60 mb-2">Category Name</label>
-                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" placeholder="e.g. Office Supplies" />
+                <label className="block text-sm text-foreground/60 mb-2">Category Name</label>
+                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" placeholder="e.g. Office Supplies" />
               </div>
 
               <div>
-                <label className="block text-sm text-white/60 mb-2">Preview</label>
-                <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.02] w-full max-w-[250px]">
+                <label className="block text-sm text-foreground/60 mb-2">Preview</label>
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-foreground/5 bg-white/[0.02] w-full max-w-[250px]">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: `${form.color}20`, color: form.color }}>
                     {form.icon}
                   </div>
-                  <span className="text-white font-medium truncate">{form.name || 'Category Name'}</span>
+                  <span className="text-foreground font-medium truncate">{form.name || 'Category Name'}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-2">Select Icon</label>
-              <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-16 gap-2 max-h-40 overflow-y-auto p-2 bg-[#12122a] rounded-xl border border-white/5">
+              <label className="block text-sm text-foreground/60 mb-2">Select Icon</label>
+              <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-16 gap-2 max-h-40 overflow-y-auto p-2 bg-muted rounded-xl border border-foreground/5">
                 {ICONS.map(icon => (
-                  <button key={icon} type="button" onClick={() => setForm({...form, icon})} className={`text-xl p-2 rounded-lg transition-all ${form.icon === icon ? 'bg-white/20 scale-110' : 'hover:bg-white/10 opacity-70 hover:opacity-100'}`}>
+                  <button key={icon} type="button" onClick={() => setForm({...form, icon})} className={`text-xl p-2 rounded-lg transition-all ${form.icon === icon ? 'bg-foreground/20 scale-110' : 'hover:bg-foreground/10 opacity-70 hover:opacity-100'}`}>
                     {icon}
                   </button>
                 ))}
@@ -137,17 +137,17 @@ export default function Categories() {
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-2">Select Color</label>
-              <div className="flex flex-wrap gap-3 p-2 bg-[#12122a] rounded-xl border border-white/5">
+              <label className="block text-sm text-foreground/60 mb-2">Select Color</label>
+              <div className="flex flex-wrap gap-3 p-2 bg-muted rounded-xl border border-foreground/5">
                 {COLORS.map(color => (
                   <button key={color} type="button" onClick={() => setForm({...form, color})} className="w-8 h-8 rounded-full transition-transform hover:scale-110 flex items-center justify-center shadow-inner" style={{ backgroundColor: color }}>
-                    {form.color === color && <Check size={16} className="text-white drop-shadow-md" />}
+                    {form.color === color && <Check size={16} className="text-foreground drop-shadow-md" />}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-white/10">
+            <div className="flex justify-end pt-4 border-t border-foreground/10">
               <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Category</button>
             </div>
           </form>
@@ -158,7 +158,7 @@ export default function Categories() {
         {filteredCategories.map(category => {
           const txCount = txCountByCategory[category.id] || 0;
           return (
-            <div key={category.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group flex items-center justify-between">
+            <div key={category.id} className="bg-card border border-foreground/10 rounded-2xl p-5 hover:border-foreground/20 transition-all group flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner shrink-0 relative" style={{ backgroundColor: `${category.color}15`, color: category.color, border: `1px solid ${category.color}30` }}>
                   {category.icon}
@@ -169,8 +169,8 @@ export default function Categories() {
                   )}
                 </div>
                 <div className="overflow-hidden">
-                  <h3 className="text-white font-medium truncate" title={category.name}>{category.name}</h3>
-                  <p className="text-xs text-white/40">
+                  <h3 className="text-foreground font-medium truncate" title={category.name}>{category.name}</h3>
+                  <p className="text-xs text-foreground/40">
                     {category.is_default ? 'System Default' : 'Custom'}
                     {txCount > 0 && <span className="text-cyan-400 ml-1">· {txCount} this month</span>}
                   </p>
@@ -178,11 +178,11 @@ export default function Categories() {
               </div>
               
               <div className="flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingCategory(category); setForm(category); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg shrink-0">
+                <button onClick={() => { setEditingCategory(category); setForm(category); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-foreground/5 hover:bg-cyan-500/10 rounded-lg shrink-0">
                   <Edit2 size={16} />
                 </button>
                 {!category.is_default && (
-                  <button onClick={() => handleDelete(category.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg shrink-0">
+                  <button onClick={() => handleDelete(category.id)} className="text-white/40 hover:text-red-400 p-1.5 bg-foreground/5 hover:bg-red-500/10 rounded-lg shrink-0">
                     <Trash2 size={16} />
                   </button>
                 )}
@@ -193,10 +193,10 @@ export default function Categories() {
       </div>
 
       {filteredCategories.length === 0 && !isAdding && (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <ShieldAlert className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No categories found</h3>
-          <p className="text-white/40 text-sm mt-1">Add some categories to get started.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <ShieldAlert className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No categories found</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add some categories to get started.</p>
         </div>
       )}
     </div>

@@ -47,8 +47,8 @@ export default function NotificationsList({ notifications, markNotificationsRead
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
-        <div className="divide-y divide-white/5">
+      <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="divide-y divide-foreground/5">
           {notifications.map(n => {
             const Icon = TYPE_ICONS[n.type] || Bell;
             return (
@@ -58,24 +58,24 @@ export default function NotificationsList({ notifications, markNotificationsRead
                   !n.is_read ? 'bg-cyan-500/[0.04]' : ''
                 }`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  !n.is_read ? 'bg-cyan-500/15 text-cyan-400' : 'bg-white/5 text-white/40'
+                  !n.is_read ? 'bg-cyan-500/15 text-cyan-400' : 'bg-foreground/5 text-white/40'
                 }`}>
                   <Icon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm ${!n.is_read ? 'text-white font-medium' : 'text-white/70'}`}>{n.title}</p>
-                  {n.body && <p className="text-white/40 text-xs mt-0.5">{n.body}</p>}
-                  <p className="text-white/25 text-xs mt-1">{timeAgo(n.created_at)}</p>
+                  <p className={`text-sm ${!n.is_read ? 'text-foreground font-medium' : 'text-foreground/70'}`}>{n.title}</p>
+                  {n.body && <p className="text-foreground/40 text-xs mt-0.5">{n.body}</p>}
+                  <p className="text-foreground/25 text-xs mt-1">{timeAgo(n.created_at)}</p>
                 </div>
                 <button onClick={(e) => handleDelete(e, n.id)}
-                  className="p-1.5 rounded-lg text-white/20 hover:text-red-400 hover:bg-white/5 shrink-0">
+                  className="p-1.5 rounded-lg text-foreground/20 hover:text-red-400 hover:bg-foreground/5 shrink-0">
                   <Trash2 size={14} />
                 </button>
               </div>
             );
           })}
           {notifications.length === 0 && (
-            <p className="px-5 py-10 text-center text-white/40 text-sm">Nothing yet — you'll see requests, notices and join alerts here.</p>
+            <p className="px-5 py-10 text-center text-foreground/40 text-sm">Nothing yet — you'll see requests, notices and join alerts here.</p>
           )}
         </div>
       </div>

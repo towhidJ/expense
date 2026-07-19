@@ -82,41 +82,41 @@ export default function Zakat() {
   const eligible = netWealth >= nisab && nisab > 0;
   const zakatDue = eligible ? netWealth * ZAKAT_RATE : 0;
 
-  if (loading) return <div className="text-white/50 p-6">Loading your balance sheet...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading your balance sheet...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h1 className="text-2xl font-bold text-white">Zakat Calculator</h1>
-        <p className="text-white/40 text-sm mt-1">Your zakatable wealth, computed from what's already tracked in the app.</p>
+        <h1 className="text-2xl font-bold text-foreground">Zakat Calculator</h1>
+        <p className="text-foreground/40 text-sm mt-1">Your zakatable wealth, computed from what's already tracked in the app.</p>
       </div>
 
       {/* Result banner */}
-      <div className={`rounded-2xl p-6 border ${eligible ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-white/[0.03] border-white/10'}`}>
+      <div className={`rounded-2xl p-6 border ${eligible ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-white/[0.03] border-foreground/10'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${eligible ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
-              <Moon className={eligible ? 'text-emerald-400' : 'text-white/40'} size={28} />
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${eligible ? 'bg-emerald-500/20' : 'bg-foreground/5'}`}>
+              <Moon className={eligible ? 'text-emerald-400' : 'text-foreground/40'} size={28} />
             </div>
             <div>
               {eligible ? (
                 <>
                   <p className="text-sm text-emerald-400/90 font-medium">Zakat is due on your wealth</p>
-                  <p className="text-3xl font-bold text-white mt-0.5">{fmt(zakatDue)}</p>
-                  <p className="text-xs text-white/40 mt-1">2.5% of {fmt(netWealth)} net zakatable wealth</p>
+                  <p className="text-3xl font-bold text-foreground mt-0.5">{fmt(zakatDue)}</p>
+                  <p className="text-xs text-foreground/40 mt-1">2.5% of {fmt(netWealth)} net zakatable wealth</p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-white/60 font-medium">Below nisab — zakat is not obligatory</p>
-                  <p className="text-3xl font-bold text-white mt-0.5">{fmt(netWealth)}</p>
-                  <p className="text-xs text-white/40 mt-1">Net wealth is under the {fmt(nisab)} threshold</p>
+                  <p className="text-sm text-foreground/60 font-medium">Below nisab — zakat is not obligatory</p>
+                  <p className="text-3xl font-bold text-foreground mt-0.5">{fmt(netWealth)}</p>
+                  <p className="text-xs text-foreground/40 mt-1">Net wealth is under the {fmt(nisab)} threshold</p>
                 </>
               )}
             </div>
           </div>
           <div className="text-left sm:text-right">
-            <p className="text-xs text-white/40">Nisab ({s.basis === 'gold' ? `${NISAB_GOLD_VORI} vori gold` : `${NISAB_SILVER_VORI} vori silver`})</p>
-            <p className="text-lg font-semibold text-white">{fmt(nisab)}</p>
+            <p className="text-xs text-foreground/40">Nisab ({s.basis === 'gold' ? `${NISAB_GOLD_VORI} vori gold` : `${NISAB_SILVER_VORI} vori silver`})</p>
+            <p className="text-lg font-semibold text-foreground">{fmt(nisab)}</p>
             <div className="flex sm:justify-end gap-2 mt-2">
               {['silver', 'gold'].map(b => (
                 <button
@@ -125,7 +125,7 @@ export default function Zakat() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all border ${
                     s.basis === b
                       ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                      : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                      : 'bg-foreground/5 text-foreground/40 border-foreground/10 hover:bg-foreground/10'
                   }`}
                 >
                   {b} basis
@@ -138,15 +138,15 @@ export default function Zakat() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Wealth breakdown */}
-        <div className="lg:col-span-2 bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-white/10">
-            <h3 className="text-white font-semibold">Zakatable Wealth</h3>
-            <p className="text-xs text-white/40 mt-0.5">Untick anything that shouldn't count (e.g. money set aside for immediate needs).</p>
+        <div className="lg:col-span-2 bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-foreground/10">
+            <h3 className="text-foreground font-semibold">Zakatable Wealth</h3>
+            <p className="text-xs text-foreground/40 mt-0.5">Untick anything that shouldn't count (e.g. money set aside for immediate needs).</p>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {rows.map(row => (
               <div key={row.key} className="flex items-center justify-between px-5 py-3.5">
-                <label className="flex items-center gap-3 text-sm text-white/70 cursor-pointer">
+                <label className="flex items-center gap-3 text-sm text-foreground/70 cursor-pointer">
                   {row.toggle ? (
                     <input
                       type="checkbox"
@@ -155,17 +155,17 @@ export default function Zakat() {
                       className="w-4 h-4 rounded accent-cyan-500"
                     />
                   ) : (
-                    <span className="w-4 h-4 flex items-center justify-center text-white/25">•</span>
+                    <span className="w-4 h-4 flex items-center justify-center text-foreground/25">•</span>
                   )}
                   {row.label}
                 </label>
-                <span className={`font-medium ${row.toggle && !s[row.key] ? 'text-white/25 line-through' : 'text-white'}`}>
+                <span className={`font-medium ${row.toggle && !s[row.key] ? 'text-foreground/25 line-through' : 'text-foreground'}`}>
                   {fmt(row.value)}
                 </span>
               </div>
             ))}
             <div className="flex items-center justify-between px-5 py-3.5">
-              <label className="flex items-center gap-3 text-sm text-white/70 cursor-pointer">
+              <label className="flex items-center gap-3 text-sm text-foreground/70 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={s.deductDebts}
@@ -174,57 +174,57 @@ export default function Zakat() {
                 />
                 Less: outstanding debts you owe
               </label>
-              <span className={`font-medium ${s.deductDebts ? 'text-red-400' : 'text-white/25 line-through'}`}>
+              <span className={`font-medium ${s.deductDebts ? 'text-red-400' : 'text-foreground/25 line-through'}`}>
                 −{fmt(debts)}
               </span>
             </div>
             <div className="flex items-center justify-between px-5 py-4 bg-white/[0.03]">
-              <span className="text-sm font-semibold text-white">Net Zakatable Wealth</span>
-              <span className="font-bold text-white text-lg">{fmt(netWealth)}</span>
+              <span className="text-sm font-semibold text-foreground">Net Zakatable Wealth</span>
+              <span className="font-bold text-foreground text-lg">{fmt(netWealth)}</span>
             </div>
           </div>
         </div>
 
         {/* Manual inputs */}
         <div className="space-y-6">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 space-y-4">
+          <div className="bg-card border border-foreground/10 rounded-2xl p-5 space-y-4">
             <div>
-              <h3 className="text-white font-semibold">Gold, Silver & Prices</h3>
-              <p className="text-xs text-white/40 mt-0.5">Update prices with today's market rate (per vori).</p>
+              <h3 className="text-foreground font-semibold">Gold, Silver & Prices</h3>
+              <p className="text-xs text-foreground/40 mt-0.5">Update prices with today's market rate (per vori).</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-white/50 mb-1">Gold price / vori</label>
+                <label className="block text-xs text-foreground/50 mb-1">Gold price / vori</label>
                 <input type="number" value={s.goldPriceVori} onChange={e => set({ goldPriceVori: e.target.value })}
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50" />
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-amber-500/50" />
               </div>
               <div>
-                <label className="block text-xs text-white/50 mb-1">Silver price / vori</label>
+                <label className="block text-xs text-foreground/50 mb-1">Silver price / vori</label>
                 <input type="number" value={s.silverPriceVori} onChange={e => set({ silverPriceVori: e.target.value })}
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-slate-400/50" />
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-slate-400/50" />
               </div>
               <div>
-                <label className="block text-xs text-white/50 mb-1">Gold you own (vori)</label>
+                <label className="block text-xs text-foreground/50 mb-1">Gold you own (vori)</label>
                 <input type="number" step="0.01" value={s.goldOwnedVori} onChange={e => set({ goldOwnedVori: e.target.value })} placeholder="0"
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50" />
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-amber-500/50" />
               </div>
               <div>
-                <label className="block text-xs text-white/50 mb-1">Silver you own (vori)</label>
+                <label className="block text-xs text-foreground/50 mb-1">Silver you own (vori)</label>
                 <input type="number" step="0.01" value={s.silverOwnedVori} onChange={e => set({ silverOwnedVori: e.target.value })} placeholder="0"
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-slate-400/50" />
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-slate-400/50" />
               </div>
             </div>
             <div>
-              <label className="block text-xs text-white/50 mb-1">Other zakatable assets (business stock, etc.)</label>
+              <label className="block text-xs text-foreground/50 mb-1">Other zakatable assets (business stock, etc.)</label>
               <input type="number" value={s.otherAssets} onChange={e => set({ otherAssets: e.target.value })} placeholder="0"
-                className="w-full bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+                className="w-full bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50" />
             </div>
-            <p className="text-[11px] text-white/30">1 vori = {VORI_GRAMS} g · Nisab: {NISAB_GOLD_VORI} vori gold or {NISAB_SILVER_VORI} vori silver</p>
+            <p className="text-[11px] text-foreground/30">1 vori = {VORI_GRAMS} g · Nisab: {NISAB_GOLD_VORI} vori gold or {NISAB_SILVER_VORI} vori silver</p>
           </div>
 
           <div className="flex items-start gap-3 bg-cyan-500/5 border border-cyan-500/15 rounded-2xl p-4">
             <Info className="text-cyan-400/70 shrink-0 mt-0.5" size={16} />
-            <p className="text-xs text-white/50 leading-relaxed">
+            <p className="text-xs text-foreground/50 leading-relaxed">
               This is an estimate to help you calculate — zakat rules vary by madhhab and personal circumstances
               (lunar year completion, personal-use gold, etc.). Please confirm the final amount with a knowledgeable scholar.
             </p>

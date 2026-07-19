@@ -55,15 +55,15 @@ export default function Budgets() {
     <div className="space-y-6 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Budgets</h1>
-          <p className="text-white/40 text-sm mt-1">Set and track monthly budgets</p>
+          <h1 className="text-2xl font-bold text-foreground">Budgets</h1>
+          <p className="text-foreground/40 text-sm mt-1">Set and track monthly budgets</p>
         </div>
         <div className="flex items-center gap-3">
-          <select value={month} onChange={e => handleMonthChange(parseInt(e.target.value), year)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer">
-            {months.map((m, i) => <option key={i} value={i + 1} className="bg-[#12122a]">{m}</option>)}
+          <select value={month} onChange={e => handleMonthChange(parseInt(e.target.value), year)} className="bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer">
+            {months.map((m, i) => <option key={i} value={i + 1} className="bg-muted">{m}</option>)}
           </select>
-          <select value={year} onChange={e => handleMonthChange(month, parseInt(e.target.value))} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer">
-            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="bg-[#12122a]">{y}</option>)}
+          <select value={year} onChange={e => handleMonthChange(month, parseInt(e.target.value))} className="bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer">
+            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="bg-muted">{y}</option>)}
           </select>
           <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
             <Plus className="w-4 h-4" /> Add Budget
@@ -73,16 +73,16 @@ export default function Budgets() {
 
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Total Budget</p>
-          <p className="text-xl font-bold text-white mt-1">৳{totalBudget.toLocaleString()}</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Total Budget</p>
+          <p className="text-xl font-bold text-foreground mt-1">৳{totalBudget.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Total Spent</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Total Spent</p>
           <p className="text-xl font-bold text-red-400 mt-1">৳{totalSpent.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Remaining</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Remaining</p>
           <p className={`text-xl font-bold mt-1 ${totalBudget - totalSpent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             ৳{(totalBudget - totalSpent).toLocaleString()}
           </p>
@@ -107,44 +107,44 @@ export default function Budgets() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 text-white/30">
+        <div className="text-center py-16 text-foreground/30">
           <p className="text-4xl mb-3">💰</p>
           <p className="text-sm">No budgets set for {months[month - 1]} {year}</p>
-          <p className="text-xs text-white/20 mt-1">Click "Add Budget" to get started</p>
+          <p className="text-xs text-foreground/20 mt-1">Click "Add Budget" to get started</p>
         </div>
       )}
 
       {/* Add Budget Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white">Add Budget</h2>
-              <button onClick={() => setShowForm(false)} className="text-white/40 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+          <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+              <h2 className="text-lg font-semibold text-foreground">Add Budget</h2>
+              <button onClick={() => setShowForm(false)} className="text-foreground/40 hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Category</label>
-                <select required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none">
-                  <option value="" className="bg-[#12122a]">Select category...</option>
-                  {expenseCategories.map(c => <option key={c.id} value={c.id} className="bg-[#12122a]">{c.icon} {c.name}</option>)}
+                <label className="block text-sm text-foreground/50 mb-1.5">Category</label>
+                <select required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none">
+                  <option value="" className="bg-muted">Select category...</option>
+                  {expenseCategories.map(c => <option key={c.id} value={c.id} className="bg-muted">{c.icon} {c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Budget Amount (৳)</label>
-                <input type="number" required min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 placeholder:text-white/20" />
+                <label className="block text-sm text-foreground/50 mb-1.5">Budget Amount (৳)</label>
+                <input type="number" required min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 placeholder:text-foreground/20" />
               </div>
               {familyMembers.length > 0 && (
                 <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Family Member (Optional)</label>
-                  <select value={form.family_member_id} onChange={e => setForm(f => ({ ...f, family_member_id: e.target.value }))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none">
-                    <option value="" className="bg-[#12122a]">Household (whole family)</option>
-                    {familyMembers.map(m => <option key={m.id} value={m.id} className="bg-[#12122a]">{m.name}</option>)}
+                  <label className="block text-sm text-foreground/50 mb-1.5">Family Member (Optional)</label>
+                  <select value={form.family_member_id} onChange={e => setForm(f => ({ ...f, family_member_id: e.target.value }))} className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none">
+                    <option value="" className="bg-muted">Household (whole family)</option>
+                    {familyMembers.map(m => <option key={m.id} value={m.id} className="bg-muted">{m.name}</option>)}
                   </select>
-                  <p className="text-white/30 text-xs mt-1">A member-scoped budget tracks only their spend; a household budget can coexist for the same category.</p>
+                  <p className="text-foreground/30 text-xs mt-1">A member-scoped budget tracks only their spend; a household budget can coexist for the same category.</p>
                 </div>
               )}
-              <p className="text-xs text-white/30">Budget for: {months[month - 1]} {year}</p>
+              <p className="text-xs text-foreground/30">Budget for: {months[month - 1]} {year}</p>
               <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50">
                 {submitting ? 'Saving...' : 'Add Budget'}
               </button>

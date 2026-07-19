@@ -3,7 +3,7 @@ import { Pencil, Trash2, Printer } from 'lucide-react';
 export default function TransactionList({ transactions, onEdit, onDelete, onVoucher, showActions = true }) {
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-12 text-white/30">
+      <div className="text-center py-12 text-foreground/30">
         <p className="text-4xl mb-3">📭</p>
         <p className="text-sm">No transactions yet</p>
       </div>
@@ -15,7 +15,7 @@ export default function TransactionList({ transactions, onEdit, onDelete, onVouc
       {transactions.map(t => (
         <div
           key={t.id}
-          className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-white/[0.02] hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+          className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-white/[0.02] hover:bg-foreground/5 border border-foreground/5 hover:border-foreground/10 transition-all group"
         >
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
@@ -24,10 +24,10 @@ export default function TransactionList({ transactions, onEdit, onDelete, onVouc
             {t.categories?.icon || '💰'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white font-medium truncate">
+            <p className="text-sm text-foreground font-medium truncate">
               {t.description || t.categories?.name || 'Transaction'}
             </p>
-            <p className="text-xs text-white/30 mt-0.5 truncate">
+            <p className="text-xs text-foreground/30 mt-0.5 truncate">
               {t.categories?.name} • {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>

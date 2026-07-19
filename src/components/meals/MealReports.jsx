@@ -11,8 +11,8 @@ const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="bg-[#12122a] border border-white/10 rounded-xl p-3 shadow-xl">
-      <p className="text-white/50 text-xs mb-1">{label}</p>
+    <div className="bg-muted border border-foreground/10 rounded-xl p-3 shadow-xl">
+      <p className="text-foreground/50 text-xs mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} className="text-sm font-medium" style={{ color: p.color }}>
           {p.name}: {typeof p.value === 'number' ? fmt(p.value) : p.value}
@@ -70,17 +70,17 @@ export default function MealReports({ fetchTrend, fetchItemNames, fetchItemPrice
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
+      <div className="bg-card border border-foreground/10 rounded-2xl p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-white font-semibold flex items-center gap-2"><TrendingUp size={18} /> Spend Trend</h3>
-          <select value={monthsBack} onChange={e => setMonthsBack(Number(e.target.value))} className="bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50">
+          <h3 className="text-foreground font-semibold flex items-center gap-2"><TrendingUp size={18} /> Spend Trend</h3>
+          <select value={monthsBack} onChange={e => setMonthsBack(Number(e.target.value))} className="bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50">
             {[3, 6, 12].map(n => <option key={n} value={n}>Last {n} months</option>)}
           </select>
         </div>
         {loading ? (
-          <div className="h-64 flex items-center justify-center text-white/30 text-sm">Loading...</div>
+          <div className="h-64 flex items-center justify-center text-foreground/30 text-sm">Loading...</div>
         ) : trend.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-white/30 text-sm">No data yet.</div>
+          <div className="h-64 flex items-center justify-center text-foreground/30 text-sm">No data yet.</div>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={trend} barGap={4}>
@@ -96,8 +96,8 @@ export default function MealReports({ fetchTrend, fetchItemNames, fetchItemPrice
         )}
       </div>
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-white font-semibold mb-4">Meal Rate Trend</h3>
+      <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+        <h3 className="text-foreground font-semibold mb-4">Meal Rate Trend</h3>
         {!loading && trend.length > 0 && (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trend}>
@@ -111,28 +111,28 @@ export default function MealReports({ fetchTrend, fetchItemNames, fetchItemPrice
         )}
       </div>
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-white font-semibold mb-4">Top Bazar Spender by Month</h3>
-        <div className="divide-y divide-white/5">
+      <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+        <h3 className="text-foreground font-semibold mb-4">Top Bazar Spender by Month</h3>
+        <div className="divide-y divide-foreground/5">
           {topSpenderRows.map((r, i) => (
             <div key={i} className="flex justify-between items-center py-2 text-sm">
-              <span className="text-white/60">{r.label}</span>
-              <span className="text-white">{r.topSpender}</span>
+              <span className="text-foreground/60">{r.label}</span>
+              <span className="text-foreground">{r.topSpender}</span>
               <span className="text-cyan-400 font-medium">{fmt(r.topSpenderAmount)}</span>
             </div>
           ))}
-          {topSpenderRows.length === 0 && <p className="text-white/30 text-sm py-4 text-center">No bazar expenses recorded yet.</p>}
+          {topSpenderRows.length === 0 && <p className="text-foreground/30 text-sm py-4 text-center">No bazar expenses recorded yet.</p>}
         </div>
       </div>
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Search size={18} /> Item Price History</h3>
-        <select value={selectedItem} onChange={e => setSelectedItem(e.target.value)} className="w-full sm:w-72 bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 mb-4">
+      <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+        <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2"><Search size={18} /> Item Price History</h3>
+        <select value={selectedItem} onChange={e => setSelectedItem(e.target.value)} className="w-full sm:w-72 bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 mb-4">
           <option value="">Select an item...</option>
           {itemNames.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
         {historyLoading ? (
-          <div className="h-48 flex items-center justify-center text-white/30 text-sm">Loading...</div>
+          <div className="h-48 flex items-center justify-center text-foreground/30 text-sm">Loading...</div>
         ) : selectedItem && priceHistory.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={priceHistory}>
@@ -144,9 +144,9 @@ export default function MealReports({ fetchTrend, fetchItemNames, fetchItemPrice
             </LineChart>
           </ResponsiveContainer>
         ) : selectedItem ? (
-          <p className="text-white/30 text-sm text-center py-8">No priced entries for "{selectedItem}" yet.</p>
+          <p className="text-foreground/30 text-sm text-center py-8">No priced entries for "{selectedItem}" yet.</p>
         ) : (
-          <p className="text-white/30 text-sm text-center py-8">Pick an item to see how its price has moved over time.</p>
+          <p className="text-foreground/30 text-sm text-center py-8">Pick an item to see how its price has moved over time.</p>
         )}
       </div>
     </div>

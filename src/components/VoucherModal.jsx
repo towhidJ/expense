@@ -64,10 +64,10 @@ export default function VoucherModal({ transaction: t, entityName, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Printer size={18} /> Voucher</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors"><X size={20} /></button>
+      <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-foreground/10">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Printer size={18} /> Voucher</h2>
+          <button onClick={onClose} className="text-foreground/40 hover:text-foreground transition-colors"><X size={20} /></button>
         </div>
 
         {/* Paper preview */}
@@ -120,7 +120,7 @@ export default function VoucherModal({ transaction: t, entityName, onClose }) {
         </div>
 
         <div className="flex justify-end gap-3 px-5 pb-5">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Close</button>
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Close</button>
           <button onClick={downloadPDF} className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">
             <FileText size={16} /> Download PDF
           </button>

@@ -96,8 +96,8 @@ export default function ScanReceipt() {
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h1 className="text-2xl font-bold text-white">Scan Receipt</h1>
-        <p className="text-white/40 text-sm mt-1">Take a photo of a receipt — AI reads the items, you confirm, it saves as transactions.</p>
+        <h1 className="text-2xl font-bold text-foreground">Scan Receipt</h1>
+        <p className="text-foreground/40 text-sm mt-1">Take a photo of a receipt — AI reads the items, you confirm, it saves as transactions.</p>
       </div>
 
       {savedCount > 0 && (
@@ -113,16 +113,16 @@ export default function ScanReceipt() {
           <button
             onClick={() => fileInput.current?.click()}
             disabled={scanning}
-            className="w-full border-2 border-dashed border-white/15 hover:border-violet-500/40 rounded-2xl p-10 text-center transition-all bg-white/[0.02] hover:bg-violet-500/5"
+            className="w-full border-2 border-dashed border-foreground/15 hover:border-violet-500/40 rounded-2xl p-10 text-center transition-all bg-white/[0.02] hover:bg-violet-500/5"
           >
             {scanning ? (
-              <><Loader2 className="mx-auto text-violet-400 mb-3 animate-spin" size={36} /><p className="text-white/60 text-sm">Reading receipt with AI...</p></>
+              <><Loader2 className="mx-auto text-violet-400 mb-3 animate-spin" size={36} /><p className="text-foreground/60 text-sm">Reading receipt with AI...</p></>
             ) : (
-              <><Upload className="mx-auto text-white/30 mb-3" size={36} /><p className="text-white/60 text-sm font-medium">Tap to take a photo or choose an image</p><p className="text-white/30 text-xs mt-1">JPG / PNG — bazar receipt, restaurant bill, invoice</p></>
+              <><Upload className="mx-auto text-foreground/30 mb-3" size={36} /><p className="text-foreground/60 text-sm font-medium">Tap to take a photo or choose an image</p><p className="text-foreground/30 text-xs mt-1">JPG / PNG — bazar receipt, restaurant bill, invoice</p></>
             )}
           </button>
           {preview && (
-            <div className="mt-4 rounded-2xl overflow-hidden border border-white/10">
+            <div className="mt-4 rounded-2xl overflow-hidden border border-foreground/10">
               <img src={preview} alt="Receipt preview" className="w-full max-h-96 object-contain bg-black/40" />
             </div>
           )}
@@ -132,26 +132,26 @@ export default function ScanReceipt() {
           {items.length > 0 && (
             <>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Paid from account (all rows)</label>
-                <select required value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-violet-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Paid from account (all rows)</label>
+                <select required value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-violet-500/50">
                   <option value="">Select an account...</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
                 </select>
               </div>
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {items.map((it, i) => (
-                  <div key={i} className="bg-[#1a1a2e] border border-white/10 rounded-xl p-3 space-y-2">
+                  <div key={i} className="bg-card border border-foreground/10 rounded-xl p-3 space-y-2">
                     <div className="flex gap-2">
-                      <input type="text" value={it.description} onChange={e => updateItem(i, { description: e.target.value })} placeholder="Description" className="flex-1 min-w-0 bg-[#12122a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50" />
-                      <input type="number" step="0.01" value={it.amount} onChange={e => updateItem(i, { amount: e.target.value })} placeholder="৳" className="w-24 bg-[#12122a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50" />
-                      <button onClick={() => setItems(prev => prev.filter((_, idx) => idx !== i))} className="text-white/30 hover:text-red-400 px-1"><Trash2 size={15} /></button>
+                      <input type="text" value={it.description} onChange={e => updateItem(i, { description: e.target.value })} placeholder="Description" className="flex-1 min-w-0 bg-muted border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-violet-500/50" />
+                      <input type="number" step="0.01" value={it.amount} onChange={e => updateItem(i, { amount: e.target.value })} placeholder="৳" className="w-24 bg-muted border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-violet-500/50" />
+                      <button onClick={() => setItems(prev => prev.filter((_, idx) => idx !== i))} className="text-foreground/30 hover:text-red-400 px-1"><Trash2 size={15} /></button>
                     </div>
                     <div className="flex gap-2">
-                      <select value={it.category_id} onChange={e => updateItem(i, { category_id: e.target.value })} className={`flex-1 min-w-0 bg-[#12122a] border rounded-lg px-3 py-2 text-white text-sm focus:outline-none ${it.category_id ? 'border-white/10' : 'border-amber-500/40'}`}>
+                      <select value={it.category_id} onChange={e => updateItem(i, { category_id: e.target.value })} className={`flex-1 min-w-0 bg-muted border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none ${it.category_id ? 'border-foreground/10' : 'border-amber-500/40'}`}>
                         <option value="">Pick category...</option>
                         {catFor(it.type).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                       </select>
-                      <input type="date" value={it.date} onChange={e => updateItem(i, { date: e.target.value })} className="bg-[#12122a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50" />
+                      <input type="date" value={it.date} onChange={e => updateItem(i, { date: e.target.value })} className="bg-muted border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-violet-500/50" />
                     </div>
                   </div>
                 ))}
@@ -162,10 +162,10 @@ export default function ScanReceipt() {
             </>
           )}
           {items.length === 0 && !scanning && (
-            <div className="h-full flex items-center justify-center border border-white/5 rounded-2xl bg-white/[0.02] py-16">
+            <div className="h-full flex items-center justify-center border border-foreground/5 rounded-2xl bg-white/[0.02] py-16">
               <div className="text-center">
-                <ScanLine className="mx-auto text-white/20 mb-3" size={40} />
-                <p className="text-white/40 text-sm">Scanned items will appear here for review.</p>
+                <ScanLine className="mx-auto text-foreground/20 mb-3" size={40} />
+                <p className="text-foreground/40 text-sm">Scanned items will appear here for review.</p>
               </div>
             </div>
           )}

@@ -303,7 +303,7 @@ export default function Dashboard() {
             {liabilities.filter(l => l.remaining_balance > 0).slice(0, 5).map(liability => {
               const progress = liability.principal > 0 ? Math.min(((liability.principal - liability.remaining_balance) / liability.principal) * 100, 100) : 0;
               return (
-                <div key={liability.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div key={liability.id} className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
                       <p className="text-sm font-medium text-foreground">{liability.name}</p>

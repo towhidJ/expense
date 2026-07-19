@@ -103,14 +103,14 @@ export default function Utility() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading utility bills...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading utility bills...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Utility Bills</h1>
-          <p className="text-white/40 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Utility Bills</h1>
+          <p className="text-foreground/40 text-sm mt-1">
             Month-wise bills with unit tracking.
             {unpaidTotal > 0 && <span className="text-amber-400"> Unpaid: {fmt(unpaidTotal)}</span>}
           </p>
@@ -133,7 +133,7 @@ export default function Utility() {
               className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${
                 activeType === k
                   ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                  : 'bg-foreground/5 text-foreground/40 border-foreground/10 hover:bg-foreground/10'
               }`}
             >
               {v.icon} {v.label}{count > 0 && <span className="ml-1.5 text-xs opacity-60">({count})</span>}
@@ -145,16 +145,16 @@ export default function Utility() {
       {linkedRecurring ? (
         <div className="flex items-center gap-3 bg-emerald-500/[0.07] border border-emerald-500/20 rounded-2xl px-4 py-3 text-sm">
           <Repeat size={16} className="text-emerald-400 shrink-0" />
-          <p className="text-white/70">
-            Auto-pay on: <strong className="text-white">{linkedRecurring.title}</strong> ({fmt(linkedRecurring.amount)}/{linkedRecurring.frequency.replace('ly', '')})
+          <p className="text-foreground/70">
+            Auto-pay on: <strong className="text-foreground">{linkedRecurring.title}</strong> ({fmt(linkedRecurring.amount)}/{linkedRecurring.frequency.replace('ly', '')})
             {' '}posts the payment and marks each month's bill PAID here. Next run: {new Date(linkedRecurring.next_run_date).toLocaleDateString()}.
           </p>
           <Link to="/recurring" className="ml-auto shrink-0 text-emerald-400 hover:underline text-xs font-medium">Manage</Link>
         </div>
       ) : (
-        <div className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 text-sm">
-          <Repeat size={16} className="text-white/30 shrink-0" />
-          <p className="text-white/40">
+        <div className="flex items-center gap-3 bg-white/[0.03] border border-foreground/10 rounded-2xl px-4 py-3 text-sm">
+          <Repeat size={16} className="text-foreground/30 shrink-0" />
+          <p className="text-foreground/40">
             Fixed monthly {TYPES[activeType].label.toLowerCase()} bill? Add a recurring expense and set its "Utility Bill" type — bills will then appear here as PAID automatically.
           </p>
           <Link to="/recurring" className="ml-auto shrink-0 text-cyan-400 hover:underline text-xs font-medium">Set up</Link>
@@ -162,27 +162,27 @@ export default function Utility() {
       )}
 
       {isAdding && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New {TYPES[activeType].label} Bill</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New {TYPES[activeType].label} Bill</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Bill Month</label>
-              <input required type="month" value={form.month} onChange={e => setForm({ ...form, month: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Bill Month</label>
+              <input required type="month" value={form.month} onChange={e => setForm({ ...form, month: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Units {TYPES[activeType].unit && `(${TYPES[activeType].unit})`}</label>
-              <input type="number" step="0.01" value={form.units} onChange={e => setForm({ ...form, units: e.target.value })} placeholder="Optional" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Units {TYPES[activeType].unit && `(${TYPES[activeType].unit})`}</label>
+              <input type="number" step="0.01" value={form.units} onChange={e => setForm({ ...form, units: e.target.value })} placeholder="Optional" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Amount</label>
-              <input required type="number" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+              <input required type="number" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Due Date</label>
-              <input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Due Date</label>
+              <input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50" />
             </div>
             <div className="sm:col-span-2 lg:col-span-4 flex justify-end gap-3">
-              <button type="button" onClick={() => setIsAdding(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setIsAdding(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all font-medium">Save Bill</button>
             </div>
           </form>
@@ -191,32 +191,32 @@ export default function Utility() {
 
       {payingBill && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-semibold text-white mb-2">Pay Bill</h2>
-            <p className="text-sm text-white/50 mb-6">
-              {TYPES[payingBill.type].icon} {TYPES[payingBill.type].label} — {new Date(payingBill.bill_month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} · <strong className="text-white">{fmt(payingBill.amount)}</strong>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Pay Bill</h2>
+            <p className="text-sm text-foreground/50 mb-6">
+              {TYPES[payingBill.type].icon} {TYPES[payingBill.type].label} — {new Date(payingBill.bill_month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} · <strong className="text-foreground">{fmt(payingBill.amount)}</strong>
             </p>
             <form onSubmit={handlePay} className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-1">Pay From Account</label>
-                <select required value={payForm.account_id} onChange={e => setPayForm({ ...payForm, account_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Pay From Account</label>
+                <select required value={payForm.account_id} onChange={e => setPayForm({ ...payForm, account_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50">
                   <option value="">Select an account...</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Expense Category</label>
-                <select required value={payForm.category_id} onChange={e => setPayForm({ ...payForm, category_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Expense Category</label>
+                <select required value={payForm.category_id} onChange={e => setPayForm({ ...payForm, category_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50">
                   <option value="">Select a category...</option>
                   {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Payment Date</label>
-                <input required type="date" value={payForm.date} onChange={e => setPayForm({ ...payForm, date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Payment Date</label>
+                <input required type="date" value={payForm.date} onChange={e => setPayForm({ ...payForm, date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-amber-500/50" />
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setPayingBill(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setPayingBill(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-medium">Confirm Payment</button>
               </div>
             </form>
@@ -242,16 +242,16 @@ export default function Utility() {
         </ChartCard>
       )}
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-white/5 border-b border-white/10">
-                <th className="text-left py-3 px-5 text-white/60 font-medium">Month</th>
-                <th className="text-right py-3 px-5 text-white/60 font-medium">Units</th>
-                <th className="text-right py-3 px-5 text-white/60 font-medium">Amount</th>
-                <th className="text-left py-3 px-5 text-white/60 font-medium">Status</th>
-                <th className="text-right py-3 px-5 text-white/60 font-medium">Actions</th>
+              <tr className="bg-foreground/5 border-b border-foreground/10">
+                <th className="text-left py-3 px-5 text-foreground/60 font-medium">Month</th>
+                <th className="text-right py-3 px-5 text-foreground/60 font-medium">Units</th>
+                <th className="text-right py-3 px-5 text-foreground/60 font-medium">Amount</th>
+                <th className="text-left py-3 px-5 text-foreground/60 font-medium">Status</th>
+                <th className="text-right py-3 px-5 text-foreground/60 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -259,10 +259,10 @@ export default function Utility() {
                 const paid = !!bill.transaction_id;
                 const overdue = !paid && bill.due_date && bill.due_date < today();
                 return (
-                  <tr key={bill.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-5 text-white font-medium">{new Date(bill.bill_month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</td>
-                    <td className="py-3 px-5 text-right text-white/60">{bill.units ?? '—'}</td>
-                    <td className="py-3 px-5 text-right text-white font-medium">{fmt(bill.amount)}</td>
+                  <tr key={bill.id} className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-5 text-foreground font-medium">{new Date(bill.bill_month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</td>
+                    <td className="py-3 px-5 text-right text-foreground/60">{bill.units ?? '—'}</td>
+                    <td className="py-3 px-5 text-right text-foreground font-medium">{fmt(bill.amount)}</td>
                     <td className="py-3 px-5">
                       {paid
                         ? <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">PAID</span>
@@ -296,8 +296,8 @@ export default function Utility() {
         </div>
         {typeBills.length === 0 && (
           <div className="text-center py-10">
-            <Zap className="mx-auto text-white/20 mb-3" size={40} />
-            <p className="text-white/40 text-sm">No {TYPES[activeType].label.toLowerCase()} bills yet — add the first one.</p>
+            <Zap className="mx-auto text-foreground/20 mb-3" size={40} />
+            <p className="text-foreground/40 text-sm">No {TYPES[activeType].label.toLowerCase()} bills yet — add the first one.</p>
           </div>
         )}
       </div>

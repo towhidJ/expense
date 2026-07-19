@@ -15,7 +15,7 @@ export default function MealLayout() {
   if (loading && !activeMembership) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <p className="text-white/50">Loading meal workspace...</p>
+        <p className="text-foreground/50">Loading meal workspace...</p>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function MealLayout() {
         <header className="sticky top-0 z-30 flex items-center h-16 px-6 bg-background/80 backdrop-blur-xl border-b border-border lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-foreground/5"
           >
             <Menu className="w-6 h-6" />
           </button>

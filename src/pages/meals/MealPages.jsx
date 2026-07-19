@@ -25,14 +25,14 @@ import StockTab from '../../components/meals/StockTab';
 function PageHeader({ title, subtitle }) {
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-bold text-white">{title}</h1>
-      {subtitle && <p className="text-white/40 text-sm mt-1">{subtitle}</p>}
+      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+      {subtitle && <p className="text-foreground/40 text-sm mt-1">{subtitle}</p>}
     </div>
   );
 }
 
 function Loading() {
-  return <div className="text-white/50 p-6">Loading...</div>;
+  return <div className="text-foreground/50 p-6">Loading...</div>;
 }
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -50,7 +50,7 @@ export function MealSummaryPage() {
           <Pin size={16} className="text-amber-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-amber-400 text-sm font-medium">{n.title}</p>
-            {n.body && <p className="text-white/60 text-xs mt-0.5 whitespace-pre-wrap">{n.body}</p>}
+            {n.body && <p className="text-foreground/60 text-xs mt-0.5 whitespace-pre-wrap">{n.body}</p>}
           </div>
         </div>
       ))}

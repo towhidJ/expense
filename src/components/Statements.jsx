@@ -8,11 +8,11 @@ const pdfNum = (n) => '৳' + Number(n || 0).toLocaleString('en-IN', { minimumFr
 
 function StatementCard({ entityName, title, subtitle, onExport, children }) {
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
-      <div className="relative border-b border-white/10 px-6 py-5 text-center">
+    <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+      <div className="relative border-b border-foreground/10 px-6 py-5 text-center">
         <p className="text-xs uppercase tracking-[0.2em] text-cyan-400/70">{entityName || 'TakaKhata'}</p>
-        <h2 className="text-xl font-bold text-white mt-1">{title}</h2>
-        <p className="text-white/40 text-xs mt-1">{subtitle}</p>
+        <h2 className="text-xl font-bold text-foreground mt-1">{title}</h2>
+        <p className="text-foreground/40 text-xs mt-1">{subtitle}</p>
         <button
           onClick={onExport}
           className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium"
@@ -30,12 +30,12 @@ const SectionRow = ({ label }) => (
 );
 const LineRow = ({ label, value, indent = true, muted = false }) => (
   <tr className="hover:bg-white/[0.02]">
-    <td className={`py-1.5 px-3 ${indent ? 'pl-7' : ''} ${muted ? 'text-white/40 italic text-xs' : 'text-white/70'}`}>{label}</td>
-    <td className={`py-1.5 px-3 text-right tabular-nums ${muted ? 'text-white/40 text-xs' : 'text-white/80'}`}>{value}</td>
+    <td className={`py-1.5 px-3 ${indent ? 'pl-7' : ''} ${muted ? 'text-foreground/40 italic text-xs' : 'text-foreground/70'}`}>{label}</td>
+    <td className={`py-1.5 px-3 text-right tabular-nums ${muted ? 'text-foreground/40 text-xs' : 'text-foreground/80'}`}>{value}</td>
   </tr>
 );
-const TotalRow = ({ label, value, color = 'text-white' }) => (
-  <tr className="border-t border-white/15">
+const TotalRow = ({ label, value, color = 'text-foreground' }) => (
+  <tr className="border-t border-foreground/15">
     <td className={`py-2 px-3 font-semibold ${color}`}>{label}</td>
     <td className={`py-2 px-3 text-right font-bold tabular-nums ${color}`}>{value}</td>
   </tr>
@@ -281,10 +281,10 @@ export function TrialBalance({ accounts, assets, investments, savings, liabiliti
 
   const Cell = ({ r }) => r ? (
     <div className="flex justify-between gap-2 py-1.5">
-      <span className={`truncate ${r.balancing ? 'text-purple-300 italic' : 'text-white/70'}`}>
-        {r.name}{r.period && <span className="text-white/30 text-[10px] ml-1">(period)</span>}
+      <span className={`truncate ${r.balancing ? 'text-purple-300 italic' : 'text-foreground/70'}`}>
+        {r.name}{r.period && <span className="text-foreground/30 text-[10px] ml-1">(period)</span>}
       </span>
-      <span className={`tabular-nums shrink-0 ${r.balancing ? 'text-purple-300' : 'text-white/80'}`}>{fmt(r.value)}</span>
+      <span className={`tabular-nums shrink-0 ${r.balancing ? 'text-purple-300' : 'text-foreground/80'}`}>{fmt(r.value)}</span>
     </div>
   ) : <div className="py-1.5">&nbsp;</div>;
 
@@ -292,7 +292,7 @@ export function TrialBalance({ accounts, assets, investments, savings, liabiliti
     <StatementCard entityName={entityName} title="Trial Balance" subtitle={`As of today · Income & expenses for: ${periodLabel}`} onExport={exportPDF}>
       <div className="overflow-x-auto">
         <div className="min-w-[560px]">
-          <div className="grid grid-cols-2 gap-x-6 border-b border-white/15 pb-2 mb-1">
+          <div className="grid grid-cols-2 gap-x-6 border-b border-foreground/15 pb-2 mb-1">
             <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">Debit (ডেবিট)</p>
             <p className="text-[11px] font-bold uppercase tracking-wider text-red-400/80">Credit (ক্রেডিট)</p>
           </div>
@@ -301,13 +301,13 @@ export function TrialBalance({ accounts, assets, investments, savings, liabiliti
               <Cell r={l} /><Cell r={r} />
             </div>
           ))}
-          <div className="grid grid-cols-2 gap-x-6 text-sm font-bold border-t-2 border-white/20 mt-1 pt-2">
-            <div className="flex justify-between"><span className="text-white">Total</span><span className="text-emerald-400 tabular-nums">{fmt(rows.total)}</span></div>
-            <div className="flex justify-between"><span className="text-white">Total</span><span className="text-red-400 tabular-nums">{fmt(rows.total)}</span></div>
+          <div className="grid grid-cols-2 gap-x-6 text-sm font-bold border-t-2 border-foreground/20 mt-1 pt-2">
+            <div className="flex justify-between"><span className="text-foreground">Total</span><span className="text-emerald-400 tabular-nums">{fmt(rows.total)}</span></div>
+            <div className="flex justify-between"><span className="text-foreground">Total</span><span className="text-red-400 tabular-nums">{fmt(rows.total)}</span></div>
           </div>
         </div>
       </div>
-      <p className="text-white/30 text-xs mt-4">
+      <p className="text-foreground/30 text-xs mt-4">
         * Balance-sheet heads are as of today; income & expense heads cover the selected period. The balancing figure represents owner's equity.
       </p>
     </StatementCard>
@@ -387,7 +387,7 @@ export function BalanceSheet({ accounts, assets, investments, savings, liabiliti
           <TotalRow label="Total Liabilities + Equity" value={fmt(d.totalLiab + d.equity)} color="text-cyan-400" />
         </tbody>
       </table>
-      <p className="text-white/30 text-xs mt-4">* Total Liabilities + Equity always equals Total Assets.</p>
+      <p className="text-foreground/30 text-xs mt-4">* Total Liabilities + Equity always equals Total Assets.</p>
     </StatementCard>
   );
 }
@@ -452,22 +452,22 @@ export function BazarReport({ shops, purchases, payments, periodLabel, inPeriod,
     <StatementCard entityName={entityName} title="Bazar Report (বাজার রিপোর্ট)" subtitle={`Period: ${periodLabel}`} onExport={exportPDF}>
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <p className="text-white/40 text-xs">Total Bazar</p>
-          <p className="text-white font-semibold mt-0.5">{fmt(d.total)}</p>
+        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3">
+          <p className="text-foreground/40 text-xs">Total Bazar</p>
+          <p className="text-foreground font-semibold mt-0.5">{fmt(d.total)}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <p className="text-white/40 text-xs">Cash (নগদ)</p>
+        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3">
+          <p className="text-foreground/40 text-xs">Cash (নগদ)</p>
           <p className="text-emerald-400 font-semibold mt-0.5">{fmt(d.cash)}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <p className="text-white/40 text-xs">On Due (বাকিতে)</p>
+        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3">
+          <p className="text-foreground/40 text-xs">On Due (বাকিতে)</p>
           <p className="text-amber-400 font-semibold mt-0.5">{fmt(d.due)}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <p className="text-white/40 text-xs">Shop Due Today</p>
+        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3">
+          <p className="text-foreground/40 text-xs">Shop Due Today</p>
           <p className="text-red-400 font-semibold mt-0.5">{fmt(d.totalDue)}</p>
-          {d.paid > 0 && <p className="text-white/30 text-[11px]">Paid this period: {fmt(d.paid)}</p>}
+          {d.paid > 0 && <p className="text-foreground/30 text-[11px]">Paid this period: {fmt(d.paid)}</p>}
         </div>
       </div>
 
@@ -476,27 +476,27 @@ export function BazarReport({ shops, purchases, payments, periodLabel, inPeriod,
       <div className="overflow-x-auto mb-5">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Shop</th>
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Phone</th>
-              <th className="text-right py-2 px-3 text-white/40 font-medium">Lifetime Purchases</th>
-              <th className="text-right py-2 px-3 text-white/40 font-medium">Current Due</th>
+            <tr className="border-b border-foreground/10">
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Shop</th>
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Phone</th>
+              <th className="text-right py-2 px-3 text-foreground/40 font-medium">Lifetime Purchases</th>
+              <th className="text-right py-2 px-3 text-foreground/40 font-medium">Current Due</th>
             </tr>
           </thead>
           <tbody>
             {shops.length === 0 ? (
-              <tr><td colSpan="4" className="text-center py-5 text-white/40">No shops yet.</td></tr>
+              <tr><td colSpan="4" className="text-center py-5 text-foreground/40">No shops yet.</td></tr>
             ) : shops.map(s => (
-              <tr key={s.id} className="border-b border-white/5">
-                <td className="py-2 px-3 text-white/80">{s.name}</td>
-                <td className="py-2 px-3 text-white/50">{s.phone || '-'}</td>
-                <td className="py-2 px-3 text-right text-white/70">{fmt(s.principal)}</td>
+              <tr key={s.id} className="border-b border-foreground/5">
+                <td className="py-2 px-3 text-foreground/80">{s.name}</td>
+                <td className="py-2 px-3 text-foreground/50">{s.phone || '-'}</td>
+                <td className="py-2 px-3 text-right text-foreground/70">{fmt(s.principal)}</td>
                 <td className={`py-2 px-3 text-right font-semibold ${Number(s.remaining_balance) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmt(s.remaining_balance)}</td>
               </tr>
             ))}
             {shops.length > 0 && (
-              <tr className="border-t border-white/15 font-semibold">
-                <td className="py-2 px-3 text-white" colSpan="3">Total Outstanding</td>
+              <tr className="border-t border-foreground/15 font-semibold">
+                <td className="py-2 px-3 text-foreground" colSpan="3">Total Outstanding</td>
                 <td className="py-2 px-3 text-right text-red-400">{fmt(d.totalDue)}</td>
               </tr>
             )}
@@ -512,7 +512,7 @@ export function BazarReport({ shops, purchases, payments, periodLabel, inPeriod,
           {Object.entries(d.perShop).sort((a, b) => b[1] - a[1]).map(([name, v]) => (
             <LineRow key={name} label={name} value={fmt(v)} />
           ))}
-          <TotalRow label="Total" value={fmt(d.total)} color="text-white" />
+          <TotalRow label="Total" value={fmt(d.total)} color="text-foreground" />
         </tbody>
       </table>
 
@@ -521,28 +521,28 @@ export function BazarReport({ shops, purchases, payments, periodLabel, inPeriod,
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Date</th>
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Payment</th>
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Source</th>
-              <th className="text-right py-2 px-3 text-white/40 font-medium">Amount</th>
-              <th className="text-left py-2 px-3 text-white/40 font-medium">Description</th>
+            <tr className="border-b border-foreground/10">
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Date</th>
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Payment</th>
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Source</th>
+              <th className="text-right py-2 px-3 text-foreground/40 font-medium">Amount</th>
+              <th className="text-left py-2 px-3 text-foreground/40 font-medium">Description</th>
             </tr>
           </thead>
           <tbody>
             {d.periodPurchases.length === 0 ? (
-              <tr><td colSpan="5" className="text-center py-5 text-white/40">No purchases in this period.</td></tr>
+              <tr><td colSpan="5" className="text-center py-5 text-foreground/40">No purchases in this period.</td></tr>
             ) : d.periodPurchases.map(p => (
-              <tr key={p.id} className="border-b border-white/5">
-                <td className="py-2 px-3 text-white/70 whitespace-nowrap">{p.date}</td>
+              <tr key={p.id} className="border-b border-foreground/5">
+                <td className="py-2 px-3 text-foreground/70 whitespace-nowrap">{p.date}</td>
                 <td className="py-2 px-3">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${p.payment_type === 'cash' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
                     {p.payment_type === 'cash' ? <><Banknote size={11} /> Cash</> : <><HandCoins size={11} /> Due</>}
                   </span>
                 </td>
-                <td className="py-2 px-3 text-white/70">{p.payment_type === 'cash' ? (p.accounts?.name || '-') : (p.liabilities?.name || '-')}</td>
-                <td className="py-2 px-3 text-right font-medium text-white">{fmt(p.amount)}</td>
-                <td className="py-2 px-3 text-white/50 max-w-[220px] truncate">{p.description || '-'}</td>
+                <td className="py-2 px-3 text-foreground/70">{p.payment_type === 'cash' ? (p.accounts?.name || '-') : (p.liabilities?.name || '-')}</td>
+                <td className="py-2 px-3 text-right font-medium text-foreground">{fmt(p.amount)}</td>
+                <td className="py-2 px-3 text-foreground/50 max-w-[220px] truncate">{p.description || '-'}</td>
               </tr>
             ))}
           </tbody>

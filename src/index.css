@@ -57,8 +57,6 @@ html {
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #0a0a1a;
-  color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -74,11 +72,19 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 18, 34, 0.15);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 18, 34, 0.25);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -89,26 +95,38 @@ body {
 
 /* Custom select arrow */
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230f1222' stroke-opacity='0.4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px !important;
 }
 
-/* Date input styling for dark mode */
+.dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Date input picker icon: dark-on-light by default, inverted in dark mode */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) opacity(0.4);
+  opacity: 0.6;
   cursor: pointer;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.4);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
   filter: invert(1) opacity(0.7);
 }
 
 /* Recharts tooltip override */
 .recharts-default-tooltip {
-  background: #1a1a2e !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px !important;
 }
 
@@ -163,6 +181,45 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 :root {
+  --background: #f4f5fa;
+  --foreground: #0f1222;
+  --card: #ffffff;
+  --card-foreground: #0f1222;
+  --popover: #ffffff;
+  --popover-foreground: #0f1222;
+  --primary: #06b6d4;
+  --primary-foreground: #ffffff;
+  --secondary: #eceef6;
+  --secondary-foreground: #0f1222;
+  --muted: #eef1f8;
+  --muted-foreground: #64748b;
+  --accent: #eef1f8;
+  --accent-foreground: #0f1222;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(15, 18, 34, 0.1);
+  --input: rgba(15, 18, 34, 0.15);
+  --ring: rgba(6, 182, 212, 0.5);
+
+  --chart-1: #06b6d4;
+  --chart-2: #8b5cf6;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #10b981;
+
+  --radius: 0.75rem;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f1222;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eceef6;
+  --sidebar-accent-foreground: #0f1222;
+  --sidebar-border: rgba(15, 18, 34, 0.1);
+  --sidebar-ring: rgba(6, 182, 212, 0.5);
+}
+
+.dark {
   --background: #0a0a1a;
   --foreground: #ffffff;
   --card: #1a1a2e;
@@ -182,14 +239,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
   --ring: rgba(6, 182, 212, 0.5);
-  
+
   --chart-1: #06b6d4;
   --chart-2: #8b5cf6;
   --chart-3: #f59e0b;
   --chart-4: #ef4444;
   --chart-5: #10b981;
-
-  --radius: 0.75rem;
 
   --sidebar: #12122a;
   --sidebar-foreground: #ffffff;

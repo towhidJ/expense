@@ -412,22 +412,22 @@ export default function Rent() {
     setStmtOpen(false);
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading rental units...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading rental units...</div>;
 
-  const inputCls = 'w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-teal-500/50';
-  const labelCls = 'block text-sm text-white/60 mb-1';
+  const inputCls = 'w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-teal-500/50';
+  const labelCls = 'block text-sm text-foreground/60 mb-1';
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Rent Management</h1>
-          <p className="text-white/40 text-sm mt-1">Units, tenants, partial collection, receipts & settlements.</p>
+          <h1 className="text-2xl font-bold text-foreground">Rent Management</h1>
+          <p className="text-foreground/40 text-sm mt-1">Units, tenants, partial collection, receipts & settlements.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setStmtOpen(true)}
-            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 px-4 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-2 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-foreground/80 px-4 py-2 rounded-xl transition-colors"
           >
             <FileText size={16} /> Statement
           </button>
@@ -448,8 +448,8 @@ export default function Rent() {
       </div>
 
       {(isAdding || editing) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editing ? 'Edit Unit' : 'New Rental Unit'}</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{editing ? 'Edit Unit' : 'New Rental Unit'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className={labelCls}>Unit Name</label>
@@ -471,7 +471,7 @@ export default function Rent() {
               <div>
                 <label className={labelCls}>New Rent Effective From</label>
                 <input required type="month" value={form.rent_effective} onChange={e => setForm({ ...form, rent_effective: e.target.value })} className={inputCls} />
-                <p className="text-xs text-white/35 mt-1">Older months keep the previous rent in dues & statements.</p>
+                <p className="text-xs text-foreground/35 mt-1">Older months keep the previous rent in dues & statements.</p>
               </div>
             )}
             <div>
@@ -484,10 +484,10 @@ export default function Rent() {
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" id="unit_active" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} className="w-4 h-4 rounded accent-teal-500" />
-              <label htmlFor="unit_active" className="text-sm text-white/80">Currently rented</label>
+              <label htmlFor="unit_active" className="text-sm text-foreground/80">Currently rented</label>
             </div>
             <div className="sm:col-span-2 lg:col-span-3 flex justify-end gap-3">
-              <button type="button" onClick={() => { setIsAdding(false); setEditing(null); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => { setIsAdding(false); setEditing(null); }} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-teal-500/20 transition-all font-medium">Save Unit</button>
             </div>
           </form>
@@ -497,13 +497,13 @@ export default function Rent() {
       {/* ---------- collect modal (partial + charges) ---------- */}
       {collecting && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-white mb-2">Collect Rent</h2>
-            <p className="text-sm text-white/50 mb-1">
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Collect Rent</h2>
+            <p className="text-sm text-foreground/50 mb-1">
               {collecting.unit.name} — {monthLabel(collecting.month, { month: 'long', year: 'numeric' })}
               {collecting.unit.tenant_name && <span> · {collecting.unit.tenant_name}</span>}
             </p>
-            <p className="text-xs text-white/40 mb-5">
+            <p className="text-xs text-foreground/40 mb-5">
               Expected {fmt(expectedRentFor(collecting.unit, collecting.month))} · already received {fmt(monthPaid(collecting.unit, collecting.month))} — partial amounts are fine.
             </p>
             <form onSubmit={handleCollect} className="space-y-4">
@@ -527,7 +527,7 @@ export default function Rent() {
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="log_income" checked={collectForm.log_income} onChange={e => setCollectForm({ ...collectForm, log_income: e.target.checked })} className="w-4 h-4 rounded accent-teal-500" />
-                <label htmlFor="log_income" className="text-sm text-white/80">Log as income transaction (adds to account balance)</label>
+                <label htmlFor="log_income" className="text-sm text-foreground/80">Log as income transaction (adds to account balance)</label>
               </div>
               {collectForm.log_income && (
                 <>
@@ -548,7 +548,7 @@ export default function Rent() {
                 </>
               )}
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setCollecting(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setCollecting(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-teal-500/20 transition-all font-medium">Record Payment</button>
               </div>
             </form>
@@ -564,20 +564,20 @@ export default function Rent() {
         const remaining = Math.max(expected - agg.paid, 0);
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-semibold text-white mb-1">{monthLabel(month, { month: 'long', year: 'numeric' })}</h2>
-              <p className="text-sm text-white/50 mb-4">
+            <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-semibold text-foreground mb-1">{monthLabel(month, { month: 'long', year: 'numeric' })}</h2>
+              <p className="text-sm text-foreground/50 mb-4">
                 {unit.name} · expected {fmt(expected)} · received {fmt(agg.paid)}
                 {remaining > 0 && <span className="text-amber-400"> · {fmt(remaining)} due</span>}
               </p>
               <div className="space-y-2 mb-5">
                 {agg.list.map(p => (
-                  <div key={p.id} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+                  <div key={p.id} className="flex items-center justify-between bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5">
                     <div>
-                      <p className="text-white text-sm font-medium">{fmt(p.amount)}
-                        {Number(p.charge_amount) > 0 && <span className="text-white/40 font-normal"> (incl. {fmt(p.charge_amount)} {p.charge_note || 'charges'})</span>}
+                      <p className="text-foreground text-sm font-medium">{fmt(p.amount)}
+                        {Number(p.charge_amount) > 0 && <span className="text-foreground/40 font-normal"> (incl. {fmt(p.charge_amount)} {p.charge_note || 'charges'})</span>}
                       </p>
-                      <p className="text-white/40 text-xs">{new Date(p.paid_date).toLocaleDateString()}{p.transaction_id ? ' · in accounts' : ''}</p>
+                      <p className="text-foreground/40 text-xs">{new Date(p.paid_date).toLocaleDateString()}{p.transaction_id ? ' · in accounts' : ''}</p>
                     </div>
                     <div className="flex gap-1.5">
                       <button onClick={() => downloadReceipt(unit, p)} title="Download receipt PDF" className="text-white/40 hover:text-teal-400 p-2 rounded-lg hover:bg-teal-500/10">
@@ -592,10 +592,10 @@ export default function Rent() {
                     </div>
                   </div>
                 ))}
-                {agg.list.length === 0 && <p className="text-white/40 text-sm text-center py-3">No payments recorded for this month.</p>}
+                {agg.list.length === 0 && <p className="text-foreground/40 text-sm text-center py-3">No payments recorded for this month.</p>}
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={() => setMonthView(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Close</button>
+                <button onClick={() => setMonthView(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Close</button>
                 <button
                   onClick={() => { setMonthView(null); openCollect(unit, month); }}
                   className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-teal-500/20 font-medium"
@@ -617,9 +617,9 @@ export default function Rent() {
         const shortfall = Math.max(dues - advance, 0);
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-semibold text-white mb-1">End Tenancy — {settling.name}</h2>
-              <p className="text-sm text-white/50 mb-5">{settling.tenant_name || 'Tenant'} is leaving. Settle dues against the advance deposit.</p>
+            <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-semibold text-foreground mb-1">End Tenancy — {settling.name}</h2>
+              <p className="text-sm text-foreground/50 mb-5">{settling.tenant_name || 'Tenant'} is leaving. Settle dues against the advance deposit.</p>
               <form onSubmit={handleSettle} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -629,14 +629,14 @@ export default function Rent() {
                   <div>
                     <label className={labelCls}>Unpaid Dues</label>
                     <input type="number" step="0.01" min="0" value={settleForm.dues} onChange={e => setSettleForm({ ...settleForm, dues: e.target.value })} placeholder="0" className={inputCls} />
-                    <p className="text-xs text-white/35 mt-1">Pre-filled from unpaid months — adjust if needed.</p>
+                    <p className="text-xs text-foreground/35 mt-1">Pre-filled from unpaid months — adjust if needed.</p>
                   </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm space-y-1.5">
-                  <div className="flex justify-between text-white/60"><span>Advance held</span><span className="text-white">{fmt(advance)}</span></div>
-                  <div className="flex justify-between text-white/60"><span>Dues deducted from advance</span><span className="text-amber-400">− {fmt(deducted)}</span></div>
-                  <div className="flex justify-between font-medium border-t border-white/10 pt-1.5 text-white/80">
+                <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4 text-sm space-y-1.5">
+                  <div className="flex justify-between text-foreground/60"><span>Advance held</span><span className="text-foreground">{fmt(advance)}</span></div>
+                  <div className="flex justify-between text-foreground/60"><span>Dues deducted from advance</span><span className="text-amber-400">− {fmt(deducted)}</span></div>
+                  <div className="flex justify-between font-medium border-t border-foreground/10 pt-1.5 text-foreground/80">
                     <span>Advance to return</span><span className="text-emerald-400">{fmt(refund)}</span>
                   </div>
                   {shortfall > 0 && (
@@ -650,7 +650,7 @@ export default function Rent() {
                   <>
                     <div className="flex items-center gap-2">
                       <input type="checkbox" id="log_refund" checked={settleForm.log_refund} onChange={e => setSettleForm({ ...settleForm, log_refund: e.target.checked })} className="w-4 h-4 rounded accent-teal-500" />
-                      <label htmlFor="log_refund" className="text-sm text-white/80">Log the {fmt(refund)} refund as an expense (cash leaves an account)</label>
+                      <label htmlFor="log_refund" className="text-sm text-foreground/80">Log the {fmt(refund)} refund as an expense (cash leaves an account)</label>
                     </div>
                     {settleForm.log_refund && (
                       <div className="grid grid-cols-2 gap-3">
@@ -677,7 +677,7 @@ export default function Rent() {
                   <>
                     <div className="flex items-center gap-2">
                       <input type="checkbox" id="log_dues_income" checked={settleForm.log_dues_income} onChange={e => setSettleForm({ ...settleForm, log_dues_income: e.target.checked })} className="w-4 h-4 rounded accent-teal-500" />
-                      <label htmlFor="log_dues_income" className="text-sm text-white/80">Log the {fmt(deducted)} kept dues as rent income (memo — no account movement)</label>
+                      <label htmlFor="log_dues_income" className="text-sm text-foreground/80">Log the {fmt(deducted)} kept dues as rent income (memo — no account movement)</label>
                     </div>
                     {settleForm.log_dues_income && (
                       <div>
@@ -696,11 +696,11 @@ export default function Rent() {
                   <input type="text" value={settleForm.notes} onChange={e => setSettleForm({ ...settleForm, notes: e.target.value })} placeholder="condition of flat, keys returned…" className={inputCls} />
                 </div>
 
-                <p className="text-xs text-white/35">
+                <p className="text-xs text-foreground/35">
                   The tenant moves to this unit's history, and the unit becomes vacant (advance reset, marked not rented).
                 </p>
                 <div className="flex justify-end gap-3">
-                  <button type="button" onClick={() => setSettling(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                  <button type="button" onClick={() => setSettling(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                   <button type="submit" className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium">End Tenancy & Settle</button>
                 </div>
               </form>
@@ -712,8 +712,8 @@ export default function Rent() {
       {/* ---------- statement modal ---------- */}
       {stmtOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <h2 className="text-xl font-semibold text-white mb-4">Yearly Rent Statement</h2>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Yearly Rent Statement</h2>
             <label className={labelCls}>Year</label>
             <select value={stmtYear} onChange={e => setStmtYear(Number(e.target.value))} className={inputCls}>
               {[0, 1, 2].map(i => {
@@ -721,9 +721,9 @@ export default function Rent() {
                 return <option key={y} value={y}>{y}</option>;
               })}
             </select>
-            <p className="text-xs text-white/35 mt-2">Per-unit expected/collected/due for every month, unit expenses, net income, plus Jul–Jun fiscal-year totals for the tax return.</p>
+            <p className="text-xs text-foreground/35 mt-2">Per-unit expected/collected/due for every month, unit expenses, net income, plus Jul–Jun fiscal-year totals for the tax return.</p>
             <div className="flex justify-end gap-3 mt-5">
-              <button onClick={() => setStmtOpen(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button onClick={() => setStmtOpen(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button onClick={generateStatement} className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-teal-500/20 font-medium">Download PDF</button>
             </div>
           </div>
@@ -741,18 +741,18 @@ export default function Rent() {
           const expenses = unitExpenses.filter(x => x.unit_id === unit.id);
           const expanded = expandedId === unit.id;
           return (
-            <div key={unit.id} className={`bg-[#1a1a2e] border rounded-2xl p-5 ${unit.is_active ? 'border-white/10' : 'border-white/5 opacity-70'}`}>
+            <div key={unit.id} className={`bg-card border rounded-2xl p-5 ${unit.is_active ? 'border-foreground/10' : 'border-foreground/5 opacity-70'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-teal-500/10 flex items-center justify-center">
                     <Home className="text-teal-400" size={20} />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">
-                      {unit.name} <span className="text-white/40 text-sm font-normal">· {fmt(expectedRentFor(unit, thisMonthKey))}/mo</span>
+                    <h3 className="text-foreground font-medium">
+                      {unit.name} <span className="text-foreground/40 text-sm font-normal">· {fmt(expectedRentFor(unit, thisMonthKey))}/mo</span>
                       {duesTotal > 0 && unit.is_active && <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-400 align-middle">DUE {fmt(duesTotal)}</span>}
                     </h3>
-                    <p className="text-white/40 text-xs">
+                    <p className="text-foreground/40 text-xs">
                       {unit.tenant_name || (unit.is_active ? 'No tenant' : 'Vacant')}
                       {unit.tenant_phone && (
                         <a href={`tel:${unit.tenant_phone}`} className="text-cyan-400/80 hover:text-cyan-400 ml-2"><Phone size={10} className="inline -mt-0.5" /> {unit.tenant_phone}</a>
@@ -768,17 +768,17 @@ export default function Rent() {
                     </a>
                   )}
                   {unit.tenant_name && unit.is_active && (
-                    <button onClick={() => openSettle(unit)} title="End tenancy — settle advance & dues" className="text-white/40 hover:text-red-400 p-2 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                    <button onClick={() => openSettle(unit)} title="End tenancy — settle advance & dues" className="text-white/40 hover:text-red-400 p-2 bg-foreground/5 hover:bg-red-500/10 rounded-lg">
                       <LogOut size={15} />
                     </button>
                   )}
-                  <button onClick={() => setExpandedId(expanded ? null : unit.id)} title="Expenses & tenant history" className={`p-2 rounded-lg ${expanded ? 'text-teal-400 bg-teal-500/10' : 'text-white/40 hover:text-teal-400 bg-white/5 hover:bg-teal-500/10'}`}>
+                  <button onClick={() => setExpandedId(expanded ? null : unit.id)} title="Expenses & tenant history" className={`p-2 rounded-lg ${expanded ? 'text-teal-400 bg-teal-500/10' : 'text-white/40 hover:text-teal-400 bg-foreground/5 hover:bg-teal-500/10'}`}>
                     {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
-                  <button onClick={() => { setEditing(unit); setForm({ ...initialForm, ...unit, rent_effective: new Date().toISOString().slice(0, 7) }); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-2 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
+                  <button onClick={() => { setEditing(unit); setForm({ ...initialForm, ...unit, rent_effective: new Date().toISOString().slice(0, 7) }); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-2 bg-foreground/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={15} />
                   </button>
-                  <button onClick={() => { if (confirm(`Delete "${unit.name}" and its payment history?`)) deleteRow(unit.id).then(fetchPayments).catch(err => alert(err.message)); }} className="text-white/40 hover:text-red-400 p-2 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete "${unit.name}" and its payment history?`)) deleteRow(unit.id).then(fetchPayments).catch(err => alert(err.message)); }} className="text-white/40 hover:text-red-400 p-2 bg-foreground/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -810,7 +810,7 @@ export default function Rent() {
                           : partial
                             ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30'
                             : disabled
-                              ? 'bg-white/[0.02] text-white/20 border-white/5 cursor-default'
+                              ? 'bg-white/[0.02] text-foreground/20 border-foreground/5 cursor-default'
                               : m.key === thisMonthKey
                                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
                                 : 'bg-red-500/10 text-red-400/80 border-red-500/20 hover:bg-red-500/20'
@@ -827,11 +827,11 @@ export default function Rent() {
 
               {/* expanded: expenses + tenant history */}
               {expanded && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4 pt-4 border-t border-foreground/5">
                   <div>
-                    <h4 className="text-white/70 text-sm font-medium mb-2 flex items-center gap-1.5">
+                    <h4 className="text-foreground/70 text-sm font-medium mb-2 flex items-center gap-1.5">
                       <Wrench size={14} className="text-teal-400" /> Unit Expenses
-                      <span className="text-white/35 font-normal">· total {fmt(totals.expenses)} · net income {fmt(totals.collected - totals.expenses)}</span>
+                      <span className="text-foreground/35 font-normal">· total {fmt(totals.expenses)} · net income {fmt(totals.collected - totals.expenses)}</span>
                     </h4>
                     <form onSubmit={e => handleAddExpense(e, unit)} className="space-y-2 mb-3">
                       <div className="grid grid-cols-3 gap-2">
@@ -840,17 +840,17 @@ export default function Rent() {
                         <input type="text" placeholder="Repair, paint…" value={expForm.description} onChange={e => setExpForm({ ...expForm, description: e.target.value })} className={inputCls + ' !px-2 text-sm'} />
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="flex items-center gap-1.5 text-xs text-white/60">
+                        <label className="flex items-center gap-1.5 text-xs text-foreground/60">
                           <input type="checkbox" checked={expForm.pay_from_account} onChange={e => setExpForm({ ...expForm, pay_from_account: e.target.checked })} className="w-3.5 h-3.5 rounded accent-teal-500" />
                           Pay from account
                         </label>
                         {expForm.pay_from_account && (
                           <>
-                            <select required value={expForm.account_id} onChange={e => setExpForm({ ...expForm, account_id: e.target.value })} className="bg-[#12122a] border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none">
+                            <select required value={expForm.account_id} onChange={e => setExpForm({ ...expForm, account_id: e.target.value })} className="bg-muted border border-foreground/10 rounded-lg px-2 py-1.5 text-foreground text-xs focus:outline-none">
                               <option value="">Account…</option>
                               {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </select>
-                            <select required value={expForm.category_id} onChange={e => setExpForm({ ...expForm, category_id: e.target.value })} className="bg-[#12122a] border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none">
+                            <select required value={expForm.category_id} onChange={e => setExpForm({ ...expForm, category_id: e.target.value })} className="bg-muted border border-foreground/10 rounded-lg px-2 py-1.5 text-foreground text-xs focus:outline-none">
                               <option value="">Category…</option>
                               {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                             </select>
@@ -862,34 +862,34 @@ export default function Rent() {
                     <div className="space-y-1.5 max-h-44 overflow-y-auto">
                       {expenses.map(x => (
                         <div key={x.id} className="flex items-center justify-between bg-white/[0.03] rounded-lg px-3 py-1.5 text-sm">
-                          <span className="text-white/60 text-xs">{new Date(x.date).toLocaleDateString()} · {x.description || 'Expense'}{x.transaction_id ? '' : ' (memo)'}</span>
+                          <span className="text-foreground/60 text-xs">{new Date(x.date).toLocaleDateString()} · {x.description || 'Expense'}{x.transaction_id ? '' : ' (memo)'}</span>
                           <span className="flex items-center gap-2">
                             <span className="text-red-400/90">{fmt(x.amount)}</span>
-                            <button onClick={() => { if (confirm('Remove this expense record? (Any linked transaction stays.)')) deleteUnitExpense(x.id).catch(err => alert(err.message)); }} className="text-white/25 hover:text-red-400"><Trash2 size={12} /></button>
+                            <button onClick={() => { if (confirm('Remove this expense record? (Any linked transaction stays.)')) deleteUnitExpense(x.id).catch(err => alert(err.message)); }} className="text-foreground/25 hover:text-red-400"><Trash2 size={12} /></button>
                           </span>
                         </div>
                       ))}
-                      {expenses.length === 0 && <p className="text-white/30 text-xs">No expenses recorded for this unit.</p>}
+                      {expenses.length === 0 && <p className="text-foreground/30 text-xs">No expenses recorded for this unit.</p>}
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-white/70 text-sm font-medium mb-2">Past Tenants</h4>
+                    <h4 className="text-foreground/70 text-sm font-medium mb-2">Past Tenants</h4>
                     <div className="space-y-1.5 max-h-56 overflow-y-auto">
                       {history.map(t => (
                         <div key={t.id} className="bg-white/[0.03] rounded-lg px-3 py-2 text-xs">
-                          <p className="text-white/80 font-medium">{t.tenant_name}
-                            <span className="text-white/40 font-normal"> · {t.start_date ? new Date(t.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '?'} → {new Date(t.end_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                          <p className="text-foreground/80 font-medium">{t.tenant_name}
+                            <span className="text-foreground/40 font-normal"> · {t.start_date ? new Date(t.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '?'} → {new Date(t.end_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                           </p>
-                          <p className="text-white/40 mt-0.5">
+                          <p className="text-foreground/40 mt-0.5">
                             Rent {fmt(t.monthly_rent)} · Advance {fmt(t.advance_deposit)}
                             {Number(t.dues_deducted) > 0 && <span className="text-amber-400/90"> · dues kept {fmt(t.dues_deducted)}</span>}
                             {Number(t.advance_returned) > 0 && <span className="text-emerald-400/90"> · returned {fmt(t.advance_returned)}</span>}
                           </p>
-                          {t.notes && <p className="text-white/30 mt-0.5">{t.notes}</p>}
+                          {t.notes && <p className="text-foreground/30 mt-0.5">{t.notes}</p>}
                         </div>
                       ))}
-                      {history.length === 0 && <p className="text-white/30 text-xs">No previous tenants recorded. Ending a tenancy archives the tenant here.</p>}
+                      {history.length === 0 && <p className="text-foreground/30 text-xs">No previous tenants recorded. Ending a tenancy archives the tenant here.</p>}
                     </div>
                   </div>
                 </div>
@@ -900,10 +900,10 @@ export default function Rent() {
       </div>
 
       {units.length === 0 && !isAdding && (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Building2 className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No rental units</h3>
-          <p className="text-white/40 text-sm mt-1">Add flats/shops you rent out and track collection month by month.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Building2 className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No rental units</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add flats/shops you rent out and track collection month by month.</p>
         </div>
       )}
     </div>

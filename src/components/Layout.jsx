@@ -27,7 +27,7 @@ export default function Layout() {
         <header className="sticky top-0 z-30 flex items-center h-16 px-6 bg-background/80 backdrop-blur-xl border-b border-border lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-foreground/5"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -39,7 +39,7 @@ export default function Layout() {
           <Outlet />
         </main>
 
-        <footer className="flex flex-col sm:flex-row items-center gap-2 sm:justify-between px-6 py-4 border-t border-white/5 text-xs text-muted-foreground/60">
+        <footer className="flex flex-col sm:flex-row items-center gap-2 sm:justify-between px-6 py-4 border-t border-foreground/5 text-xs text-muted-foreground/60">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {apk && (
               <a

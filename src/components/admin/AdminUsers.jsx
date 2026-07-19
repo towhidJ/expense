@@ -95,7 +95,7 @@ export default function AdminUsers() {
   };
 
   if (!users) {
-    return <div className="p-8 text-center text-white/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
+    return <div className="p-8 text-center text-foreground/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
   }
 
   const q = query.trim().toLowerCase();
@@ -107,25 +107,25 @@ export default function AdminUsers() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-white/30 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-foreground/30 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by email or name…"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-11 pr-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
           />
         </div>
-        <p className="text-xs text-white/40 shrink-0">
+        <p className="text-xs text-foreground/40 shrink-0">
           {users.length} accounts • {users.filter(u => u.sub?.active).length} premium
         </p>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wider text-white/30 border-b border-white/10">
+              <tr className="text-left text-[11px] uppercase tracking-wider text-foreground/30 border-b border-foreground/10">
                 <th className="px-5 py-3 font-medium">User</th>
                 <th className="px-5 py-3 font-medium">Joined</th>
                 <th className="px-5 py-3 font-medium">Last sign-in</th>
@@ -133,11 +133,11 @@ export default function AdminUsers() {
                 <th className="px-5 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-foreground/5">
               {shown.map(u => (
                 <tr key={u.id} className="hover:bg-white/[0.03]">
                   <td className="px-5 py-3">
-                    <p className="text-white font-medium flex items-center gap-2">
+                    <p className="text-foreground font-medium flex items-center gap-2">
                       {u.full_name || '—'}
                       {u.is_admin && (
                         <span className="text-[10px] uppercase tracking-wide bg-cyan-500/15 text-cyan-400 px-2 py-0.5 rounded-full">admin</span>
@@ -146,10 +146,10 @@ export default function AdminUsers() {
                         <span className="text-[10px] uppercase tracking-wide bg-red-500/15 text-red-400 px-2 py-0.5 rounded-full">blocked</span>
                       )}
                     </p>
-                    <p className="text-xs text-white/40">{u.email}</p>
+                    <p className="text-xs text-foreground/40">{u.email}</p>
                   </td>
-                  <td className="px-5 py-3 text-white/50 whitespace-nowrap">{fmtDate(u.created_at)}</td>
-                  <td className="px-5 py-3 text-white/50 whitespace-nowrap">{fmtDate(u.last_sign_in_at)}</td>
+                  <td className="px-5 py-3 text-foreground/50 whitespace-nowrap">{fmtDate(u.created_at)}</td>
+                  <td className="px-5 py-3 text-foreground/50 whitespace-nowrap">{fmtDate(u.last_sign_in_at)}</td>
                   <td className="px-5 py-3 whitespace-nowrap">
                     {u.sub?.active ? (
                       <span className="flex items-center gap-1.5 text-amber-400">
@@ -159,7 +159,7 @@ export default function AdminUsers() {
                     ) : u.sub ? (
                       <span className="text-red-400/70">Expired {fmtDate(u.sub.expires_at)}</span>
                     ) : (
-                      <span className="text-white/30">Free</span>
+                      <span className="text-foreground/30">Free</span>
                     )}
                   </td>
                   <td className="px-5 py-3">
@@ -167,7 +167,7 @@ export default function AdminUsers() {
                       <button
                         onClick={() => setSubTarget(u)}
                         disabled={busyId === u.id}
-                        className="p-2 text-white/40 hover:text-amber-400 transition-colors disabled:opacity-40"
+                        className="p-2 text-foreground/40 hover:text-amber-400 transition-colors disabled:opacity-40"
                         title="Manage subscription"
                       >
                         <Crown className="w-4 h-4" />
@@ -175,7 +175,7 @@ export default function AdminUsers() {
                       <button
                         onClick={() => { setPwTarget(u); setPwValue(''); }}
                         disabled={busyId === u.id}
-                        className="p-2 text-white/40 hover:text-cyan-400 transition-colors disabled:opacity-40"
+                        className="p-2 text-foreground/40 hover:text-cyan-400 transition-colors disabled:opacity-40"
                         title="Set temporary password"
                       >
                         <KeyRound className="w-4 h-4" />
@@ -183,7 +183,7 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleToggleAdmin(u)}
                         disabled={busyId === u.id}
-                        className="p-2 text-white/40 hover:text-purple-400 transition-colors disabled:opacity-40"
+                        className="p-2 text-foreground/40 hover:text-purple-400 transition-colors disabled:opacity-40"
                         title={u.is_admin ? 'Remove admin' : 'Make admin'}
                       >
                         {busyId === u.id
@@ -193,7 +193,7 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleToggleBan(u)}
                         disabled={busyId === u.id}
-                        className={`p-2 transition-colors disabled:opacity-40 ${u.banned ? 'text-red-400 hover:text-emerald-400' : 'text-white/40 hover:text-orange-400'}`}
+                        className={`p-2 transition-colors disabled:opacity-40 ${u.banned ? 'text-red-400 hover:text-emerald-400' : 'text-foreground/40 hover:text-orange-400'}`}
                         title={u.banned ? 'Unblock user' : 'Block user (cannot sign in)'}
                       >
                         <Ban className="w-4 h-4" />
@@ -201,7 +201,7 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleDelete(u)}
                         disabled={busyId === u.id}
-                        className="p-2 text-white/40 hover:text-red-400 transition-colors disabled:opacity-40"
+                        className="p-2 text-foreground/40 hover:text-red-400 transition-colors disabled:opacity-40"
                         title="Delete user permanently"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -214,23 +214,23 @@ export default function AdminUsers() {
           </table>
         </div>
         {shown.length === 0 && (
-          <p className="p-8 text-center text-sm text-white/40">No matching users.</p>
+          <p className="p-8 text-center text-sm text-foreground/40">No matching users.</p>
         )}
       </div>
 
       {/* Temp password modal */}
       {pwTarget && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setPwTarget(null)}>
-          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white">Set temporary password</h2>
-              <button onClick={() => setPwTarget(null)} className="text-white/40 hover:text-white transition-colors">
+          <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+              <h2 className="text-lg font-semibold text-foreground">Set temporary password</h2>
+              <button onClick={() => setPwTarget(null)} className="text-foreground/40 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-white/50">
-                For <span className="text-white">{pwTarget.email}</span>. Share it with the user and
+              <p className="text-sm text-foreground/50">
+                For <span className="text-foreground">{pwTarget.email}</span>. Share it with the user and
                 ask them to change it after signing in.
               </p>
               <input
@@ -240,7 +240,7 @@ export default function AdminUsers() {
                 placeholder="New temporary password (min 6 chars)"
                 value={pwValue}
                 onChange={e => setPwValue(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 font-mono"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 font-mono"
               />
               <button
                 onClick={handleSetPassword}
@@ -257,18 +257,18 @@ export default function AdminUsers() {
       {/* Subscription modal */}
       {subTarget && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setSubTarget(null)}>
-          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+          <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Crown className="w-5 h-5 text-amber-400" /> Manage subscription
               </h2>
-              <button onClick={() => setSubTarget(null)} className="text-white/40 hover:text-white transition-colors">
+              <button onClick={() => setSubTarget(null)} className="text-foreground/40 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-3">
-              <p className="text-sm text-white/50">
-                <span className="text-white">{subTarget.email}</span> —{' '}
+              <p className="text-sm text-foreground/50">
+                <span className="text-foreground">{subTarget.email}</span> —{' '}
                 {subTarget.sub?.active
                   ? subTarget.sub.lifetime
                     ? 'Lifetime premium'
@@ -279,7 +279,7 @@ export default function AdminUsers() {
               <button
                 onClick={() => handleSetSub('trial')}
                 disabled={busyId === subTarget.id}
-                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm hover:bg-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-50"
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 text-white text-sm hover:bg-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-50"
               >
                 <Check className="w-4 h-4 text-amber-400" /> Grant 3-day trial
               </button>
@@ -288,7 +288,7 @@ export default function AdminUsers() {
                   key={d}
                   onClick={() => handleSetSub(d)}
                   disabled={busyId === subTarget.id}
-                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm capitalize hover:bg-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-50"
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 text-white text-sm capitalize hover:bg-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-50"
                 >
                   <Check className="w-4 h-4 text-amber-400" /> Grant / extend {d}
                 </button>
@@ -297,7 +297,7 @@ export default function AdminUsers() {
                 <button
                   onClick={() => window.confirm(`Revoke ${subTarget.email}'s subscription?`) && handleSetSub(null)}
                   disabled={busyId === subTarget.id}
-                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-red-500/25 text-red-400 text-sm hover:bg-red-500/10 transition-all disabled:opacity-50"
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-foreground/5 border border-red-500/25 text-red-400 text-sm hover:bg-red-500/10 transition-all disabled:opacity-50"
                 >
                   <X className="w-4 h-4" /> Revoke subscription
                 </button>

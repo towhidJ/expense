@@ -89,20 +89,20 @@ export default function DebtPayoff() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading debts...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading debts...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h1 className="text-2xl font-bold text-white">Debt Payoff Planner</h1>
-        <p className="text-white/40 text-sm mt-1">Snowball or avalanche your loans, credit cards and installments to debt-free.</p>
+        <h1 className="text-2xl font-bold text-foreground">Debt Payoff Planner</h1>
+        <p className="text-foreground/40 text-sm mt-1">Snowball or avalanche your loans, credit cards and installments to debt-free.</p>
       </div>
 
       {debts.length === 0 ? (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Scale className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No active debts</h3>
-          <p className="text-white/40 text-sm mt-1">Loans and credit cards from <Link to="/liabilities" className="text-cyan-400 hover:underline">Liabilities</Link> with a remaining balance show up here.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Scale className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No active debts</h3>
+          <p className="text-foreground/40 text-sm mt-1">Loans and credit cards from <Link to="/liabilities" className="text-cyan-400 hover:underline">Liabilities</Link> with a remaining balance show up here.</p>
         </div>
       ) : (
         <>
@@ -112,28 +112,28 @@ export default function DebtPayoff() {
             <StatCard title="Debt-Free In" value={`${(withExtra || baseline).months} mo`} icon={TrendingDown} gradient={["#34d399", "#10b981"]} iconBg="bg-emerald-500/10" />
           </div>
 
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 flex flex-wrap items-end gap-4">
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 flex flex-wrap items-end gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1.5">Strategy</label>
+              <label className="block text-sm text-foreground/60 mb-1.5">Strategy</label>
               <div className="flex gap-2">
-                <button onClick={() => setSettings(s => ({ ...s, strategy: 'avalanche' }))} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${settings.strategy === 'avalanche' ? 'bg-red-500/15 border-red-500/40 text-red-400' : 'bg-white/5 border-white/10 text-white/50'}`}>
+                <button onClick={() => setSettings(s => ({ ...s, strategy: 'avalanche' }))} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${settings.strategy === 'avalanche' ? 'bg-red-500/15 border-red-500/40 text-red-400' : 'bg-foreground/5 border-foreground/10 text-white/50'}`}>
                   <Flame size={15} /> Avalanche (highest rate first)
                 </button>
-                <button onClick={() => setSettings(s => ({ ...s, strategy: 'snowball' }))} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${settings.strategy === 'snowball' ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400' : 'bg-white/5 border-white/10 text-white/50'}`}>
+                <button onClick={() => setSettings(s => ({ ...s, strategy: 'snowball' }))} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${settings.strategy === 'snowball' ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400' : 'bg-foreground/5 border-foreground/10 text-white/50'}`}>
                   <Snowflake size={15} /> Snowball (smallest balance first)
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1.5">Extra Monthly Payment (৳)</label>
-              <input type="number" step="0.01" value={settings.extraMonthly} onChange={e => setSettings(s => ({ ...s, extraMonthly: parseFloat(e.target.value) || 0 }))} className="w-48 bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1.5">Extra Monthly Payment (৳)</label>
+              <input type="number" step="0.01" value={settings.extraMonthly} onChange={e => setSettings(s => ({ ...s, extraMonthly: parseFloat(e.target.value) || 0 }))} className="w-48 bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
           </div>
 
           {withExtra && baseline && (
             <div className="bg-emerald-500/[0.07] border border-emerald-500/20 rounded-2xl p-5 flex items-start gap-3">
               <TrendingDown className="text-emerald-400 shrink-0 mt-0.5" size={20} />
-              <p className="text-sm text-white/70">
+              <p className="text-sm text-foreground/70">
                 With {fmt(settings.extraMonthly)}/month extra, you'll be debt-free in{' '}
                 <strong className="text-emerald-400">{withExtra.months} months</strong> instead of {baseline.months}, saving{' '}
                 <strong className="text-emerald-400">{fmt(baseline.totalInterest - withExtra.totalInterest)}</strong> in interest.
@@ -141,32 +141,32 @@ export default function DebtPayoff() {
             </div>
           )}
 
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-white/5 border-b border-white/10">
-                    <th className="text-left py-3 px-5 text-white/60 font-medium">Order</th>
-                    <th className="text-left py-3 px-5 text-white/60 font-medium">Debt</th>
-                    <th className="text-right py-3 px-5 text-white/60 font-medium">Balance</th>
-                    <th className="text-right py-3 px-5 text-white/60 font-medium">Rate</th>
-                    <th className="text-right py-3 px-5 text-white/60 font-medium">Min. Payment</th>
-                    <th className="text-right py-3 px-5 text-white/60 font-medium">Paid Off In</th>
+                  <tr className="bg-foreground/5 border-b border-foreground/10">
+                    <th className="text-left py-3 px-5 text-foreground/60 font-medium">Order</th>
+                    <th className="text-left py-3 px-5 text-foreground/60 font-medium">Debt</th>
+                    <th className="text-right py-3 px-5 text-foreground/60 font-medium">Balance</th>
+                    <th className="text-right py-3 px-5 text-foreground/60 font-medium">Rate</th>
+                    <th className="text-right py-3 px-5 text-foreground/60 font-medium">Min. Payment</th>
+                    <th className="text-right py-3 px-5 text-foreground/60 font-medium">Paid Off In</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(withExtra || baseline).order.map((d, i) => (
-                    <tr key={d.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="py-3 px-5 text-white/40">#{i + 1}</td>
-                      <td className="py-3 px-5 text-white font-medium">{d.name}</td>
-                      <td className="py-3 px-5 text-right text-white">{fmt(d.remaining_balance)}</td>
-                      <td className="py-3 px-5 text-right text-white/60">{d.interest_rate || 0}%</td>
+                    <tr key={d.id} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                      <td className="py-3 px-5 text-foreground/40">#{i + 1}</td>
+                      <td className="py-3 px-5 text-foreground font-medium">{d.name}</td>
+                      <td className="py-3 px-5 text-right text-foreground">{fmt(d.remaining_balance)}</td>
+                      <td className="py-3 px-5 text-right text-foreground/60">{d.interest_rate || 0}%</td>
                       <td className="py-3 px-5 text-right">
                         <input
                           type="number" step="0.01" placeholder={fmt(Math.max(Number(d.remaining_balance) * 0.03, Number(d.remaining_balance) / 12))}
                           defaultValue={d.min_payment ?? ''}
                           onBlur={e => handleMinPayment(d, e.target.value)}
-                          className="w-28 bg-[#12122a] border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-right text-xs focus:outline-none focus:border-cyan-500/50"
+                          className="w-28 bg-muted border border-foreground/10 rounded-lg px-2.5 py-1.5 text-foreground text-right text-xs focus:outline-none focus:border-cyan-500/50"
                         />
                       </td>
                       <td className="py-3 px-5 text-right text-emerald-400 font-medium">{d.paidOffMonth ? `Month ${d.paidOffMonth}` : '—'}</td>
@@ -175,7 +175,7 @@ export default function DebtPayoff() {
                 </tbody>
               </table>
             </div>
-            <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between text-xs text-white/40">
+            <div className="px-5 py-3 border-t border-foreground/5 flex items-center justify-between text-xs text-foreground/40">
               <span>Blank minimum payments default to ~3% of balance for the simulation — set them for accuracy.</span>
               <Link to="/liabilities" className="flex items-center gap-1 text-cyan-400 hover:underline shrink-0 ml-4">
                 Log a payment <ExternalLink size={12} />

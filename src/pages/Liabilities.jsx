@@ -158,24 +158,24 @@ export default function Liabilities() {
       case 'loan_given': return <Banknote className="text-emerald-400" size={24} />;
       case 'credit_card': return <CreditCard className="text-orange-400" size={24} />;
       case 'installment': return <Banknote className="text-yellow-400" size={24} />;
-      default: return <ShieldAlert className="text-white/50" size={24} />;
+      default: return <ShieldAlert className="text-foreground/50" size={24} />;
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading liabilities...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading liabilities...</div>;
 
   return (
     <div className="space-y-6 animate-in relative">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Liabilities & Debts</h1>
-          <p className="text-white/40 text-sm mt-1">Manage loans, credit cards, and installments.</p>
+          <h1 className="text-2xl font-bold text-foreground">Liabilities & Debts</h1>
+          <p className="text-foreground/40 text-sm mt-1">Manage loans, credit cards, and installments.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowPaid(v => !v)}
             className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
-              showPaid ? 'bg-white/10 text-white border-white/20' : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white'
+              showPaid ? 'bg-foreground/10 text-foreground border-foreground/20' : 'bg-foreground/5 text-foreground/40 border-foreground/10 hover:bg-foreground/10 hover:text-foreground'
             }`}
           >
             {showPaid ? 'Hide Paid' : 'Show Paid'}
@@ -190,8 +190,8 @@ export default function Liabilities() {
       </div>
 
       {(isAdding || editingLiability) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editingLiability ? 'Edit Liability' : 'New Liability'}</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{editingLiability ? 'Edit Liability' : 'New Liability'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div className="sm:col-span-2 mb-2">
@@ -216,7 +216,7 @@ export default function Liabilities() {
                     className={`flex-1 flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                       form.type === t.id
                         ? `bg-${t.color}-500/20 text-${t.color}-400 border border-${t.color}-500/30`
-                        : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'
+                        : 'bg-foreground/5 text-foreground/40 border border-foreground/10 hover:bg-foreground/10'
                     }`}
                   >
                     <span className="text-lg mb-0.5">{t.icon}</span>
@@ -227,29 +227,29 @@ export default function Liabilities() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Name / Source</label>
-              <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={`w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-${form.type === 'loan_given' ? 'emerald' : 'red'}-500/50`} placeholder={form.type === 'loan_given' ? "e.g. Lent to John" : "e.g. Home Loan"} />
+              <label className="block text-sm text-foreground/60 mb-1">Name / Source</label>
+              <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={`w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-${form.type === 'loan_given' ? 'emerald' : 'red'}-500/50`} placeholder={form.type === 'loan_given' ? "e.g. Lent to John" : "e.g. Home Loan"} />
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Principal Amount</label>
-              <input required type="number" step="0.01" value={form.principal} onChange={e => setForm({...form, principal: parseFloat(e.target.value)})} className={`w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-${form.type === 'loan_given' ? 'emerald' : 'red'}-500/50`} />
+              <label className="block text-sm text-foreground/60 mb-1">Principal Amount</label>
+              <input required type="number" step="0.01" value={form.principal} onChange={e => setForm({...form, principal: parseFloat(e.target.value)})} className={`w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-${form.type === 'loan_given' ? 'emerald' : 'red'}-500/50`} />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Remaining Balance</label>
-              <input required type="number" step="0.01" value={form.remaining_balance} onChange={e => setForm({...form, remaining_balance: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Remaining Balance</label>
+              <input required type="number" step="0.01" value={form.remaining_balance} onChange={e => setForm({...form, remaining_balance: parseFloat(e.target.value)})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Interest Rate (%)</label>
-              <input type="number" step="0.01" value={form.interest_rate} onChange={e => setForm({...form, interest_rate: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Interest Rate (%)</label>
+              <input type="number" step="0.01" value={form.interest_rate} onChange={e => setForm({...form, interest_rate: parseFloat(e.target.value)})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Due Date</label>
-              <input type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Due Date</label>
+              <input type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" />
             </div>
             {!editingLiability && (
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-2">
+              <label className="block text-sm text-foreground/60 mb-2">
                 {form.type === 'loan_given' ? 'How did you give this money?' : 'What did you receive from this liability?'}
               </label>
               <div className={`grid grid-cols-2 ${form.type === 'loan_given' ? '' : 'sm:grid-cols-4'} gap-2 mb-4`}>
@@ -269,7 +269,7 @@ export default function Liabilities() {
                     className={`py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
                       form.received_type === opt.id
                         ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50'
-                        : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                        : 'bg-foreground/5 text-foreground/40 border-foreground/10 hover:bg-foreground/10'
                     }`}
                   >
                     {opt.label}
@@ -279,14 +279,14 @@ export default function Liabilities() {
 
               {form.received_type === 'cash' && (
                 <div className="animate-in fade-in slide-in-from-top-2">
-                  <label className="block text-sm text-white/60 mb-1">
+                  <label className="block text-sm text-foreground/60 mb-1">
                     {form.type === 'loan_given' ? 'Pay From Account' : 'Deposit To Account'}
                   </label>
-                  <select required value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className={`w-full bg-[#12122a] border ${form.type === 'loan_given' ? 'border-red-500/30 focus:border-red-500/50' : 'border-emerald-500/30 focus:border-emerald-500/50'} rounded-xl px-4 py-2.5 text-white focus:outline-none`}>
+                  <select required value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className={`w-full bg-muted border ${form.type === 'loan_given' ? 'border-red-500/30 focus:border-red-500/50' : 'border-emerald-500/30 focus:border-emerald-500/50'} rounded-xl px-4 py-2.5 text-foreground focus:outline-none`}>
                     <option value="">Select an account...</option>
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
                   </select>
-                  <p className="text-xs text-white/40 mt-1">
+                  <p className="text-xs text-foreground/40 mt-1">
                     {form.type === 'loan_given'
                       ? 'The Principal Amount will be deducted from this account balance.'
                       : 'The Principal Amount will be added to this account balance.'}
@@ -295,7 +295,7 @@ export default function Liabilities() {
               )}
 
               {form.received_type === 'none' && (
-                <p className="text-xs text-white/40 animate-in fade-in slide-in-from-top-2">
+                <p className="text-xs text-foreground/40 animate-in fade-in slide-in-from-top-2">
                   Opening balance entry — the liability will be tracked, but no account balance will change. Use this for loans/hawlads from before you started using the app.
                 </p>
               )}
@@ -303,12 +303,12 @@ export default function Liabilities() {
               {form.received_type === 'asset' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                   <div>
-                    <label className="block text-sm text-white/60 mb-1">Asset Name</label>
-                    <input required={form.received_type === 'asset'} type="text" placeholder="e.g. iPhone 15 Pro" value={form.asset_name} onChange={e => setForm({...form, asset_name: e.target.value})} className="w-full bg-[#12122a] border border-cyan-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                    <label className="block text-sm text-foreground/60 mb-1">Asset Name</label>
+                    <input required={form.received_type === 'asset'} type="text" placeholder="e.g. iPhone 15 Pro" value={form.asset_name} onChange={e => setForm({...form, asset_name: e.target.value})} className="w-full bg-muted border border-cyan-500/30 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
                   </div>
                   <div>
-                    <label className="block text-sm text-white/60 mb-1">Asset Category</label>
-                    <select value={form.asset_type} onChange={e => setForm({...form, asset_type: e.target.value})} className="w-full bg-[#12122a] border border-cyan-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+                    <label className="block text-sm text-foreground/60 mb-1">Asset Category</label>
+                    <select value={form.asset_type} onChange={e => setForm({...form, asset_type: e.target.value})} className="w-full bg-muted border border-cyan-500/30 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                       <option value="Electronics">Electronics</option>
                       <option value="Vehicle">Vehicle</option>
                       <option value="Real Estate">Real Estate</option>
@@ -316,25 +316,25 @@ export default function Liabilities() {
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <p className="text-xs text-white/40 mt-1 sm:col-span-2">This will automatically create a new Asset in your portfolio with the loan's principal amount.</p>
+                  <p className="text-xs text-foreground/40 mt-1 sm:col-span-2">This will automatically create a new Asset in your portfolio with the loan's principal amount.</p>
                 </div>
               )}
 
               {form.received_type === 'expense' && (
                 <div className="animate-in fade-in slide-in-from-top-2">
-                  <label className="block text-sm text-white/60 mb-1">Expense Category</label>
-                  <select required={form.received_type === 'expense'} value={form.expense_category_id} onChange={e => setForm({...form, expense_category_id: e.target.value})} className="w-full bg-[#12122a] border border-red-500/30 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50">
+                  <label className="block text-sm text-foreground/60 mb-1">Expense Category</label>
+                  <select required={form.received_type === 'expense'} value={form.expense_category_id} onChange={e => setForm({...form, expense_category_id: e.target.value})} className="w-full bg-muted border border-red-500/30 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50">
                     <option value="">Select a category...</option>
                     {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                   </select>
-                  <p className="text-xs text-white/40 mt-1">This will log an Expense transaction without deducting your cash balance.</p>
+                  <p className="text-xs text-foreground/40 mt-1">This will log an Expense transaction without deducting your cash balance.</p>
                 </div>
               )}
             </div>
             )}
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Notes</label>
-              <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" rows={2} />
+              <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" rows={2} />
             </div>
             <div className="sm:col-span-2">
               <DocumentUpload
@@ -346,7 +346,7 @@ export default function Liabilities() {
               />
             </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
-              <button type="button" onClick={() => {setIsAdding(false); setEditingLiability(null); setLiabilityFiles([]);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => {setIsAdding(false); setEditingLiability(null); setLiabilityFiles([]);}} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium">Save Liability</button>
             </div>
           </form>
@@ -356,29 +356,29 @@ export default function Liabilities() {
       {/* Repayment Modal */}
       {repayingLiability && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-white mb-2">Record Repayment</h2>
-            <p className="text-sm text-white/50 mb-6">Repaying: <strong className="text-white">{repayingLiability.name}</strong></p>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Record Repayment</h2>
+            <p className="text-sm text-foreground/50 mb-6">Repaying: <strong className="text-foreground">{repayingLiability.name}</strong></p>
             
             <form onSubmit={handleRepay} className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-1">Pay From Account</label>
-                <select required value={repayForm.account_id} onChange={e => setRepayForm({...repayForm, account_id: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Pay From Account</label>
+                <select required value={repayForm.account_id} onChange={e => setRepayForm({...repayForm, account_id: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50">
                   <option value="">Select an account...</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Amount</label>
-                <input required type="number" step="0.01" max={repayingLiability.remaining_balance} value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" placeholder="0.00" />
+                <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+                <input required type="number" step="0.01" max={repayingLiability.remaining_balance} value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" placeholder="0.00" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Date</label>
-                <input required type="date" value={repayForm.date} onChange={e => setRepayForm({...repayForm, date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Date</label>
+                <input required type="date" value={repayForm.date} onChange={e => setRepayForm({...repayForm, date: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Notes</label>
-                <input type="text" value={repayForm.notes} onChange={e => setRepayForm({...repayForm, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+                <input type="text" value={repayForm.notes} onChange={e => setRepayForm({...repayForm, notes: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
               </div>
               <DocumentUpload
                 files={repayFiles}
@@ -386,7 +386,7 @@ export default function Liabilities() {
                 label="Receipt / Proof (Optional)"
               />
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => { setRepayingLiability(null); setRepayFiles([]); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => { setRepayingLiability(null); setRepayFiles([]); }} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-medium">Confirm Payment</button>
               </div>
             </form>
@@ -397,30 +397,30 @@ export default function Liabilities() {
       {/* Increase Due Modal */}
       {increasingLiability && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-white mb-2">Add Amount to Due</h2>
-            <p className="text-sm text-white/50 mb-6">Increasing Liability: <strong className="text-white">{increasingLiability.name}</strong></p>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Add Amount to Due</h2>
+            <p className="text-sm text-foreground/50 mb-6">Increasing Liability: <strong className="text-foreground">{increasingLiability.name}</strong></p>
             
             <form onSubmit={handleIncrease} className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-1">Additional Amount</label>
-                <input required type="number" step="0.01" value={increaseForm.amount} onChange={e => setIncreaseForm({...increaseForm, amount: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" placeholder="0.00" />
+                <label className="block text-sm text-foreground/60 mb-1">Additional Amount</label>
+                <input required type="number" step="0.01" value={increaseForm.amount} onChange={e => setIncreaseForm({...increaseForm, amount: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" placeholder="0.00" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Expense Category (Optional)</label>
-                <select value={increaseForm.expense_category_id} onChange={e => setIncreaseForm({...increaseForm, expense_category_id: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Expense Category (Optional)</label>
+                <select value={increaseForm.expense_category_id} onChange={e => setIncreaseForm({...increaseForm, expense_category_id: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50">
                   <option value="">Do not log as expense</option>
                   {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                 </select>
-                <p className="text-xs text-white/40 mt-1">If selected, this amount will be added to your monthly expenses (e.g. for Groceries baki).</p>
+                <p className="text-xs text-foreground/40 mt-1">If selected, this amount will be added to your monthly expenses (e.g. for Groceries baki).</p>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Date</label>
-                <input required type="date" value={increaseForm.date} onChange={e => setIncreaseForm({...increaseForm, date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Date</label>
+                <input required type="date" value={increaseForm.date} onChange={e => setIncreaseForm({...increaseForm, date: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Notes</label>
-                <input type="text" value={increaseForm.notes} onChange={e => setIncreaseForm({...increaseForm, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+                <input type="text" value={increaseForm.notes} onChange={e => setIncreaseForm({...increaseForm, notes: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50" />
               </div>
               <DocumentUpload
                 files={increaseFiles}
@@ -428,7 +428,7 @@ export default function Liabilities() {
                 label="Document / Proof (Optional)"
               />
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => { setIncreasingLiability(null); setIncreaseFiles([]); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => { setIncreasingLiability(null); setIncreaseFiles([]); }} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all font-medium">Add Amount</button>
               </div>
             </form>
@@ -437,31 +437,31 @@ export default function Liabilities() {
       )}
 
       {repayments && repayments.length > 0 && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden mt-6">
-          <div className="p-5 border-b border-white/10">
-            <h3 className="text-white font-semibold">Repayment History</h3>
+        <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden mt-6">
+          <div className="p-5 border-b border-foreground/10">
+            <h3 className="text-foreground font-semibold">Repayment History</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Date</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Liability Name</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Paid From</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Amount</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Notes</th>
+                <tr className="bg-foreground/5 border-b border-foreground/10">
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Date</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Liability Name</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Paid From</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Amount</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody>
                 {repayments.map(rep => {
                   const liability = liabilities.find(l => l.id === rep.liability_id);
                   return (
-                    <tr key={rep.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                      <td className="py-3 px-5 text-white/70">{new Date(rep.date).toLocaleDateString()}</td>
-                      <td className="py-3 px-5 text-white font-medium">{liability?.name || 'Unknown'}</td>
-                      <td className="py-3 px-5 text-white/70">{rep.accounts?.name || 'Unknown Account'}</td>
+                    <tr key={rep.id} className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3 px-5 text-foreground/70">{new Date(rep.date).toLocaleDateString()}</td>
+                      <td className="py-3 px-5 text-foreground font-medium">{liability?.name || 'Unknown'}</td>
+                      <td className="py-3 px-5 text-foreground/70">{rep.accounts?.name || 'Unknown Account'}</td>
                       <td className="py-3 px-5 text-right font-medium text-emerald-400">৳{rep.amount.toLocaleString()}</td>
-                      <td className="py-3 px-5 text-white/50">{rep.notes || '-'}</td>
+                      <td className="py-3 px-5 text-foreground/50">{rep.notes || '-'}</td>
                     </tr>
                   );
                 })}
@@ -480,54 +480,54 @@ export default function Liabilities() {
           const isPaidOff = liability.remaining_balance <= 0;
           const progress = liability.principal > 0 ? Math.min(((liability.principal - liability.remaining_balance) / liability.principal) * 100, 100) : 0;
           return (
-            <div key={liability.id} className={`border rounded-2xl p-5 hover:border-white/20 transition-all group ${
-              isPaidOff ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-[#1a1a2e] border-white/10'
+            <div key={liability.id} className={`border rounded-2xl p-5 hover:border-foreground/20 transition-all group ${
+              isPaidOff ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-card border-foreground/10'
             }`}>
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#12122a] flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                     {getIcon(liability.type)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-white font-medium">{liability.name}</h3>
+                      <h3 className="text-foreground font-medium">{liability.name}</h3>
                       {isPaidOff && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✓ PAID</span>
                       )}
                     </div>
-                    <p className="text-white/40 text-xs capitalize">{liability.type.replace('_', ' ')}</p>
+                    <p className="text-foreground/40 text-xs capitalize">{liability.type.replace('_', ' ')}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => { setEditingLiability(liability); setForm(liability); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
+                  <button onClick={() => { setEditingLiability(liability); setForm(liability); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-foreground/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => { if (confirm(`Delete "${liability.name}"? Repayment history will also be removed.`)) deleteLiability(liability.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete "${liability.name}"? Repayment history will also be removed.`)) deleteLiability(liability.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-foreground/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
               
-              <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="space-y-4 pt-4 border-t border-foreground/5">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-white/40">Remaining</span>
+                    <span className="text-foreground/40">Remaining</span>
                     <span className={`${liability.type === 'loan_given' ? 'text-emerald-400' : 'text-red-400'} font-semibold`}>৳{liability.remaining_balance.toLocaleString()}</span>
                   </div>
-                  <div className="h-1.5 w-full bg-[#12122a] rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                     <div className={`h-full ${liability.type === 'loan_given' ? 'bg-emerald-500' : 'bg-red-500'} rounded-full`} style={{ width: `${100 - progress}%` }} />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex flex-col">
-                    <span className="text-white/40 text-xs">Original</span>
-                    <span className="text-white/80 font-medium">৳{liability.principal.toLocaleString()}</span>
+                    <span className="text-foreground/40 text-xs">Original</span>
+                    <span className="text-foreground/80 font-medium">৳{liability.principal.toLocaleString()}</span>
                   </div>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setIncreasingLiability(liability)}
-                      className="text-sm bg-white/5 hover:bg-white/10 text-white px-3 py-2 rounded-xl transition-all font-medium"
+                      className="text-sm bg-foreground/5 hover:bg-foreground/10 text-foreground px-3 py-2 rounded-xl transition-all font-medium"
                       title="Add more amount to this liability"
                     >
                       <Plus size={16} />
@@ -546,10 +546,10 @@ export default function Liabilities() {
         })}
       </div>
       {liabilities.length === 0 && !isAdding && (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <ShieldAlert className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No liabilities found</h3>
-          <p className="text-white/40 text-sm mt-1">Add your active loans or credit cards to track them.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <ShieldAlert className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No liabilities found</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add your active loans or credit cards to track them.</p>
         </div>
       )}
     </div>

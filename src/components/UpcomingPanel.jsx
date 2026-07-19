@@ -104,12 +104,12 @@ export default function UpcomingPanel({ recurring, recurringSavings, liabilities
           const isOverdue = item.date < today;
           const Icon = item.fallbackIcon;
           return (
-            <div key={item.id} className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
+            <div key={item.id} className="flex items-center justify-between py-2.5 border-b border-foreground/5 last:border-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${
-                  isOverdue ? 'bg-red-500/10' : item.incoming ? 'bg-emerald-500/10' : 'bg-white/5'
+                  isOverdue ? 'bg-red-500/10' : item.incoming ? 'bg-emerald-500/10' : 'bg-foreground/5'
                 }`}>
-                  {item.icon || <Icon size={14} className={isOverdue ? 'text-red-400' : item.incoming ? 'text-emerald-400' : 'text-white/50'} />}
+                  {item.icon || <Icon size={14} className={isOverdue ? 'text-red-400' : item.incoming ? 'text-emerald-400' : 'text-foreground/50'} />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{item.label}</p>

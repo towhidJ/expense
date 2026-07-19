@@ -79,14 +79,14 @@ export default function Inventory() {
   );
   const itemName = (id) => items.find(i => i.id === id)?.name || '—';
 
-  if (loading) return <div className="text-white/50 p-6">Loading inventory...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading inventory...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Inventory</h1>
-          <p className="text-white/40 text-sm mt-1">Stock levels, cost value and movements.</p>
+          <h1 className="text-2xl font-bold text-foreground">Inventory</h1>
+          <p className="text-foreground/40 text-sm mt-1">Stock levels, cost value and movements.</p>
         </div>
         <button onClick={() => setAdding(true)} className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-cyan-500/20">
           <Plus size={18} /> Add Item
@@ -100,35 +100,35 @@ export default function Inventory() {
       </div>
 
       {adding && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New Item</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New Item</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Name</label>
-              <input required type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Name</label>
+              <input required type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">SKU</label>
-              <input type="text" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">SKU</label>
+              <input type="text" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Unit</label>
-              <input type="text" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="pcs / kg / box" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Unit</label>
+              <input type="text" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="pcs / kg / box" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Cost Price</label>
-              <input type="number" step="0.01" value={form.cost_price} onChange={e => setForm({ ...form, cost_price: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Cost Price</label>
+              <input type="number" step="0.01" value={form.cost_price} onChange={e => setForm({ ...form, cost_price: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Sale Price</label>
-              <input type="number" step="0.01" value={form.sale_price} onChange={e => setForm({ ...form, sale_price: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Sale Price</label>
+              <input type="number" step="0.01" value={form.sale_price} onChange={e => setForm({ ...form, sale_price: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Reorder Level</label>
-              <input type="number" step="0.01" value={form.reorder_level} onChange={e => setForm({ ...form, reorder_level: e.target.value })} placeholder="Alert below this" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Reorder Level</label>
+              <input type="number" step="0.01" value={form.reorder_level} onChange={e => setForm({ ...form, reorder_level: e.target.value })} placeholder="Alert below this" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div className="lg:col-span-3 flex justify-end gap-3">
-              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Item</button>
             </div>
           </form>
@@ -137,42 +137,42 @@ export default function Inventory() {
 
       {moving && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-semibold text-white mb-2">{mForm.movement_type === 'in' ? 'Stock In' : 'Stock Out'}</h2>
-            <p className="text-sm text-white/50 mb-6">{moving.name} — current stock: <strong className="text-white">{moving.quantity} {moving.unit}</strong></p>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-semibold text-foreground mb-2">{mForm.movement_type === 'in' ? 'Stock In' : 'Stock Out'}</h2>
+            <p className="text-sm text-foreground/50 mb-6">{moving.name} — current stock: <strong className="text-foreground">{moving.quantity} {moving.unit}</strong></p>
             <form onSubmit={handleMove} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-white/60 mb-1">Quantity</label>
-                  <input required type="number" step="0.01" value={mForm.quantity} onChange={e => setMForm({ ...mForm, quantity: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                  <label className="block text-sm text-foreground/60 mb-1">Quantity</label>
+                  <input required type="number" step="0.01" value={mForm.quantity} onChange={e => setMForm({ ...mForm, quantity: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
                 </div>
                 <div>
-                  <label className="block text-sm text-white/60 mb-1">Unit Price</label>
-                  <input type="number" step="0.01" value={mForm.unit_price} onChange={e => setMForm({ ...mForm, unit_price: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                  <label className="block text-sm text-foreground/60 mb-1">Unit Price</label>
+                  <input type="number" step="0.01" value={mForm.unit_price} onChange={e => setMForm({ ...mForm, unit_price: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Date</label>
-                <input required type="date" value={mForm.date} onChange={e => setMForm({ ...mForm, date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Date</label>
+                <input required type="date" value={mForm.date} onChange={e => setMForm({ ...mForm, date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">{mForm.movement_type === 'in' ? 'Pay From Account (optional)' : 'Deposit To Account (optional)'}</label>
-                <select value={mForm.account_id} onChange={e => setMForm({ ...mForm, account_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">{mForm.movement_type === 'in' ? 'Pay From Account (optional)' : 'Deposit To Account (optional)'}</label>
+                <select value={mForm.account_id} onChange={e => setMForm({ ...mForm, account_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                   <option value="">Don't log a transaction</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               {mForm.account_id && (
                 <div>
-                  <label className="block text-sm text-white/60 mb-1">Category</label>
-                  <select required value={mForm.category_id} onChange={e => setMForm({ ...mForm, category_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+                  <label className="block text-sm text-foreground/60 mb-1">Category</label>
+                  <select required value={mForm.category_id} onChange={e => setMForm({ ...mForm, category_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                     <option value="">Select...</option>
                     {relevantCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                   </select>
                 </div>
               )}
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setMoving(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setMoving(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Confirm</button>
               </div>
             </form>
@@ -184,22 +184,22 @@ export default function Inventory() {
         {items.map(item => {
           const low = Number(item.reorder_level) > 0 && Number(item.quantity) <= Number(item.reorder_level);
           return (
-            <div key={item.id} className={`bg-[#1a1a2e] border rounded-2xl p-5 transition-all ${low ? 'border-red-500/30' : 'border-white/10 hover:border-white/20'}`}>
+            <div key={item.id} className={`bg-card border rounded-2xl p-5 transition-all ${low ? 'border-red-500/30' : 'border-foreground/10 hover:border-foreground/20'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-white font-medium">{item.name}</h3>
-                  <p className="text-white/40 text-xs">{item.sku ? `#${item.sku}` : '—'}</p>
+                  <h3 className="text-foreground font-medium">{item.name}</h3>
+                  <p className="text-foreground/40 text-xs">{item.sku ? `#${item.sku}` : '—'}</p>
                 </div>
-                <button onClick={() => { if (confirm(`Delete "${item.name}"?`)) deleteRow(item.id).catch(err => alert(err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                <button onClick={() => { if (confirm(`Delete "${item.name}"?`)) deleteRow(item.id).catch(err => alert(err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-foreground/5 hover:bg-red-500/10 rounded-lg">
                   <Trash2 size={15} />
                 </button>
               </div>
-              <div className="space-y-1.5 pt-3 border-t border-white/5 text-sm">
+              <div className="space-y-1.5 pt-3 border-t border-foreground/5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-white/40">Stock</span>
-                  <span className={low ? 'text-red-400 font-medium' : 'text-white'}>{item.quantity} {item.unit}{low ? ' ⚠️' : ''}</span>
+                  <span className="text-foreground/40">Stock</span>
+                  <span className={low ? 'text-red-400 font-medium' : 'text-foreground'}>{item.quantity} {item.unit}{low ? ' ⚠️' : ''}</span>
                 </div>
-                <div className="flex justify-between"><span className="text-white/40">Cost / Sale</span><span className="text-white/70">{fmt(item.cost_price)} / {fmt(item.sale_price)}</span></div>
+                <div className="flex justify-between"><span className="text-foreground/40">Cost / Sale</span><span className="text-foreground/70">{fmt(item.cost_price)} / {fmt(item.sale_price)}</span></div>
               </div>
               <div className="flex gap-2 mt-4">
                 <button onClick={() => openMove(item, 'in')} className="flex-1 flex items-center justify-center gap-1.5 text-xs bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-2 rounded-lg font-medium">
@@ -215,37 +215,37 @@ export default function Inventory() {
       </div>
 
       {items.length === 0 && !adding && (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Boxes className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No inventory items yet</h3>
-          <p className="text-white/40 text-sm mt-1">Add products to track stock levels and value.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Boxes className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No inventory items yet</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add products to track stock levels and value.</p>
         </div>
       )}
 
       {recentMovements.length > 0 && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
-          <h2 className="text-white font-semibold px-5 pt-4 pb-2">Recent Movements</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+          <h2 className="text-foreground font-semibold px-5 pt-4 pb-2">Recent Movements</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Date</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Item</th>
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Type</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Qty</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Value</th>
+                <tr className="bg-foreground/5 border-b border-foreground/10">
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Date</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Item</th>
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Type</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Qty</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Value</th>
                 </tr>
               </thead>
               <tbody>
                 {recentMovements.map(m => (
-                  <tr key={m.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                    <td className="py-2.5 px-5 text-white/70">{new Date(m.move_date).toLocaleDateString()}</td>
-                    <td className="py-2.5 px-5 text-white">{itemName(m.item_id)}</td>
+                  <tr key={m.id} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                    <td className="py-2.5 px-5 text-foreground/70">{new Date(m.move_date).toLocaleDateString()}</td>
+                    <td className="py-2.5 px-5 text-foreground">{itemName(m.item_id)}</td>
                     <td className="py-2.5 px-5">
                       <span className={m.movement_type === 'in' ? 'text-emerald-400' : 'text-red-400'}>{m.movement_type === 'in' ? 'IN' : 'OUT'}</span>
                     </td>
-                    <td className="py-2.5 px-5 text-right text-white/70">{m.quantity}</td>
-                    <td className="py-2.5 px-5 text-right text-white">{fmt(m.quantity * m.unit_price)}</td>
+                    <td className="py-2.5 px-5 text-right text-foreground/70">{m.quantity}</td>
+                    <td className="py-2.5 px-5 text-right text-foreground">{fmt(m.quantity * m.unit_price)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -48,21 +48,21 @@ export default function AdminBilling() {
   };
 
   if (!form) {
-    return <div className="p-8 text-center text-white/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
+    return <div className="p-8 text-center text-foreground/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Durations & prices */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Premium plan pricing</h2>
-        <p className="text-sm text-white/40">
+      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Premium plan pricing</h2>
+        <p className="text-sm text-foreground/40">
           Enable the durations you want to sell and set their prices. Disabled durations disappear
           from the paywall and new requests for them are refused server-side.
         </p>
         <div className="space-y-3">
           {DURATIONS.map(d => (
-            <div key={d.key} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+            <div key={d.key} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
               <label className="flex items-center gap-3 flex-1 cursor-pointer">
                 <input
                   type="checkbox"
@@ -70,18 +70,18 @@ export default function AdminBilling() {
                   onChange={e => setForm(f => ({ ...f, [`${d.key}_enabled`]: e.target.checked }))}
                   className="w-4 h-4 accent-cyan-500"
                 />
-                <span className="text-sm text-white font-medium">{d.label}</span>
-                <span className="text-xs text-white/30">{d.hint}</span>
+                <span className="text-sm text-foreground font-medium">{d.label}</span>
+                <span className="text-xs text-foreground/30">{d.hint}</span>
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-white/40 text-sm">৳</span>
+                <span className="text-foreground/40 text-sm">৳</span>
                 <input
                   type="number"
                   min="0"
                   value={form[`${d.key}_price`] ?? ''}
                   onChange={e => setForm(f => ({ ...f, [`${d.key}_price`]: e.target.value }))}
                   disabled={!form[`${d.key}_enabled`]}
-                  className="w-28 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 disabled:opacity-40"
+                  className="w-28 bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 disabled:opacity-40"
                 />
               </div>
             </div>
@@ -90,8 +90,8 @@ export default function AdminBilling() {
       </div>
 
       {/* Payment numbers */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Wallet className="w-5 h-5 text-cyan-400" /> Payment receiving numbers
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -106,28 +106,28 @@ export default function AdminBilling() {
                 placeholder="01XXXXXXXXX"
                 value={form[`${m.id}_number`] || ''}
                 onChange={e => setForm(f => ({ ...f, [`${m.id}_number`]: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
               />
               <select
                 value={form[`${m.id}_account_type`] || 'personal'}
                 onChange={e => setForm(f => ({ ...f, [`${m.id}_account_type`]: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white/70 text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer capitalize"
+                className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-2 text-foreground/70 text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer capitalize"
               >
                 {['personal', 'agent', 'merchant'].map(t => (
-                  <option key={t} value={t} className="bg-[#12122a] capitalize">{t} account</option>
+                  <option key={t} value={t} className="bg-muted capitalize">{t} account</option>
                 ))}
               </select>
             </div>
           ))}
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1.5">Payment instructions (shown on the paywall)</label>
+          <label className="block text-sm text-foreground/50 mb-1.5">Payment instructions (shown on the paywall)</label>
           <textarea
             rows={3}
             placeholder={'e.g. Send Money korে trx ID টা submit করুন। Reference-এ আপনার email দিন।'}
             value={form.instructions || ''}
             onChange={e => setForm(f => ({ ...f, instructions: e.target.value }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
+            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
           />
         </div>
       </div>

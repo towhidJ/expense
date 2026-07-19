@@ -99,23 +99,23 @@ export default function Backup() {
   return (
     <div className="space-y-6 animate-in max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-white">Backup & Export</h1>
-        <p className="text-white/40 text-sm mt-1">Download everything in the "{currentEntity?.name}" workspace. Keep a copy somewhere safe (Google Drive, pen drive).</p>
+        <h1 className="text-2xl font-bold text-foreground">Backup & Export</h1>
+        <p className="text-foreground/40 text-sm mt-1">Download everything in the "{currentEntity?.name}" workspace. Keep a copy somewhere safe (Google Drive, pen drive).</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
           <FileJson className="text-cyan-400 mb-3" size={28} />
-          <h3 className="text-white font-semibold mb-1">Full Backup (JSON)</h3>
-          <p className="text-white/40 text-xs mb-4">One file with every table — best for safe-keeping and future restore.</p>
+          <h3 className="text-foreground font-semibold mb-1">Full Backup (JSON)</h3>
+          <p className="text-foreground/40 text-xs mb-4">One file with every table — best for safe-keeping and future restore.</p>
           <button onClick={exportJSON} disabled={busy} className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-medium transition-all">
             <Download size={16} /> {busy ? progress || 'Working...' : 'Download JSON'}
           </button>
         </div>
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
           <FileSpreadsheet className="text-emerald-400 mb-3" size={28} />
-          <h3 className="text-white font-semibold mb-1">Spreadsheets (CSV)</h3>
-          <p className="text-white/40 text-xs mb-4">One CSV per table — open in Excel / Google Sheets. Empty tables are skipped.</p>
+          <h3 className="text-foreground font-semibold mb-1">Spreadsheets (CSV)</h3>
+          <p className="text-foreground/40 text-xs mb-4">One CSV per table — open in Excel / Google Sheets. Empty tables are skipped.</p>
           <button onClick={exportCSVs} disabled={busy} className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-medium transition-all">
             <Download size={16} /> {busy ? progress || 'Working...' : 'Download CSVs'}
           </button>
@@ -123,20 +123,20 @@ export default function Backup() {
       </div>
 
       {lastCounts && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5">
-          <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2"><DatabaseBackup size={16} className="text-cyan-400" /> Last export contents</h3>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-5">
+          <h3 className="text-foreground font-semibold text-sm mb-3 flex items-center gap-2"><DatabaseBackup size={16} className="text-cyan-400" /> Last export contents</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1.5">
             {Object.entries(lastCounts).filter(([, n]) => n > 0).map(([table, n]) => (
               <div key={table} className="flex justify-between text-xs">
-                <span className="text-white/50">{table.replace(/_/g, ' ')}</span>
-                <span className="text-white/80 font-medium">{n}</span>
+                <span className="text-foreground/50">{table.replace(/_/g, ' ')}</span>
+                <span className="text-foreground/80 font-medium">{n}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-foreground/30">
         Note: uploaded documents (receipts, agreements) live in Supabase Storage and are not inside these files — they stay linked by URL in the attachments data.
       </p>
     </div>

@@ -24,7 +24,7 @@ export default function ItemListEditor({ items, onChange }) {
             value={it.name}
             onChange={e => update(i, { name: e.target.value })}
             placeholder={`Item ${i + 1}, e.g. Rice 5kg`}
-            className="flex-1 bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+            className="flex-1 bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
           />
           <input
             type="number"
@@ -33,7 +33,7 @@ export default function ItemListEditor({ items, onChange }) {
             value={it.amount}
             onChange={e => update(i, { amount: e.target.value })}
             placeholder="৳"
-            className="w-24 bg-[#12122a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm text-right focus:outline-none focus:border-cyan-500/50"
+            className="w-24 bg-muted border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm text-right focus:outline-none focus:border-cyan-500/50"
           />
           <button
             type="button"
@@ -48,12 +48,12 @@ export default function ItemListEditor({ items, onChange }) {
         <button
           type="button"
           onClick={addRow}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-cyan-400"
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-foreground/5 border border-foreground/10 text-foreground/60 hover:text-cyan-400"
         >
           <Plus size={13} /> Add item
         </button>
         {itemsTotal > 0 && (
-          <span className="text-white/40 text-xs">Items total: ৳{itemsTotal.toLocaleString()}</span>
+          <span className="text-foreground/40 text-xs">Items total: ৳{itemsTotal.toLocaleString()}</span>
         )}
       </div>
     </div>

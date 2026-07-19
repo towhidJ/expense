@@ -27,7 +27,7 @@ export default function MonthCloseCard({ summary, isManager, closeMonth, reopenM
         <Lock size={18} className="text-emerald-400 shrink-0" />
         <div className="flex-1 min-w-[200px]">
           <p className="text-emerald-400 text-sm font-medium">{monthLabel} is closed</p>
-          <p className="text-white/40 text-xs mt-0.5">
+          <p className="text-foreground/40 text-xs mt-0.5">
             Balances have been carried forward to the next month. Entries, deposits and expenses are locked.
             {summary.closed_at && ` Closed on ${new Date(summary.closed_at).toLocaleDateString()}.`}
           </p>
@@ -49,11 +49,11 @@ export default function MonthCloseCard({ summary, isManager, closeMonth, reopenM
   if (!isManager) return null;
 
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center gap-3">
-      <LockOpen size={18} className="text-white/40 shrink-0" />
+    <div className="bg-card border border-foreground/10 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+      <LockOpen size={18} className="text-foreground/40 shrink-0" />
       <div className="flex-1 min-w-[200px]">
-        <p className="text-white text-sm font-medium">Close {monthLabel}</p>
-        <p className="text-white/40 text-xs mt-0.5">
+        <p className="text-foreground text-sm font-medium">Close {monthLabel}</p>
+        <p className="text-foreground/40 text-xs mt-0.5">
           Locks this month and carries every member's balance (joma/bokeya) into the next month automatically.
         </p>
       </div>

@@ -105,14 +105,14 @@ export default function Committee() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading committees...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading committees...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Committee / Samity</h1>
-          <p className="text-white/40 text-sm mt-1">Rotating savings group deposits and payout.</p>
+          <h1 className="text-2xl font-bold text-foreground">Committee / Samity</h1>
+          <p className="text-foreground/40 text-sm mt-1">Rotating savings group deposits and payout.</p>
         </div>
         <button onClick={() => setAdding(true)} className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl transition-colors shadow-lg shadow-purple-500/20">
           <Plus size={18} /> Add Committee
@@ -120,15 +120,15 @@ export default function Committee() {
       </div>
 
       {committees.length === 0 && !adding ? (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Users className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No committees yet</h3>
-          <p className="text-white/40 text-sm mt-1">Add a group savings committee (samity) to track your deposits and payout turn.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Users className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No committees yet</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add a group savings committee (samity) to track your deposits and payout turn.</p>
         </div>
       ) : (
         <div className="flex gap-2 flex-wrap">
           {committees.map(c => (
-            <button key={c.id} onClick={() => setActiveCommittee(c.id)} className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${shownId === c.id ? 'bg-purple-500/20 text-purple-400 border-purple-500/40' : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'}`}>
+            <button key={c.id} onClick={() => setActiveCommittee(c.id)} className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${shownId === c.id ? 'bg-purple-500/20 text-purple-400 border-purple-500/40' : 'bg-foreground/5 text-white/40 border-foreground/10 hover:bg-foreground/10'}`}>
               👥 {c.name}
             </button>
           ))}
@@ -136,35 +136,35 @@ export default function Committee() {
       )}
 
       {adding && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New Committee</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New Committee</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Name</label>
-              <input required type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Office Samity" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Name</label>
+              <input required type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Office Samity" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Monthly Amount</label>
-              <input required type="number" step="0.01" value={form.monthly_amount} onChange={e => setForm({ ...form, monthly_amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Monthly Amount</label>
+              <input required type="number" step="0.01" value={form.monthly_amount} onChange={e => setForm({ ...form, monthly_amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Total Members</label>
-              <input type="number" value={form.total_members} onChange={e => setForm({ ...form, total_members: e.target.value })} placeholder="Optional" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Total Members</label>
+              <input type="number" value={form.total_members} onChange={e => setForm({ ...form, total_members: e.target.value })} placeholder="Optional" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Your Payout Month</label>
-              <input type="month" value={form.your_turn_month} onChange={e => setForm({ ...form, your_turn_month: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Your Payout Month</label>
+              <input type="month" value={form.your_turn_month} onChange={e => setForm({ ...form, your_turn_month: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Start Date</label>
-              <input required type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Start Date</label>
+              <input required type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div className="lg:col-span-3">
-              <label className="block text-sm text-white/60 mb-1">Notes</label>
-              <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+              <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
             </div>
             <div className="lg:col-span-3 flex justify-end gap-3">
-              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-purple-500/20 transition-all font-medium">Save Committee</button>
             </div>
           </form>
@@ -173,34 +173,34 @@ export default function Committee() {
 
       {payModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-semibold text-white mb-2">{payModal.entryType === 'deposit' ? 'Record Deposit' : 'Record Payout'}</h2>
-            <p className="text-sm text-white/50 mb-6">{payModal.committee.name} — {monthLabel(payModal.month)}</p>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-semibold text-foreground mb-2">{payModal.entryType === 'deposit' ? 'Record Deposit' : 'Record Payout'}</h2>
+            <p className="text-sm text-foreground/50 mb-6">{payModal.committee.name} — {monthLabel(payModal.month)}</p>
             <form onSubmit={handlePay} className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-1">Amount</label>
-                <input required type="number" step="0.01" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+                <input required type="number" step="0.01" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">{payModal.entryType === 'deposit' ? 'Pay From Account' : 'Deposit To Account'}</label>
-                <select required value={payForm.account_id} onChange={e => setPayForm({ ...payForm, account_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">{payModal.entryType === 'deposit' ? 'Pay From Account' : 'Deposit To Account'}</label>
+                <select required value={payForm.account_id} onChange={e => setPayForm({ ...payForm, account_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50">
                   <option value="">Select an account...</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Category</label>
-                <select required value={payForm.category_id} onChange={e => setPayForm({ ...payForm, category_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Category</label>
+                <select required value={payForm.category_id} onChange={e => setPayForm({ ...payForm, category_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50">
                   <option value="">Select a category...</option>
                   {(payModal.entryType === 'deposit' ? expenseCategories : incomeCategories).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Date</label>
-                <input required type="date" value={payForm.date} onChange={e => setPayForm({ ...payForm, date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500/50" />
+                <label className="block text-sm text-foreground/60 mb-1">Date</label>
+                <input required type="date" value={payForm.date} onChange={e => setPayForm({ ...payForm, date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500/50" />
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setPayModal(null)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setPayModal(null)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
                 <button type="submit" className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-purple-500/20 transition-all font-medium">Confirm</button>
               </div>
             </form>
@@ -216,14 +216,14 @@ export default function Committee() {
             <StatCard title="Net Position" value={fmt(totalReceived - totalDeposited)} icon={TrendingUp} gradient={["#22d3ee", "#06b6d4"]} iconBg="bg-cyan-500/10" />
           </div>
 
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-white/5 border-b border-white/10">
-                    <th className="text-left py-3 px-5 text-white/60 font-medium">Month</th>
-                    <th className="text-left py-3 px-5 text-white/60 font-medium">Deposit</th>
-                    <th className="text-left py-3 px-5 text-white/60 font-medium">Payout</th>
+                  <tr className="bg-foreground/5 border-b border-foreground/10">
+                    <th className="text-left py-3 px-5 text-foreground/60 font-medium">Month</th>
+                    <th className="text-left py-3 px-5 text-foreground/60 font-medium">Deposit</th>
+                    <th className="text-left py-3 px-5 text-foreground/60 font-medium">Payout</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -232,7 +232,7 @@ export default function Committee() {
                     const payout = shownPayments.find(p => p.pay_month === m && p.entry_type === 'payout');
                     const isTurn = shown.your_turn_month === m;
                     return (
-                      <tr key={m} className="border-b border-white/5 hover:bg-white/[0.02]">
+                      <tr key={m} className="border-b border-foreground/5 hover:bg-white/[0.02]">
                         <td className="py-3 px-5 text-white font-medium">{monthLabel(m)}{isTurn && <span className="ml-2 text-[10px] uppercase text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded">Your turn</span>}</td>
                         <td className="py-3 px-5">
                           {deposit

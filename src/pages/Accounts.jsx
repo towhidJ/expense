@@ -47,7 +47,7 @@ export default function Accounts() {
 
   const getIcon = (type) => {
     const t = ACCOUNT_TYPES.find(at => at.id === type);
-    if (!t) return <Building className="text-white/50" size={24} />;
+    if (!t) return <Building className="text-foreground/50" size={24} />;
     const Icon = t.icon;
     return <Icon className={t.color} size={24} />;
   };
@@ -61,14 +61,14 @@ export default function Accounts() {
     count: accounts.filter(a => a.type === t.id).length
   })).filter(t => t.count > 0);
 
-  if (loading) return <div className="text-white/50 p-6">Loading accounts...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading accounts...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Accounts Management</h1>
-          <p className="text-white/40 text-sm mt-1">Manage your cash, bank, and digital wallets.</p>
+          <h1 className="text-2xl font-bold text-foreground">Accounts Management</h1>
+          <p className="text-foreground/40 text-sm mt-1">Manage your cash, bank, and digital wallets.</p>
         </div>
         <button
           onClick={() => { setIsAdding(true); setEditingAccount(null); setForm(initialForm); }}
@@ -85,19 +85,19 @@ export default function Accounts() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Landmark className="w-5 h-5 text-cyan-400" />
-                <p className="text-sm text-white/60">Total Cash Position</p>
+                <p className="text-sm text-foreground/60">Total Cash Position</p>
               </div>
-              <p className="text-4xl font-bold text-white">৳{totalBalance.toLocaleString()}</p>
-              <p className="text-white/40 text-sm mt-1">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</p>
+              <p className="text-4xl font-bold text-foreground">৳{totalBalance.toLocaleString()}</p>
+              <p className="text-foreground/40 text-sm mt-1">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</p>
             </div>
             {/* Type breakdown */}
             <div className="flex flex-wrap gap-3">
               {byType.map(t => (
-                <div key={t.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${t.bg} border border-white/10`}>
+                <div key={t.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${t.bg} border border-foreground/10`}>
                   <div>{getIcon(t.id)}</div>
                   <div>
-                    <p className="text-xs text-white/40">{t.label}</p>
-                    <p className="text-sm font-semibold text-white">৳{t.total.toLocaleString()}</p>
+                    <p className="text-xs text-foreground/40">{t.label}</p>
+                    <p className="text-sm font-semibold text-foreground">৳{t.total.toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -107,52 +107,52 @@ export default function Accounts() {
       )}
 
       {(isAdding || editingAccount) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editingAccount ? 'Edit Account' : 'New Account'}</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{editingAccount ? 'Edit Account' : 'New Account'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Account Name</label>
-              <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" placeholder="e.g. City Bank / bKash" />
+              <label className="block text-sm text-foreground/60 mb-1">Account Name</label>
+              <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" placeholder="e.g. City Bank / bKash" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Type</label>
-              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Type</label>
+              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 {ACCOUNT_TYPES.map(t => (
                   <option key={t.id} value={t.id}>{t.label}</option>
                 ))}
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Account Number (Optional)</label>
-              <input type="text" value={form.account_number || ''} onChange={e => setForm({...form, account_number: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" placeholder="e.g. bank A/C no, bKash 01XXXXXXXXX, card number" />
+              <label className="block text-sm text-foreground/60 mb-1">Account Number (Optional)</label>
+              <input type="text" value={form.account_number || ''} onChange={e => setForm({...form, account_number: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" placeholder="e.g. bank A/C no, bKash 01XXXXXXXXX, card number" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Opening Balance</label>
-              <input required type="number" step="0.01" value={form.opening_balance} onChange={e => setForm({...form, opening_balance: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Opening Balance</label>
+              <input required type="number" step="0.01" value={form.opening_balance} onChange={e => setForm({...form, opening_balance: parseFloat(e.target.value)})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Current Balance</label>
-              <input required type="number" step="0.01" value={form.current_balance} onChange={e => setForm({...form, current_balance: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Current Balance</label>
+              <input required type="number" step="0.01" value={form.current_balance} onChange={e => setForm({...form, current_balance: parseFloat(e.target.value)})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Currency</label>
-              <select value={form.currency} onChange={e => setForm({...form, currency: e.target.value, exchange_rate: e.target.value === '৳' ? 1 : form.exchange_rate})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Currency</label>
+              <select value={form.currency} onChange={e => setForm({...form, currency: e.target.value, exchange_rate: e.target.value === '৳' ? 1 : form.exchange_rate})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             {form.currency !== '৳' && (
               <div className="animate-in fade-in slide-in-from-top-2">
-                <label className="block text-sm text-white/60 mb-1">Exchange Rate (1 {form.currency} = ? ৳)</label>
-                <input required type="number" step="0.0001" min="0" value={form.exchange_rate} onChange={e => setForm({...form, exchange_rate: parseFloat(e.target.value)})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
-                <p className="text-xs text-white/40 mt-1">Used to convert this account into ৳ for totals and reports. Update it when the rate changes.</p>
+                <label className="block text-sm text-foreground/60 mb-1">Exchange Rate (1 {form.currency} = ? ৳)</label>
+                <input required type="number" step="0.0001" min="0" value={form.exchange_rate} onChange={e => setForm({...form, exchange_rate: parseFloat(e.target.value)})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
+                <p className="text-xs text-foreground/40 mt-1">Used to convert this account into ৳ for totals and reports. Update it when the rate changes.</p>
               </div>
             )}
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Notes</label>
-              <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" rows={2} />
+              <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" rows={2} />
             </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
-              <button type="button" onClick={() => {setIsAdding(false); setEditingAccount(null);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => {setIsAdding(false); setEditingAccount(null);}} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium">Save Account</button>
             </div>
           </form>
@@ -164,50 +164,50 @@ export default function Accounts() {
           const typeInfo = ACCOUNT_TYPES.find(t => t.id === acc.type);
           const change = Number(acc.current_balance) - Number(acc.opening_balance);
           return (
-            <div key={acc.id} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-colors group">
+            <div key={acc.id} className="bg-card border border-foreground/10 rounded-2xl p-5 hover:border-foreground/20 transition-colors group">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full ${typeInfo?.bg || 'bg-white/5'} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-full ${typeInfo?.bg || 'bg-foreground/5'} flex items-center justify-center`}>
                     {getIcon(acc.type)}
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{acc.name}</h3>
-                    <p className="text-white/40 text-xs capitalize">{acc.type.replace('_', ' ')}</p>
+                    <h3 className="text-foreground font-medium">{acc.name}</h3>
+                    <p className="text-foreground/40 text-xs capitalize">{acc.type.replace('_', ' ')}</p>
                     {acc.account_number && (
-                      <p className="text-white/30 text-xs mt-0.5">A/C: {acc.account_number}</p>
+                      <p className="text-foreground/30 text-xs mt-0.5">A/C: {acc.account_number}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => { setEditingAccount(acc); setForm(acc); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-white/5 hover:bg-cyan-500/10 rounded-lg">
+                  <button onClick={() => { setEditingAccount(acc); setForm(acc); setIsAdding(false); }} className="text-white/40 hover:text-cyan-400 p-1.5 bg-foreground/5 hover:bg-cyan-500/10 rounded-lg">
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => { if (confirm(`Delete account "${acc.name}"?`)) deleteAccount(acc.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-white/5 hover:bg-red-500/10 rounded-lg">
+                  <button onClick={() => { if (confirm(`Delete account "${acc.name}"?`)) deleteAccount(acc.id).catch(err => alert("Cannot delete: " + err.message)); }} className="text-white/40 hover:text-red-400 p-1.5 bg-foreground/5 hover:bg-red-500/10 rounded-lg">
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
-              <div className="pt-4 border-t border-white/5 space-y-2">
+              <div className="pt-4 border-t border-foreground/5 space-y-2">
                 <div className="flex justify-between items-end">
-                  <p className="text-white/40 text-sm">Balance</p>
+                  <p className="text-foreground/40 text-sm">Balance</p>
                   {change !== 0 && (
                     <span className={`text-xs font-medium ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {change >= 0 ? '+' : ''}৳{change.toLocaleString()} from opening
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-semibold text-white">{acc.currency}{Number(acc.current_balance).toLocaleString()}</p>
-                {isForeign(acc) && <p className="text-xs text-white/40 mt-0.5">≈ ৳{Math.round(toBDT(acc)).toLocaleString()} @ {acc.exchange_rate}</p>}
+                <p className="text-2xl font-semibold text-foreground">{acc.currency}{Number(acc.current_balance).toLocaleString()}</p>
+                {isForeign(acc) && <p className="text-xs text-foreground/40 mt-0.5">≈ ৳{Math.round(toBDT(acc)).toLocaleString()} @ {acc.exchange_rate}</p>}
               </div>
             </div>
           );
         })}
       </div>
       {accounts.length === 0 && !isAdding && (
-        <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-          <Wallet className="mx-auto text-white/20 mb-4" size={48} />
-          <h3 className="text-white/60 font-medium">No accounts found</h3>
-          <p className="text-white/40 text-sm mt-1">Add your first bank account or wallet to get started.</p>
+        <div className="text-center py-12 border border-foreground/5 rounded-2xl bg-white/[0.02]">
+          <Wallet className="mx-auto text-foreground/20 mb-4" size={48} />
+          <h3 className="text-foreground/60 font-medium">No accounts found</h3>
+          <p className="text-foreground/40 text-sm mt-1">Add your first bank account or wallet to get started.</p>
         </div>
       )}
     </div>

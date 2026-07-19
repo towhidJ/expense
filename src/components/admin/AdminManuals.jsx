@@ -93,51 +93,51 @@ export default function AdminManuals() {
   return (
     <div className="space-y-6">
       {/* Upload form */}
-      <form onSubmit={handleUpload} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+      <form onSubmit={handleUpload} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <UploadCloud className="w-5 h-5 text-cyan-400" /> Upload a manual
         </h2>
-        <p className="text-xs text-white/40 -mt-2">
+        <p className="text-xs text-foreground/40 -mt-2">
           PDF guides you upload here are public — shown to everyone on the login page and the app footer.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Title</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Title</label>
             <input
               type="text"
               placeholder="e.g. ব্যবহার নির্দেশিকা (Bangla)"
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
             />
           </div>
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Short description (optional)</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Short description (optional)</label>
             <input
               type="text"
               placeholder="e.g. How to use TakaKhata"
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm text-white/50 mb-1.5">PDF file</label>
+          <label className="block text-sm text-foreground/50 mb-1.5">PDF file</label>
           {file ? (
             <div className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-3 py-2.5">
               <FileUp className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span className="flex-1 min-w-0 text-sm text-white/80 truncate">{file.name}</span>
-              <span className="text-xs text-white/40 shrink-0">{prettySize(file.size)}</span>
-              <button type="button" onClick={() => setFile(null)} className="text-white/40 hover:text-red-400 text-xs shrink-0">Remove</button>
+              <span className="flex-1 min-w-0 text-sm text-foreground/80 truncate">{file.name}</span>
+              <span className="text-xs text-foreground/40 shrink-0">{prettySize(file.size)}</span>
+              <button type="button" onClick={() => setFile(null)} className="text-foreground/40 hover:text-red-400 text-xs shrink-0">Remove</button>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 bg-white/5 border border-dashed border-white/15 rounded-xl px-4 py-6 text-white/50 text-sm hover:bg-white/10 hover:text-white/80 transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-foreground/5 border border-dashed border-foreground/15 rounded-xl px-4 py-6 text-foreground/50 text-sm hover:bg-foreground/10 hover:text-foreground/80 transition-all"
             >
               <UploadCloud className="w-5 h-5" /> Click to select the PDF
             </button>
@@ -155,33 +155,33 @@ export default function AdminManuals() {
       </form>
 
       {/* Manual list */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Published manuals</h2>
+      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-foreground/10">
+          <h2 className="text-lg font-semibold text-foreground">Published manuals</h2>
         </div>
         {loading ? (
-          <div className="p-8 text-center text-white/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>
+          <div className="p-8 text-center text-foreground/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>
         ) : manuals.length === 0 ? (
-          <p className="p-8 text-center text-sm text-white/40">No manuals uploaded yet.</p>
+          <p className="p-8 text-center text-sm text-foreground/40">No manuals uploaded yet.</p>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {manuals.map((m) => (
               <div key={m.id} className="px-6 py-4 flex items-start gap-4">
-                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
-                  <BookOpen className="w-4 h-4 text-white/50" />
+                <div className="w-9 h-9 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0 mt-0.5">
+                  <BookOpen className="w-4 h-4 text-foreground/50" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium truncate">{m.title}</p>
-                  {m.description && <p className="text-xs text-white/50 mt-1">{m.description}</p>}
-                  <p className="text-[11px] text-white/30 mt-1">
+                  <p className="text-sm text-foreground font-medium truncate">{m.title}</p>
+                  {m.description && <p className="text-xs text-foreground/50 mt-1">{m.description}</p>}
+                  <p className="text-[11px] text-foreground/30 mt-1">
                     {prettySize(m.file_size)} • {new Date(m.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <a href={m.file_url} target="_blank" rel="noreferrer" className="p-2 text-white/40 hover:text-cyan-400 transition-colors" title="Open PDF">
+                  <a href={m.file_url} target="_blank" rel="noreferrer" className="p-2 text-foreground/40 hover:text-cyan-400 transition-colors" title="Open PDF">
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                  <button onClick={() => handleDelete(m)} className="p-2 text-white/40 hover:text-red-400 transition-colors" title="Delete manual">
+                  <button onClick={() => handleDelete(m)} className="p-2 text-foreground/40 hover:text-red-400 transition-colors" title="Delete manual">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

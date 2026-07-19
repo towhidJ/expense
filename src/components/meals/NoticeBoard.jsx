@@ -49,30 +49,30 @@ export default function NoticeBoard({ notices, isManager, addNotice, updateNotic
       )}
 
       {isManager && editingId !== null && (
-        <form onSubmit={handleSave} className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 space-y-4">
+        <form onSubmit={handleSave} className="bg-card border border-foreground/10 rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-white font-semibold">{editingId === 'new' ? 'New Notice' : 'Edit Notice'}</h3>
-            <button type="button" onClick={close} className="text-white/40 hover:text-white"><X size={18} /></button>
+            <h3 className="text-foreground font-semibold">{editingId === 'new' ? 'New Notice' : 'Edit Notice'}</h3>
+            <button type="button" onClick={close} className="text-foreground/40 hover:text-foreground"><X size={18} /></button>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Title</label>
+            <label className="block text-sm text-foreground/60 mb-1">Title</label>
             <input required type="text" value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
               placeholder="Mess meeting on Friday after dinner"
-              className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Details (optional)</label>
+            <label className="block text-sm text-foreground/60 mb-1">Details (optional)</label>
             <textarea rows={3} value={form.body}
               onChange={e => setForm({ ...form, body: e.target.value })}
-              className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50 resize-y" />
+              className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50 resize-y" />
           </div>
-          <label className="flex items-center gap-3 bg-[#12122a] border border-white/10 rounded-xl px-4 py-3 cursor-pointer">
+          <label className="flex items-center gap-3 bg-muted border border-foreground/10 rounded-xl px-4 py-3 cursor-pointer">
             <input type="checkbox" checked={form.pinned}
               onChange={e => setForm({ ...form, pinned: e.target.checked })}
               className="accent-cyan-500 w-4 h-4" />
-            <span className="text-white text-sm">Pin this notice</span>
-            <span className="text-white/40 text-xs ml-auto">Pinned notices show as a banner on the Summary page</span>
+            <span className="text-foreground text-sm">Pin this notice</span>
+            <span className="text-foreground/40 text-xs ml-auto">Pinned notices show as a banner on the Summary page</span>
           </label>
           <div className="flex justify-end">
             <button type="submit" disabled={saving}
@@ -86,27 +86,27 @@ export default function NoticeBoard({ notices, isManager, addNotice, updateNotic
       <div className="space-y-3">
         {notices.map(n => (
           <div key={n.id} className={`rounded-2xl p-5 border ${
-            n.pinned ? 'bg-amber-500/5 border-amber-500/20' : 'bg-[#1a1a2e] border-white/10'
+            n.pinned ? 'bg-amber-500/5 border-amber-500/20' : 'bg-card border-foreground/10'
           }`}>
             <div className="flex items-start gap-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                n.pinned ? 'bg-amber-500/15 text-amber-400' : 'bg-white/5 text-white/40'
+                n.pinned ? 'bg-amber-500/15 text-amber-400' : 'bg-foreground/5 text-white/40'
               }`}>
                 {n.pinned ? <Pin size={16} /> : <Megaphone size={16} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium">{n.title}</p>
-                {n.body && <p className="text-white/60 text-sm mt-1 whitespace-pre-wrap">{n.body}</p>}
-                <p className="text-white/30 text-xs mt-2">
+                <p className="text-foreground font-medium">{n.title}</p>
+                {n.body && <p className="text-foreground/60 text-sm mt-1 whitespace-pre-wrap">{n.body}</p>}
+                <p className="text-foreground/30 text-xs mt-2">
                   {new Date(n.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               </div>
               {isManager && (
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => openEdit(n)} className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5">
+                  <button onClick={() => openEdit(n)} className="p-2 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/5">
                     <Pencil size={15} />
                   </button>
-                  <button onClick={() => handleDelete(n.id)} className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/5">
+                  <button onClick={() => handleDelete(n.id)} className="p-2 rounded-lg text-foreground/40 hover:text-red-400 hover:bg-foreground/5">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -115,7 +115,7 @@ export default function NoticeBoard({ notices, isManager, addNotice, updateNotic
           </div>
         ))}
         {notices.length === 0 && (
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-8 text-center text-white/40 text-sm">
+          <div className="bg-card border border-foreground/10 rounded-2xl p-8 text-center text-foreground/40 text-sm">
             No notices yet.{isManager ? ' Post one for your mess mates.' : ''}
           </div>
         )}

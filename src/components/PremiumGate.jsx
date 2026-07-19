@@ -115,10 +115,10 @@ export function Paywall({ module, labelOverride }) {
         </div>
         {isPremiumActive ? (
           <>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-foreground">
               {isTrial ? "You're on a free trial" : 'You have Premium'}
             </h1>
-            <p className="text-sm text-white/50 mt-2">
+            <p className="text-sm text-foreground/50 mt-2">
               {isLifetime
                 ? 'Lifetime access — every Premium module is unlocked for good.'
                 : isTrial
@@ -128,8 +128,8 @@ export function Paywall({ module, labelOverride }) {
           </>
         ) : (
           <>
-            <h1 className="text-xl font-bold text-white">{label} is a Premium module</h1>
-            <p className="text-sm text-white/50 mt-2">
+            <h1 className="text-xl font-bold text-foreground">{label} is a Premium module</h1>
+            <p className="text-sm text-foreground/50 mt-2">
               Subscribe once and unlock every Premium module in TakaKhata.
             </p>
           </>
@@ -138,12 +138,12 @@ export function Paywall({ module, labelOverride }) {
 
       {pending ? (
         /* Waiting card replaces the whole flow */
-        <div className="bg-white/5 border border-amber-500/25 rounded-2xl p-6 text-center space-y-2">
+        <div className="bg-foreground/5 border border-amber-500/25 rounded-2xl p-6 text-center space-y-2">
           <Clock className="w-8 h-8 text-amber-400 mx-auto" />
-          <h2 className="text-white font-semibold">Waiting for verification</h2>
-          <p className="text-sm text-white/50">
+          <h2 className="text-foreground font-semibold">Waiting for verification</h2>
+          <p className="text-sm text-foreground/50">
             Your {DURATION_META[pending.duration]?.label.toLowerCase()} request ({pending.method}, trx{' '}
-            <span className="font-mono text-white/70">{pending.trx_id}</span>) was submitted{' '}
+            <span className="font-mono text-foreground/70">{pending.trx_id}</span>) was submitted{' '}
             {fmtDate(pending.created_at)}. The admin will verify the payment shortly — you'll get a
             notification when it's approved.
           </p>
@@ -160,20 +160,20 @@ export function Paywall({ module, labelOverride }) {
                   className={`rounded-2xl p-5 text-center border transition-all ${
                     duration === d.key
                       ? 'bg-gradient-to-b from-amber-500/15 to-transparent border-amber-500/40'
-                      : 'bg-white/5 border-white/10 hover:border-white/25'
+                      : 'bg-foreground/5 border-foreground/10 hover:border-foreground/25'
                   }`}
                 >
-                  <p className="text-sm text-white/50">{d.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">৳{Number(d.price).toLocaleString()}</p>
-                  <p className="text-xs text-white/30 mt-0.5">{d.per}</p>
+                  <p className="text-sm text-foreground/50">{d.label}</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">৳{Number(d.price).toLocaleString()}</p>
+                  <p className="text-xs text-foreground/30 mt-0.5">{d.per}</p>
                 </button>
               ))}
             </div>
           )}
 
           {/* Payment instructions */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-            <h2 className="text-white font-semibold">1. Send the money</h2>
+          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+            <h2 className="text-foreground font-semibold">1. Send the money</h2>
             {payNumbers.length === 0 ? (
               <p className="text-sm text-amber-400">
                 Payment numbers are not configured yet — please contact the admin.
@@ -183,7 +183,7 @@ export function Paywall({ module, labelOverride }) {
                 {payNumbers.map(p => (
                   <div key={p.id} className={`rounded-xl border px-4 py-3 ${p.cls}`}>
                     <p className="text-xs opacity-80">{p.label} ({p.type})</p>
-                    <p className="font-mono text-lg text-white flex items-center gap-2 mt-0.5">
+                    <p className="font-mono text-lg text-foreground flex items-center gap-2 mt-0.5">
                       {p.number}
                       <button onClick={() => copy(p.number, p.id)} className="opacity-60 hover:opacity-100" title="Copy">
                         {copied === p.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -194,13 +194,13 @@ export function Paywall({ module, labelOverride }) {
               </div>
             )}
             {billing?.instructions && (
-              <p className="text-sm text-white/50 whitespace-pre-line bg-white/5 rounded-xl px-4 py-3">{billing.instructions}</p>
+              <p className="text-sm text-foreground/50 whitespace-pre-line bg-foreground/5 rounded-xl px-4 py-3">{billing.instructions}</p>
             )}
           </div>
 
           {/* Request form */}
-          <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-            <h2 className="text-white font-semibold">2. Submit the transaction ID</h2>
+          <form onSubmit={handleSubmit} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+            <h2 className="text-foreground font-semibold">2. Submit the transaction ID</h2>
             <div className="flex gap-2">
               {['bkash', 'nagad'].map(m => (
                 <button
@@ -212,7 +212,7 @@ export function Paywall({ module, labelOverride }) {
                       ? m === 'bkash'
                         ? 'bg-pink-500/15 border-pink-500/40 text-pink-400'
                         : 'bg-orange-500/15 border-orange-500/40 text-orange-400'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
+                      : 'bg-foreground/5 border-foreground/10 text-foreground/50 hover:text-foreground'
                   }`}
                 >
                   {m === 'bkash' ? 'bKash' : 'Nagad'}
@@ -221,36 +221,36 @@ export function Paywall({ module, labelOverride }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Transaction ID</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Transaction ID</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. 9HK7A2B3C4"
                   value={trxId}
                   onChange={e => setTrxId(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-amber-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm font-mono focus:outline-none focus:border-amber-500/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Number you paid from</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Number you paid from</label>
                 <input
                   type="tel"
                   required
                   placeholder="01XXXXXXXXX"
                   value={sender}
                   onChange={e => setSender(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-amber-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm font-mono focus:outline-none focus:border-amber-500/50"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm text-white/50 mb-1.5">Amount sent (৳)</label>
+              <label className="block text-sm text-foreground/50 mb-1.5">Amount sent (৳)</label>
               <input
                 type="number"
                 min="0"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                className="w-full sm:w-48 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/50"
+                className="w-full sm:w-48 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-amber-500/50"
               />
             </div>
             <button
@@ -267,33 +267,33 @@ export function Paywall({ module, labelOverride }) {
 
       {/* Request history */}
       {requests?.length > 0 && (
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           <button
             onClick={() => setHistoryOpen(o => !o)}
-            className="w-full flex items-center justify-between px-6 py-4 text-sm text-white/60 hover:text-white transition-colors"
+            className="w-full flex items-center justify-between px-6 py-4 text-sm text-foreground/60 hover:text-foreground transition-colors"
           >
             <span>My requests ({requests.length})</span>
             <ChevronDown className={`w-4 h-4 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
           </button>
           {historyOpen && (
-            <div className="divide-y divide-white/5 border-t border-white/10">
+            <div className="divide-y divide-foreground/5 border-t border-foreground/10">
               {requests.map(r => (
                 <div key={r.id} className="px-6 py-3 flex items-center gap-3 text-sm">
                   {r.status === 'pending' && <Clock className="w-4 h-4 text-amber-400 shrink-0" />}
                   {r.status === 'approved' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
                   {r.status === 'rejected' && <XCircle className="w-4 h-4 text-red-400 shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/80 capitalize">
+                    <p className="text-foreground/80 capitalize">
                       {r.duration} • {r.method} • <span className="font-mono">{r.trx_id}</span>
                     </p>
-                    <p className="text-xs text-white/30">
+                    <p className="text-xs text-foreground/30">
                       {fmtDate(r.created_at)}
                       {r.status === 'rejected' && r.reject_reason && (
                         <span className="text-red-400/80"> — {r.reject_reason}</span>
                       )}
                     </p>
                   </div>
-                  <span className="text-xs text-white/40 capitalize shrink-0">{r.status}</span>
+                  <span className="text-xs text-foreground/40 capitalize shrink-0">{r.status}</span>
                 </div>
               ))}
             </div>

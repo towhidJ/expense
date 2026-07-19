@@ -404,8 +404,8 @@ export default function Reports() {
     <div className="space-y-6 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Reports & Statements</h1>
-          <p className="text-white/40 text-sm mt-1">Detailed financial analysis</p>
+          <h1 className="text-2xl font-bold text-foreground">Reports & Statements</h1>
+          <p className="text-foreground/40 text-sm mt-1">Detailed financial analysis</p>
         </div>
         <div className="flex flex-col items-stretch sm:items-end gap-3">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -414,11 +414,11 @@ export default function Reports() {
                 <select
                   value={reportType}
                   onChange={e => setReportType(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                  className="bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
                   title="Which report to download"
                 >
                   {REPORT_TYPES.map(r => (
-                    <option key={r.id} value={r.id} className="bg-[#12122a]">{r.label}</option>
+                    <option key={r.id} value={r.id} className="bg-muted">{r.label}</option>
                   ))}
                 </select>
                 <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium whitespace-nowrap">
@@ -429,7 +429,7 @@ export default function Reports() {
                 </button>
               </div>
             )}
-            <div className="flex gap-2 bg-white/5 p-1 rounded-xl">
+            <div className="flex gap-2 bg-foreground/5 p-1 rounded-xl">
               <button
                 onClick={() => setFilterType('monthly')}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-all whitespace-nowrap ${filterType === 'monthly' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/40 hover:text-white'}`}
@@ -447,21 +447,21 @@ export default function Reports() {
             <select
               value={accountFilter}
               onChange={e => setAccountFilter(e.target.value)}
-              className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+              className="flex-1 sm:flex-none min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
             >
-              <option value="all" className="bg-[#12122a]">All Accounts</option>
+              <option value="all" className="bg-muted">All Accounts</option>
               {accounts.map(a => (
-                <option key={a.id} value={a.id} className="bg-[#12122a]">{a.name}</option>
+                <option key={a.id} value={a.id} className="bg-muted">{a.name}</option>
               ))}
             </select>
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+              className="flex-1 sm:flex-none min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
             >
-              <option value="all" className="bg-[#12122a]">All Categories</option>
+              <option value="all" className="bg-muted">All Categories</option>
               {categories.map(c => (
-                <option key={c.id} value={c.id} className="bg-[#12122a]">{c.icon} {c.name}</option>
+                <option key={c.id} value={c.id} className="bg-muted">{c.icon} {c.name}</option>
               ))}
             </select>
           </div>
@@ -472,34 +472,34 @@ export default function Reports() {
               <select
                 value={month}
                 onChange={e => setMonth(parseInt(e.target.value))}
-                className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                className="flex-1 sm:flex-none min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
               >
                 {months.map((m, i) => (
-                  <option key={i} value={i + 1} className="bg-[#12122a]">{m}</option>
+                  <option key={i} value={i + 1} className="bg-muted">{m}</option>
                 ))}
               </select>
               <select
                 value={year}
                 onChange={e => setYear(parseInt(e.target.value))}
-                className="flex-1 sm:flex-none min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                className="flex-1 sm:flex-none min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
               >
                 {[2024, 2025, 2026, 2027].map(y => (
-                  <option key={y} value={y} className="bg-[#12122a]">{y}</option>
+                  <option key={y} value={y} className="bg-muted">{y}</option>
                 ))}
               </select>
             </div>
           ) : (
             <div className="flex flex-wrap gap-3 items-center">
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-              <span className="text-white/40">to</span>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="flex-1 min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50" />
+              <span className="text-foreground/40">to</span>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="flex-1 min-w-0 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50" />
             </div>
           )}
         </div>
       </div>
 
       {/* View tabs */}
-      <div className="grid grid-cols-2 sm:flex gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
+      <div className="grid grid-cols-2 sm:flex gap-1 bg-foreground/5 border border-foreground/10 p-1 rounded-xl">
         {VIEWS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -638,7 +638,7 @@ export default function Reports() {
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-60 text-white/20 text-sm">Add some transactions to get suggestions</div>
+            <div className="flex items-center justify-center h-60 text-foreground/20 text-sm">Add some transactions to get suggestions</div>
           )}
         </ChartCard>
       </div>
@@ -660,14 +660,14 @@ export default function Reports() {
                 {categoryData.map((c, i) => (
                   <div key={c.name} className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                    <span className="text-xs text-white/50">{c.name}</span>
-                    <span className="text-xs text-white/70 font-medium ml-auto">৳{c.value.toLocaleString()}</span>
+                    <span className="text-xs text-foreground/50">{c.name}</span>
+                    <span className="text-xs text-foreground/70 font-medium ml-auto">৳{c.value.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-60 text-white/20 text-sm">No expense data</div>
+            <div className="flex items-center justify-center h-60 text-foreground/20 text-sm">No expense data</div>
           )}
         </ChartCard>
 
@@ -679,10 +679,10 @@ export default function Reports() {
                 return (
                   <div key={c.name}>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm text-white/70">{c.name}</span>
-                      <span className="text-sm text-white font-medium">৳{c.value.toLocaleString()} ({pct.toFixed(1)}%)</span>
+                      <span className="text-sm text-foreground/70">{c.name}</span>
+                      <span className="text-sm text-foreground font-medium">৳{c.value.toLocaleString()} ({pct.toFixed(1)}%)</span>
                     </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-foreground/5 rounded-full overflow-hidden">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                     </div>
                   </div>
@@ -690,7 +690,7 @@ export default function Reports() {
               })}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-60 text-white/20 text-sm">No income data</div>
+            <div className="flex items-center justify-center h-60 text-foreground/20 text-sm">No income data</div>
           )}
         </ChartCard>
       </div>
@@ -700,11 +700,11 @@ export default function Reports() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-4 text-white/40 font-medium">Category</th>
-                <th className="text-right py-3 px-4 text-white/40 font-medium">Income</th>
-                <th className="text-right py-3 px-4 text-white/40 font-medium">Expense</th>
-                <th className="text-right py-3 px-4 text-white/40 font-medium">Count</th>
+              <tr className="border-b border-foreground/10">
+                <th className="text-left py-3 px-4 text-foreground/40 font-medium">Category</th>
+                <th className="text-right py-3 px-4 text-foreground/40 font-medium">Income</th>
+                <th className="text-right py-3 px-4 text-foreground/40 font-medium">Expense</th>
+                <th className="text-right py-3 px-4 text-foreground/40 font-medium">Count</th>
               </tr>
             </thead>
             <tbody>
@@ -714,24 +714,24 @@ export default function Reports() {
                 const inc = catTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
                 const exp = catTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
                 return (
-                  <tr key={cat.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <tr key={cat.id} className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <span>{cat.icon}</span>
-                        <span className="text-white/70">{cat.name}</span>
+                        <span className="text-foreground/70">{cat.name}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right text-emerald-400">{inc > 0 ? `৳${inc.toLocaleString()}` : '-'}</td>
                     <td className="py-3 px-4 text-right text-red-400">{exp > 0 ? `৳${exp.toLocaleString()}` : '-'}</td>
-                    <td className="py-3 px-4 text-right text-white/50">{catTx.length}</td>
+                    <td className="py-3 px-4 text-right text-foreground/50">{catTx.length}</td>
                   </tr>
                 );
               })}
-              <tr className="border-t border-white/10 font-semibold">
-                <td className="py-3 px-4 text-white">Total</td>
+              <tr className="border-t border-foreground/10 font-semibold">
+                <td className="py-3 px-4 text-foreground">Total</td>
                 <td className="py-3 px-4 text-right text-emerald-400">৳{stats.income.toLocaleString()}</td>
                 <td className="py-3 px-4 text-right text-red-400">৳{stats.expense.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right text-white/70">{stats.count}</td>
+                <td className="py-3 px-4 text-right text-foreground/70">{stats.count}</td>
               </tr>
             </tbody>
           </table>

@@ -163,14 +163,14 @@ export default function Recurring() {
     .filter(r => r.is_active && r.type === 'income' && r.frequency === 'monthly')
     .reduce((s, r) => s + Number(r.amount), 0);
 
-  if (loading) return <div className="text-white/50 p-6">Loading recurring transactions...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading recurring transactions...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Recurring Transactions</h1>
-          <p className="text-white/40 text-sm mt-1">Manage subscriptions, salaries, and auto-payments.</p>
+          <h1 className="text-2xl font-bold text-foreground">Recurring Transactions</h1>
+          <p className="text-foreground/40 text-sm mt-1">Manage subscriptions, salaries, and auto-payments.</p>
         </div>
         <div className="flex gap-2">
           {dueCount > 0 && (
@@ -193,23 +193,23 @@ export default function Recurring() {
 
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Active Schedules</p>
-          <p className="text-xl font-bold text-white mt-1">{recurring.filter(r => r.is_active).length}</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Active Schedules</p>
+          <p className="text-xl font-bold text-foreground mt-1">{recurring.filter(r => r.is_active).length}</p>
         </div>
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Monthly Expenses</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Monthly Expenses</p>
           <p className="text-xl font-bold text-red-400 mt-1">৳{totalMonthlyExpense.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-white/40">Monthly Income</p>
+        <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+          <p className="text-xs text-foreground/40">Monthly Income</p>
           <p className="text-xl font-bold text-emerald-400 mt-1">৳{totalMonthlyIncome.toLocaleString()}</p>
         </div>
       </div>
 
       {(isAdding || editingItem) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editingItem ? 'Edit Item' : 'New Recurring Transaction'}</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{editingItem ? 'Edit Item' : 'New Recurring Transaction'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div className="sm:col-span-2 flex gap-2">
@@ -223,7 +223,7 @@ export default function Recurring() {
                       ? type === 'expense'
                         ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                         : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'
+                      : 'bg-foreground/5 text-foreground/40 border border-foreground/10 hover:bg-foreground/10'
                   }`}
                 >
                   {type === 'expense' ? '💸 Expense' : '💰 Income'}
@@ -232,34 +232,34 @@ export default function Recurring() {
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Title</label>
-              <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50" placeholder="e.g. Netflix Subscription" />
+              <label className="block text-sm text-foreground/60 mb-1">Title</label>
+              <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50" placeholder="e.g. Netflix Subscription" />
             </div>
             
             <div>
-              <label className="block text-sm text-white/60 mb-1">Amount</label>
-              <input required type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+              <input required type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50" />
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Account</label>
-              <select required value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Account</label>
+              <select required value={form.account_id} onChange={e => setForm({...form, account_id: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50">
                 <option value="">Select Account</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency}{a.current_balance})</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Category</label>
-              <select required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Category</label>
+              <select required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50">
                 <option value="">Select Category</option>
                 {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Frequency</label>
-              <select required value={form.frequency} onChange={e => setForm({...form, frequency: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Frequency</label>
+              <select required value={form.frequency} onChange={e => setForm({...form, frequency: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50">
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -268,52 +268,52 @@ export default function Recurring() {
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-1">Next Run Date</label>
-              <input required type="date" value={form.next_run_date} onChange={e => setForm({...form, next_run_date: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Next Run Date</label>
+              <input required type="date" value={form.next_run_date} onChange={e => setForm({...form, next_run_date: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50" />
             </div>
 
             {form.type === 'expense' && (
               <div>
-                <label className="block text-sm text-white/60 mb-1">Utility Bill (optional)</label>
-                <select value={form.utility_type || ''} onChange={e => setForm({...form, utility_type: e.target.value})} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50">
+                <label className="block text-sm text-foreground/60 mb-1">Utility Bill (optional)</label>
+                <select value={form.utility_type || ''} onChange={e => setForm({...form, utility_type: e.target.value})} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500/50">
                   <option value="">Not a utility bill</option>
                   {Object.entries(UTILITY_TYPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
                 </select>
-                <p className="text-xs text-white/35 mt-1">Each auto-run records that month's bill as PAID on the Utility page.</p>
+                <p className="text-xs text-foreground/35 mt-1">Each auto-run records that month's bill as PAID on the Utility page.</p>
               </div>
             )}
 
             <div className="sm:col-span-2 flex items-center gap-2 mt-2">
-              <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({...form, is_active: e.target.checked})} className="w-4 h-4 rounded border-white/10 bg-[#12122a] text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
-              <label htmlFor="is_active" className="text-sm text-white/80">Active (Will run automatically)</label>
-              <input type="checkbox" id="is_subscription" checked={form.is_subscription || false} onChange={e => setForm({...form, is_subscription: e.target.checked})} className="w-4 h-4 ml-4 rounded border-white/10 bg-[#12122a] text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
-              <label htmlFor="is_subscription" className="text-sm text-white/80">Subscription (show on Subscriptions page)</label>
+              <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({...form, is_active: e.target.checked})} className="w-4 h-4 rounded border-foreground/10 bg-muted text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
+              <label htmlFor="is_active" className="text-sm text-foreground/80">Active (Will run automatically)</label>
+              <input type="checkbox" id="is_subscription" checked={form.is_subscription || false} onChange={e => setForm({...form, is_subscription: e.target.checked})} className="w-4 h-4 ml-4 rounded border-foreground/10 bg-muted text-orange-500 focus:ring-orange-500 focus:ring-offset-[#1a1a2e]" />
+              <label htmlFor="is_subscription" className="text-sm text-foreground/80">Subscription (show on Subscriptions page)</label>
             </div>
 
             <div className="sm:col-span-2 flex justify-end gap-3 mt-4">
-              <button type="button" onClick={() => {setIsAdding(false); setEditingItem(null);}} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => {setIsAdding(false); setEditingItem(null);}} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-orange-500/20 transition-all font-medium">Save Setting</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-white/5 border-b border-white/10">
-                <th className="text-left py-4 px-5 text-white/60 font-medium">Details</th>
-                <th className="text-left py-4 px-5 text-white/60 font-medium">Schedule</th>
-                <th className="text-right py-4 px-5 text-white/60 font-medium">Amount</th>
-                <th className="text-center py-4 px-5 text-white/60 font-medium">Status</th>
-                <th className="text-right py-4 px-5 text-white/60 font-medium">Actions</th>
+              <tr className="bg-foreground/5 border-b border-foreground/10">
+                <th className="text-left py-4 px-5 text-foreground/60 font-medium">Details</th>
+                <th className="text-left py-4 px-5 text-foreground/60 font-medium">Schedule</th>
+                <th className="text-right py-4 px-5 text-foreground/60 font-medium">Amount</th>
+                <th className="text-center py-4 px-5 text-foreground/60 font-medium">Status</th>
+                <th className="text-right py-4 px-5 text-foreground/60 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {recurring.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-white/40">
+                  <td colSpan="5" className="text-center py-12 text-foreground/40">
                     <Repeat className="mx-auto mb-3 opacity-20" size={32} />
                     No recurring transactions setup yet.
                   </td>
@@ -322,14 +322,14 @@ export default function Recurring() {
                 const isExpense = item.type === 'expense';
                 const isDue = new Date(item.next_run_date) <= new Date();
                 return (
-                  <tr key={item.id} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${!item.is_active ? 'opacity-50' : ''}`}>
+                  <tr key={item.id} className={`border-b border-foreground/5 hover:bg-white/[0.02] transition-colors ${!item.is_active ? 'opacity-50' : ''}`}>
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isExpense ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                           {item.categories?.icon || <CalendarClock size={16} />}
                         </div>
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-foreground font-medium">
                             {item.title}
                             {item.utility_type && (
                               <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 align-middle">
@@ -337,13 +337,13 @@ export default function Recurring() {
                               </span>
                             )}
                           </p>
-                          <p className="text-white/40 text-xs">{item.accounts?.name}</p>
+                          <p className="text-foreground/40 text-xs">{item.accounts?.name}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-5">
-                      <p className="text-white/80 capitalize">{item.frequency}</p>
-                      <p className={`text-xs ${isDue && item.is_active ? 'text-orange-400 font-medium' : 'text-white/40'}`}>
+                      <p className="text-foreground/80 capitalize">{item.frequency}</p>
+                      <p className={`text-xs ${isDue && item.is_active ? 'text-orange-400 font-medium' : 'text-foreground/40'}`}>
                         Next: {new Date(item.next_run_date).toLocaleDateString()}
                         {isDue && item.is_active && ' ⚠️'}
                       </p>
@@ -352,7 +352,7 @@ export default function Recurring() {
                       {isExpense ? '-' : '+'}৳{item.amount.toLocaleString()}
                     </td>
                     <td className="py-4 px-5 text-center">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${item.is_active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/10 text-white/40'}`}>
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${item.is_active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-foreground/10 text-white/40'}`}>
                         {item.is_active ? 'Active' : 'Paused'}
                       </span>
                     </td>

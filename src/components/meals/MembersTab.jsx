@@ -10,15 +10,15 @@ export default function MembersTab({
   return (
     <div className="space-y-6">
       {pending.length > 0 && isManager && (
-        <div className="bg-[#1a1a2e] border border-orange-500/20 rounded-2xl p-6">
-          <h3 className="text-white font-semibold mb-4">Pending Requests ({pending.length})</h3>
+        <div className="bg-card border border-orange-500/20 rounded-2xl p-6">
+          <h3 className="text-foreground font-semibold mb-4">Pending Requests ({pending.length})</h3>
           <div className="space-y-2">
             {pending.map(m => (
-              <div key={m.id} className="flex items-center gap-3 bg-[#12122a] border border-white/10 rounded-xl px-4 py-3">
+              <div key={m.id} className="flex items-center gap-3 bg-muted border border-foreground/10 rounded-xl px-4 py-3">
                 <div className="w-9 h-9 rounded-full bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0">
                   <User size={16} />
                 </div>
-                <span className="flex-1 text-white text-sm font-medium">{m.display_name}</span>
+                <span className="flex-1 text-foreground text-sm font-medium">{m.display_name}</span>
                 <button
                   onClick={() => respondJoinRequest(m.id, true).catch(err => alert(err.message))}
                   className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-3 py-1.5 rounded-lg"
@@ -37,26 +37,26 @@ export default function MembersTab({
         </div>
       )}
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-white font-semibold mb-4">Members ({approved.length})</h3>
+      <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+        <h3 className="text-foreground font-semibold mb-4">Members ({approved.length})</h3>
         <div className="space-y-2">
           {approved.map(m => (
-            <div key={m.id} className="flex flex-wrap items-center gap-3 bg-[#12122a] border border-white/10 rounded-xl px-4 py-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${m.role === 'manager' ? 'bg-gradient-to-br from-cyan-500 to-purple-600 text-white' : 'bg-white/5 text-white/60'}`}>
+            <div key={m.id} className="flex flex-wrap items-center gap-3 bg-muted border border-foreground/10 rounded-xl px-4 py-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${m.role === 'manager' ? 'bg-gradient-to-br from-cyan-500 to-purple-600 text-white' : 'bg-foreground/5 text-white/60'}`}>
                 {m.role === 'manager' ? <Crown size={16} /> : <User size={16} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">
+                <p className="text-foreground text-sm font-medium truncate">
                   {m.display_name}
                   {m.user_id === currentUserId && <span className="text-cyan-400 text-xs ml-1">(you)</span>}
                 </p>
-                <p className="text-white/40 text-xs capitalize">{m.role}</p>
+                <p className="text-foreground/40 text-xs capitalize">{m.role}</p>
               </div>
               {isManager && m.user_id !== currentUserId && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMemberRole(m.id, m.role === 'manager' ? 'member' : 'manager').catch(err => alert(err.message))}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-foreground/5 border border-foreground/10 text-foreground/60 hover:text-foreground"
                   >
                     {m.role === 'manager' ? 'Demote' : 'Make Manager'}
                   </button>

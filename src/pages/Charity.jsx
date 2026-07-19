@@ -67,14 +67,14 @@ export default function Charity() {
     }
   };
 
-  if (loading) return <div className="text-white/50 p-6">Loading donations...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Loading donations...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Charity / Sadaqah</h1>
-          <p className="text-white/40 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Charity / Sadaqah</h1>
+          <p className="text-foreground/40 text-sm mt-1">
             A ledger of what you've given. Use <Link to="/zakat" className="text-cyan-400 hover:underline">Zakat</Link> to calculate what you owe.
           </p>
         </div>
@@ -90,71 +90,71 @@ export default function Charity() {
       </div>
 
       {adding && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">New Donation</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">New Donation</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Recipient</label>
-              <input required type="text" value={form.recipient} onChange={e => setForm({ ...form, recipient: e.target.value })} placeholder="e.g. Local Madrasa" className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Recipient</label>
+              <input required type="text" value={form.recipient} onChange={e => setForm({ ...form, recipient: e.target.value })} placeholder="e.g. Local Madrasa" className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Category</label>
-              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Category</label>
+              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50">
                 {Object.entries(CAT_META).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Amount</label>
-              <input required type="number" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Amount</label>
+              <input required type="number" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">From Account</label>
-              <select required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">From Account</label>
+              <select required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50">
                 <option value="">Select...</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Expense Category</label>
-              <select required value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Expense Category</label>
+              <select required value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50">
                 <option value="">Select...</option>
                 {expenseCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Date</label>
-              <input required type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Date</label>
+              <input required type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
             </div>
             <div className="sm:col-span-2 lg:col-span-3">
-              <label className="block text-sm text-white/60 mb-1">Notes</label>
-              <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Notes</label>
+              <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50" />
             </div>
             <div className="sm:col-span-2 lg:col-span-3 flex justify-end gap-3">
-              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => setAdding(false)} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-medium">Save Donation</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-white/5 border-b border-white/10">
-                <th className="text-left py-3 px-5 text-white/60 font-medium">Date</th>
-                <th className="text-left py-3 px-5 text-white/60 font-medium">Recipient</th>
-                <th className="text-left py-3 px-5 text-white/60 font-medium">Category</th>
-                <th className="text-right py-3 px-5 text-white/60 font-medium">Amount</th>
-                <th className="text-right py-3 px-5 text-white/60 font-medium">Actions</th>
+              <tr className="bg-foreground/5 border-b border-foreground/10">
+                <th className="text-left py-3 px-5 text-foreground/60 font-medium">Date</th>
+                <th className="text-left py-3 px-5 text-foreground/60 font-medium">Recipient</th>
+                <th className="text-left py-3 px-5 text-foreground/60 font-medium">Category</th>
+                <th className="text-right py-3 px-5 text-foreground/60 font-medium">Amount</th>
+                <th className="text-right py-3 px-5 text-foreground/60 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {donations.map(d => (
-                <tr key={d.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                  <td className="py-3 px-5 text-white/70">{new Date(d.date).toLocaleDateString()}</td>
-                  <td className="py-3 px-5 text-white">{d.recipient}</td>
-                  <td className="py-3 px-5 text-white/60">{CAT_META[d.category]?.icon} {CAT_META[d.category]?.label}</td>
+                <tr key={d.id} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                  <td className="py-3 px-5 text-foreground/70">{new Date(d.date).toLocaleDateString()}</td>
+                  <td className="py-3 px-5 text-foreground">{d.recipient}</td>
+                  <td className="py-3 px-5 text-foreground/60">{CAT_META[d.category]?.icon} {CAT_META[d.category]?.label}</td>
                   <td className="py-3 px-5 text-right text-emerald-400 font-medium">{fmt(d.amount)}</td>
                   <td className="py-3 px-5 text-right">
                     <button onClick={() => { if (confirm('Delete this donation record? (Linked transaction stays.)')) deleteRow(d.id).catch(err => alert(err.message)); }} className="text-white/30 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10">
@@ -168,8 +168,8 @@ export default function Charity() {
         </div>
         {donations.length === 0 && (
           <div className="text-center py-10">
-            <HandHeart className="mx-auto text-white/20 mb-3" size={40} />
-            <p className="text-white/40 text-sm">No donations logged yet.</p>
+            <HandHeart className="mx-auto text-foreground/20 mb-3" size={40} />
+            <p className="text-foreground/40 text-sm">No donations logged yet.</p>
           </div>
         )}
       </div>

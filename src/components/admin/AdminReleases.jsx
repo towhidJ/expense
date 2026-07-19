@@ -110,8 +110,8 @@ export default function AdminReleases() {
             <Smartphone className="w-6 h-6 text-cyan-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold">Latest release: v{latest.version_name} <span className="text-white/40 font-normal">(code {latest.version_code})</span></p>
-            <p className="text-xs text-white/40 mt-0.5">
+            <p className="text-foreground font-semibold">Latest release: v{latest.version_name} <span className="text-foreground/40 font-normal">(code {latest.version_code})</span></p>
+            <p className="text-xs text-foreground/40 mt-0.5">
               {prettySize(latest.file_size)} • published {new Date(latest.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
             </p>
           </div>
@@ -126,63 +126,63 @@ export default function AdminReleases() {
       )}
 
       {/* Publish form */}
-      <form onSubmit={handlePublish} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+      <form onSubmit={handlePublish} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <UploadCloud className="w-5 h-5 text-cyan-400" /> Publish new version
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Version name</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Version name</label>
             <input
               type="text"
               placeholder="e.g. 1.1.0"
               value={form.version_name}
               onChange={e => setForm(f => ({ ...f, version_name: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
             />
           </div>
           <div>
-            <label className="block text-sm text-white/50 mb-1.5">Version code (must increase every release)</label>
+            <label className="block text-sm text-foreground/50 mb-1.5">Version code (must increase every release)</label>
             <input
               type="number"
               min="1"
               placeholder="e.g. 2"
               value={form.version_code}
               onChange={e => setForm(f => ({ ...f, version_code: e.target.value }))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm text-white/50 mb-1.5">Release notes (shown in the update dialog)</label>
+          <label className="block text-sm text-foreground/50 mb-1.5">Release notes (shown in the update dialog)</label>
           <textarea
             rows={3}
             placeholder={'What changed?\ne.g. Voucher print, bug fixes'}
             value={form.notes}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
+            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-white/50 mb-1.5">APK file</label>
+          <label className="block text-sm text-foreground/50 mb-1.5">APK file</label>
           {apkFile ? (
             <div className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-3 py-2.5">
               <FileUp className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span className="flex-1 min-w-0 text-sm text-white/80 truncate">{apkFile.name}</span>
-              <span className="text-xs text-white/40 shrink-0">{prettySize(apkFile.size)}</span>
-              <button type="button" onClick={() => setApkFile(null)} className="text-white/40 hover:text-red-400 text-xs shrink-0">Remove</button>
+              <span className="flex-1 min-w-0 text-sm text-foreground/80 truncate">{apkFile.name}</span>
+              <span className="text-xs text-foreground/40 shrink-0">{prettySize(apkFile.size)}</span>
+              <button type="button" onClick={() => setApkFile(null)} className="text-foreground/40 hover:text-red-400 text-xs shrink-0">Remove</button>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 bg-white/5 border border-dashed border-white/15 rounded-xl px-4 py-6 text-white/50 text-sm hover:bg-white/10 hover:text-white/80 transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-foreground/5 border border-dashed border-foreground/15 rounded-xl px-4 py-6 text-foreground/50 text-sm hover:bg-foreground/10 hover:text-foreground/80 transition-all"
             >
               <UploadCloud className="w-5 h-5" /> Click to select the APK
-              <span className="text-white/30 text-xs">(mobile/build/app/outputs/flutter-apk/app-release.apk)</span>
+              <span className="text-foreground/30 text-xs">(mobile/build/app/outputs/flutter-apk/app-release.apk)</span>
             </button>
           )}
           <input ref={inputRef} type="file" accept=".apk" onChange={handlePick} className="hidden" />
@@ -198,36 +198,36 @@ export default function AdminReleases() {
       </form>
 
       {/* Version history */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Release history</h2>
+      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-foreground/10">
+          <h2 className="text-lg font-semibold text-foreground">Release history</h2>
         </div>
         {loading ? (
-          <div className="p-8 text-center text-white/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>
+          <div className="p-8 text-center text-foreground/40"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>
         ) : versions.length === 0 ? (
-          <p className="p-8 text-center text-sm text-white/40">No releases published yet.</p>
+          <p className="p-8 text-center text-sm text-foreground/40">No releases published yet.</p>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {versions.map((v, i) => (
               <div key={v.id} className="px-6 py-4 flex items-start gap-4">
-                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
-                  <Smartphone className="w-4 h-4 text-white/50" />
+                <div className="w-9 h-9 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0 mt-0.5">
+                  <Smartphone className="w-4 h-4 text-foreground/50" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium">
-                    v{v.version_name} <span className="text-white/40 font-normal">(code {v.version_code})</span>
+                  <p className="text-sm text-foreground font-medium">
+                    v{v.version_name} <span className="text-foreground/40 font-normal">(code {v.version_code})</span>
                     {i === 0 && <span className="ml-2 text-[10px] uppercase tracking-wide bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">latest</span>}
                   </p>
-                  {v.notes && <p className="text-xs text-white/50 mt-1 whitespace-pre-line">{v.notes}</p>}
-                  <p className="text-[11px] text-white/30 mt-1">
+                  {v.notes && <p className="text-xs text-foreground/50 mt-1 whitespace-pre-line">{v.notes}</p>}
+                  <p className="text-[11px] text-foreground/30 mt-1">
                     {prettySize(v.file_size)} • {new Date(v.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <a href={v.apk_url} download className="p-2 text-white/40 hover:text-cyan-400 transition-colors" title="Download APK">
+                  <a href={v.apk_url} download className="p-2 text-foreground/40 hover:text-cyan-400 transition-colors" title="Download APK">
                     <Download className="w-4 h-4" />
                   </a>
-                  <button onClick={() => handleDelete(v)} className="p-2 text-white/40 hover:text-red-400 transition-colors" title="Delete release">
+                  <button onClick={() => handleDelete(v)} className="p-2 text-foreground/40 hover:text-red-400 transition-colors" title="Delete release">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

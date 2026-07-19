@@ -57,13 +57,13 @@ export default function Forecast() {
   const firstNegative = projection.find(r => r.balance < 0);
   const monthlyNet = averages.income - averages.expense + (parseFloat(adjIncome) || 0) - (parseFloat(adjExpense) || 0);
 
-  if (loading) return <div className="text-white/50 p-6">Building your forecast...</div>;
+  if (loading) return <div className="text-foreground/50 p-6">Building your forecast...</div>;
 
   return (
     <div className="space-y-6 animate-in">
       <div>
-        <h1 className="text-2xl font-bold text-white">Cashflow Forecast</h1>
-        <p className="text-white/40 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Cashflow Forecast</h1>
+        <p className="text-foreground/40 text-sm mt-1">
           Where your balance is heading over the next 6 months, based on your last {averages.sampleSize || 1} month{(averages.sampleSize || 1) > 1 ? 's' : ''} of activity.
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function Forecast() {
           <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={20} />
           <div>
             <p className="text-red-400 font-medium text-sm">Balance projected to go negative in {firstNegative.name}</p>
-            <p className="text-white/50 text-xs mt-1">
+            <p className="text-foreground/50 text-xs mt-1">
               At the current rate you'd be short by {fmt(Math.abs(firstNegative.balance))}. Consider cutting expenses or adding income before then.
             </p>
           </div>
@@ -114,31 +114,31 @@ export default function Forecast() {
       </ChartCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#1a1a2e] border border-white/10 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-white/10">
-            <h3 className="text-white font-semibold">Month by Month</h3>
+        <div className="lg:col-span-2 bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-foreground/10">
+            <h3 className="text-foreground font-semibold">Month by Month</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                  <th className="text-left py-3 px-5 text-white/60 font-medium">Month</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Income</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Expense</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Net</th>
-                  <th className="text-right py-3 px-5 text-white/60 font-medium">Ending Balance</th>
+                <tr className="bg-foreground/5 border-b border-foreground/10">
+                  <th className="text-left py-3 px-5 text-foreground/60 font-medium">Month</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Income</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Expense</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Net</th>
+                  <th className="text-right py-3 px-5 text-foreground/60 font-medium">Ending Balance</th>
                 </tr>
               </thead>
               <tbody>
                 {projection.slice(1).map(row => (
-                  <tr key={row.name} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-5 text-white font-medium">{row.name}</td>
+                  <tr key={row.name} className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-5 text-foreground font-medium">{row.name}</td>
                     <td className="py-3 px-5 text-right text-emerald-400">{fmt(row.income)}</td>
                     <td className="py-3 px-5 text-right text-red-400">{fmt(row.expense)}</td>
                     <td className={`py-3 px-5 text-right font-medium ${row.net >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {row.net >= 0 ? '+' : '−'}{fmt(Math.abs(row.net))}
                     </td>
-                    <td className={`py-3 px-5 text-right font-semibold ${row.balance >= 0 ? 'text-white' : 'text-red-400'}`}>
+                    <td className={`py-3 px-5 text-right font-semibold ${row.balance >= 0 ? 'text-foreground' : 'text-red-400'}`}>
                       {fmt(row.balance)}
                     </td>
                   </tr>
@@ -149,55 +149,55 @@ export default function Forecast() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5">
-            <h3 className="text-white font-semibold mb-1">What-if Adjustments</h3>
-            <p className="text-xs text-white/40 mb-4">Add expected changes on top of your averages (e.g. a raise, new rent).</p>
+          <div className="bg-card border border-foreground/10 rounded-2xl p-5">
+            <h3 className="text-foreground font-semibold mb-1">What-if Adjustments</h3>
+            <p className="text-xs text-foreground/40 mb-4">Add expected changes on top of your averages (e.g. a raise, new rent).</p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-white/60 mb-1">Extra monthly income</label>
+                <label className="block text-sm text-foreground/60 mb-1">Extra monthly income</label>
                 <input
                   type="number" step="100" value={adjIncome}
                   onChange={e => setAdjIncome(e.target.value)}
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500/50"
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-emerald-500/50"
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-1">Extra monthly expense</label>
+                <label className="block text-sm text-foreground/60 mb-1">Extra monthly expense</label>
                 <input
                   type="number" step="100" value={adjExpense}
                   onChange={e => setAdjExpense(e.target.value)}
-                  className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50"
+                  className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-red-500/50"
                   placeholder="0"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5">
-            <h3 className="text-white font-semibold mb-1 flex items-center gap-2"><Repeat size={16} className="text-cyan-400" /> Fixed Commitments</h3>
-            <p className="text-xs text-white/40 mb-4">
+          <div className="bg-card border border-foreground/10 rounded-2xl p-5">
+            <h3 className="text-foreground font-semibold mb-1 flex items-center gap-2"><Repeat size={16} className="text-cyan-400" /> Fixed Commitments</h3>
+            <p className="text-xs text-foreground/40 mb-4">
               Active recurring items, normalized per month. Already included in your averages — shown here so you know what's locked in.
             </p>
             <div className="flex justify-between text-sm mb-3">
-              <span className="text-white/50">Recurring income</span>
+              <span className="text-foreground/50">Recurring income</span>
               <span className="text-emerald-400 font-medium">{fmt(recurringMonthly.income)}/mo</span>
             </div>
             <div className="flex justify-between text-sm mb-3">
-              <span className="text-white/50">Recurring expense</span>
+              <span className="text-foreground/50">Recurring expense</span>
               <span className="text-red-400 font-medium">{fmt(recurringMonthly.expense)}/mo</span>
             </div>
             {recurring.length > 0 ? (
-              <div className="space-y-1.5 mt-3 pt-3 border-t border-white/5">
+              <div className="space-y-1.5 mt-3 pt-3 border-t border-foreground/5">
                 {recurring.map((r, i) => (
                   <div key={i} className="flex justify-between text-xs">
-                    <span className="text-white/50 truncate mr-2">{r.title} <span className="text-white/25">({r.frequency})</span></span>
+                    <span className="text-foreground/50 truncate mr-2">{r.title} <span className="text-foreground/25">({r.frequency})</span></span>
                     <span className={r.type === 'income' ? 'text-emerald-400' : 'text-red-400'}>{fmt(r.amount)}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-white/30 mt-2">No active recurring items.</p>
+              <p className="text-xs text-foreground/30 mt-2">No active recurring items.</p>
             )}
           </div>
         </div>

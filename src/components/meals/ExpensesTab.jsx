@@ -10,7 +10,7 @@ const TYPES = {
   utility: { label: 'Utility', icon: Zap, color: 'text-orange-400 bg-orange-500/10' },
   maid: { label: 'Maid', icon: HandPlatter, color: 'text-purple-400 bg-purple-500/10' },
   feast: { label: 'Feast / Special', icon: PartyPopper, color: 'text-pink-400 bg-pink-500/10' },
-  other: { label: 'Other', icon: Package, color: 'text-white/60 bg-white/5' }
+  other: { label: 'Other', icon: Package, color: 'text-foreground/60 bg-foreground/5' }
 };
 
 export default function ExpensesTab({ expenses, members, isManager, currentUserId, addExpense, updateExpense, deleteExpense, uploadReceipt }) {
@@ -93,9 +93,9 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap justify-between items-center gap-3">
-        <p className="text-white/60 text-sm">
+        <p className="text-foreground/60 text-sm">
           Bazar: <span className="text-cyan-400 font-semibold">{fmt(totalBazar)}</span>
-          <span className="mx-2 text-white/20">|</span>
+          <span className="mx-2 text-foreground/20">|</span>
           Fixed (utility/maid/feast): <span className="text-orange-400 font-semibold">{fmt(totalOther)}</span>
         </p>
         <button
@@ -107,12 +107,12 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
       </div>
 
       {(isAdding || editing) && (
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">{editing ? 'Edit Expense' : 'New Expense'}</h2>
+        <div className="bg-card border border-foreground/10 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{editing ? 'Edit Expense' : 'New Expense'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1">Type</label>
-              <select value={form.expense_type} onChange={e => setForm({ ...form, expense_type: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Type</label>
+              <select value={form.expense_type} onChange={e => setForm({ ...form, expense_type: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 {Object.entries(TYPES).map(([k, t]) => <option key={k} value={k}>{t.label}</option>)}
               </select>
               {form.expense_type === 'feast' && (
@@ -120,39 +120,39 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
               )}
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Amount (৳)</label>
-              <input required type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Amount (৳)</label>
+              <input required type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Date</label>
-              <input required type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+              <label className="block text-sm text-foreground/60 mb-1">Date</label>
+              <input required type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Spent by (who did bazar)</label>
-              <select value={form.spent_by} onChange={e => setForm({ ...form, spent_by: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+              <label className="block text-sm text-foreground/60 mb-1">Spent by (who did bazar)</label>
+              <select value={form.spent_by} onChange={e => setForm({ ...form, spent_by: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50">
                 <option value="">—</option>
                 {approvedMembers.map(m => <option key={m.id} value={m.id}>{m.display_name}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Items bought (ki ki kinlen)</label>
+              <label className="block text-sm text-foreground/60 mb-1">Items bought (ki ki kinlen)</label>
               <ItemListEditor items={items} onChange={setItems} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Note</label>
-              <input type="text" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="w-full bg-[#12122a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" placeholder="optional" />
+              <label className="block text-sm text-foreground/60 mb-1">Note</label>
+              <input type="text" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="w-full bg-muted border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-cyan-500/50" placeholder="optional" />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm text-white/60 mb-1">Receipt / রশিদ (optional)</label>
+              <label className="block text-sm text-foreground/60 mb-1">Receipt / রশিদ (optional)</label>
               <div className="flex flex-wrap items-center gap-3">
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={e => { setReceiptFile(e.target.files?.[0] || null); setRemoveReceipt(false); }}
-                  className="text-sm text-white/60 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-white/10 file:text-white file:text-sm hover:file:bg-white/20 file:cursor-pointer"
+                  className="text-sm text-foreground/60 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-foreground/10 file:text-foreground file:text-sm hover:file:bg-foreground/20 file:cursor-pointer"
                 />
                 {editing?.attachment_url && !receiptFile && !removeReceipt && (
-                  <span className="flex items-center gap-2 text-xs text-white/50">
+                  <span className="flex items-center gap-2 text-xs text-foreground/50">
                     <a href={editing.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-cyan-400 hover:underline">
                       <Paperclip size={12} /> Current receipt
                     </a>
@@ -163,7 +163,7 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
               </div>
             </div>
             <div className="sm:col-span-2 flex justify-end gap-3 mt-2">
-              <button type="button" onClick={() => { setIsAdding(false); setEditing(null); }} className="px-5 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+              <button type="button" onClick={() => { setIsAdding(false); setEditing(null); }} className="px-5 py-2.5 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors">Cancel</button>
               <button type="submit" disabled={saving} className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all font-medium disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save'}
               </button>
@@ -172,7 +172,7 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
         </div>
       )}
 
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl divide-y divide-white/5">
+      <div className="bg-card border border-foreground/10 rounded-2xl divide-y divide-foreground/5">
         {expenses.map(exp => {
           const t = TYPES[exp.expense_type] || TYPES.other;
           const expItems = Array.isArray(exp.items) ? exp.items : [];
@@ -184,17 +184,17 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
                   <t.icon size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">
+                  <p className="text-foreground text-sm font-medium truncate">
                     {t.label}
                     {exp.spent_by && memberName(exp.spent_by) && (
-                      <span className="text-white/40 font-normal"> · by {memberName(exp.spent_by)}</span>
+                      <span className="text-foreground/40 font-normal"> · by {memberName(exp.spent_by)}</span>
                     )}
                   </p>
-                  <p className="text-white/40 text-xs truncate">{exp.date}{exp.note ? ` · ${exp.note}` : ''}</p>
+                  <p className="text-foreground/40 text-xs truncate">{exp.date}{exp.note ? ` · ${exp.note}` : ''}</p>
                 </div>
                 {exp.attachment_url && (
                   <a href={exp.attachment_url} target="_blank" rel="noreferrer" title="View receipt"
-                    className="p-1.5 rounded-lg bg-[#12122a] border border-white/10 text-white/60 hover:text-cyan-400">
+                    className="p-1.5 rounded-lg bg-muted border border-foreground/10 text-foreground/60 hover:text-cyan-400">
                     <Paperclip size={14} />
                   </a>
                 )}
@@ -202,18 +202,18 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
                   <button
                     onClick={() => setExpanded(x => ({ ...x, [exp.id]: !x[exp.id] }))}
                     title="Items list"
-                    className="flex items-center gap-1 p-1.5 rounded-lg bg-[#12122a] border border-white/10 text-white/60 hover:text-cyan-400 text-xs"
+                    className="flex items-center gap-1 p-1.5 rounded-lg bg-muted border border-foreground/10 text-foreground/60 hover:text-cyan-400 text-xs"
                   >
                     {expItems.length} {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
                 )}
-                <span className="text-white font-semibold">{fmt(exp.amount)}</span>
+                <span className="text-foreground font-semibold">{fmt(exp.amount)}</span>
                 {canEdit(exp) && (
                   <div className="flex gap-1 ml-2">
-                    <button onClick={() => openEdit(exp)} className="p-1.5 rounded-lg bg-[#12122a] border border-white/10 text-white/60 hover:text-cyan-400">
+                    <button onClick={() => openEdit(exp)} className="p-1.5 rounded-lg bg-muted border border-foreground/10 text-foreground/60 hover:text-cyan-400">
                       <Edit2 size={14} />
                     </button>
-                    <button onClick={() => { if (confirm('Delete this expense?')) deleteExpense(exp.id).catch(err => alert('Cannot delete: ' + err.message)); }} className="p-1.5 rounded-lg bg-[#12122a] border border-white/10 text-white/60 hover:text-red-400">
+                    <button onClick={() => { if (confirm('Delete this expense?')) deleteExpense(exp.id).catch(err => alert('Cannot delete: ' + err.message)); }} className="p-1.5 rounded-lg bg-muted border border-foreground/10 text-foreground/60 hover:text-red-400">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -221,11 +221,11 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
               </div>
               {isOpen && expItems.length > 0 && (
                 <div className="px-4 pb-3 pl-16">
-                  <div className="bg-[#12122a] border border-white/10 rounded-xl px-4 py-2 divide-y divide-white/5">
+                  <div className="bg-muted border border-foreground/10 rounded-xl px-4 py-2 divide-y divide-foreground/5">
                     {expItems.map((it, i) => (
                       <div key={i} className="flex justify-between py-1.5 text-sm">
-                        <span className="text-white/70">{it.name}</span>
-                        <span className="text-white/50">{it.amount != null && it.amount !== '' ? fmt(it.amount) : ''}</span>
+                        <span className="text-foreground/70">{it.name}</span>
+                        <span className="text-foreground/50">{it.amount != null && it.amount !== '' ? fmt(it.amount) : ''}</span>
                       </div>
                     ))}
                   </div>
@@ -235,7 +235,7 @@ export default function ExpensesTab({ expenses, members, isManager, currentUserI
           );
         })}
         {expenses.length === 0 && (
-          <div className="px-4 py-10 text-center text-white/40 text-sm">No expenses this month. Whoever does the bazar records it here.</div>
+          <div className="px-4 py-10 text-center text-foreground/40 text-sm">No expenses this month. Whoever does the bazar records it here.</div>
         )}
       </div>
     </div>

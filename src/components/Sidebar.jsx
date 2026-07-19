@@ -5,6 +5,7 @@ import { useEntity } from '../context/EntityContext';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useFinanceNotifications } from '../hooks/useFinanceNotifications';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useTheme } from '../context/ThemeContext';
 import { moduleKeyByPath } from '../lib/modules';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Wallet,
@@ -12,7 +13,7 @@ import {
   Pencil, Trash2, AlertTriangle, ChevronUp, Bell, HandCoins, Moon,
   Tv, Umbrella, Zap, Home, BadgeCheck, DatabaseBackup, History, Split, Scale, Sparkles, ScanLine, Lock,
   ChevronDown, Wallet2, CalendarClock, Gem, HousePlus, Settings2,
-  Calculator, TrendingDown, Fuel, HandHeart, Receipt, Boxes, ScanSearch, FileText
+  Calculator, TrendingDown, Fuel, HandHeart, Receipt, Boxes, ScanSearch, FileText, Sun
 } from 'lucide-react';
 
 // Core links always visible; everything else lives in collapsible accordion
@@ -107,7 +108,7 @@ function SidebarLink({ item, onClose, nested = false, unreadAlerts, isModuleLock
         } ${
           isActive
             ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-cyan-400 border border-cyan-500/20 shadow-lg shadow-cyan-500/5'
-            : 'text-white/50 hover:text-white hover:bg-white/5'
+            : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5'
         }`
       }
     >
@@ -129,6 +130,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const { signOut, user, changePassword } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { isModuleLocked, isPremiumActive, isTrial, isLifetime, expiresAt } = useSubscription();
+  const { theme, toggleTheme } = useTheme();
   const { entities, currentEntity, switchEntity, addEntity, updateEntity, deleteEntity } = useEntity();
   const { notifications: financeNotifications } = useFinanceNotifications();
   const unreadAlerts = financeNotifications.filter(n => !n.is_read).length;
@@ -266,39 +268,39 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* h-dvh (not h-full): mobile browsers' collapsing URL bar makes 100%
           taller than the visible viewport, which pushed the footer offscreen. */}
       <aside
-        className={`fixed top-0 left-0 h-dvh w-[280px] bg-white/5 backdrop-blur-2xl border-r border-white/10 z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-dvh w-[280px] bg-foreground/5 backdrop-blur-2xl border-r border-foreground/10 z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+        <div className="flex items-center justify-between p-6 border-b border-foreground/10">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="TakaKhata" className="w-10 h-10 rounded-xl shadow-lg shadow-cyan-500/25" />
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">TakaKhata</h1>
-              <p className="text-xs text-white/40">Finance Manager</p>
+              <h1 className="text-lg font-bold text-foreground tracking-tight">TakaKhata</h1>
+              <p className="text-xs text-foreground/40">Finance Manager</p>
             </div>
           </div>
-          <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white transition-colors">
+          <button onClick={onClose} className="lg:hidden text-foreground/40 hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Workspace switcher */}
         <div className="px-4 pt-4">
-          <label className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-white/30 mb-1.5 px-1">
+          <label className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-foreground/30 mb-1.5 px-1">
             <Briefcase className="w-3 h-3" /> Workspace
           </label>
           <select
             value={currentEntity?.id || ''}
             onChange={handleEntityChange}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
           >
             {entities.map(e => (
-              <option key={e.id} value={e.id} className="bg-[#12122a] capitalize">
+              <option key={e.id} value={e.id} className="bg-muted capitalize">
                 {e.name} ({e.type})
               </option>
             ))}
-            <option value="__new__" className="bg-[#12122a]">
+            <option value="__new__" className="bg-muted">
               {!isPremiumActive && !isAdmin && entities.length >= 1 ? '🔒 New workspace (Premium)' : '＋ New workspace...'}
             </option>
           </select>
@@ -306,7 +308,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="flex gap-1.5 mt-1.5">
               <button
                 onClick={openEditWorkspace}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-colors"
               >
                 <Pencil className="w-3 h-3" /> Edit
               </button>
@@ -340,7 +342,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                     hasActive && !open
                       ? 'text-cyan-400 bg-cyan-500/5'
-                      : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                      : 'text-foreground/40 hover:text-foreground/80 hover:bg-foreground/5'
                   }`}
                 >
                   <GroupIcon className="w-4 h-4" />
@@ -349,7 +351,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="ml-3 pl-2 border-l border-white/10 space-y-0.5 py-1">
+                  <div className="ml-3 pl-2 border-l border-foreground/10 space-y-0.5 py-1">
                     {group.items.map(item => (
                       <SidebarLink key={item.to} item={item} onClose={onClose} nested
                         unreadAlerts={unreadAlerts} isModuleLocked={isModuleLocked} />
@@ -364,7 +366,7 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Pinned footer: shrink-0 keeps it visible however long the nav gets.
             Admin/Subscription/Meal are a single icon row (was 3 stacked full
             pills) — same shortcuts, a fraction of the height. */}
-        <div className="p-3 border-t border-white/10 shrink-0">
+        <div className="p-3 border-t border-foreground/10 shrink-0">
           <div className="flex gap-1.5 mb-2">
             {isAdmin && (
               <NavLink
@@ -401,40 +403,49 @@ export default function Sidebar({ isOpen, onClose }) {
             >
               <UtensilsCrossed className="w-4.5 h-4.5" />
               {isModuleLocked?.('meals') && (
-                <Lock className="w-3 h-3 text-amber-400 absolute -top-1.5 -right-1.5 bg-[#12122a] rounded-full p-0.5" />
+                <Lock className="w-3 h-3 text-amber-400 absolute -top-1.5 -right-1.5 bg-card rounded-full p-0.5" />
               )}
             </NavLink>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-foreground/60 hover:bg-foreground/10 hover:text-foreground transition-all"
+            >
+              {theme === 'dark' ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            </button>
           </div>
 
           <div className="relative">
             <button
               onClick={() => setProfileOpen(o => !o)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left hover:bg-white/5 transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left hover:bg-foreground/5 transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/80 truncate">{user?.user_metadata?.full_name || 'User'}</p>
-                <p className="text-xs text-white/30 truncate">{user?.email}</p>
+                <p className="text-sm text-foreground/80 truncate">{user?.user_metadata?.full_name || 'User'}</p>
+                <p className="text-xs text-foreground/30 truncate">{user?.email}</p>
               </div>
-              <ChevronUp className={`w-4 h-4 text-white/30 shrink-0 transition-transform duration-200 ${profileOpen ? '' : 'rotate-180'}`} />
+              <ChevronUp className={`w-4 h-4 text-foreground/30 shrink-0 transition-transform duration-200 ${profileOpen ? '' : 'rotate-180'}`} />
             </button>
 
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-[55]" onClick={() => setProfileOpen(false)} />
-                <div className="absolute left-0 right-0 bottom-full mb-2 bg-[#12122a] border border-white/10 rounded-xl shadow-2xl z-[56] overflow-hidden">
+                <div className="absolute left-0 right-0 bottom-full mb-2 bg-muted border border-foreground/10 rounded-xl shadow-2xl z-[56] overflow-hidden">
                   <button
                     onClick={() => { setProfileOpen(false); setPwForm({ current: '', next: '', confirm: '' }); setShowPasswordModal(true); }}
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 w-full transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground/60 hover:text-foreground hover:bg-foreground/5 w-full transition-colors"
                   >
                     <KeyRound className="w-4 h-4" />
                     Change Password
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors border-t border-white/5"
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors border-t border-foreground/5"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
@@ -449,28 +460,28 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowPasswordModal(false)}>
-          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white">Change Password</h2>
-              <button onClick={() => setShowPasswordModal(false)} className="text-white/40 hover:text-white transition-colors">
+          <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+              <h2 className="text-lg font-semibold text-foreground">Change Password</h2>
+              <button onClick={() => setShowPasswordModal(false)} className="text-foreground/40 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleChangePassword} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Current Password</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Current Password</label>
                 <input
                   type="password"
                   required
                   autoComplete="current-password"
                   value={pwForm.current}
                   onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">New Password</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">New Password</label>
                 <input
                   type="password"
                   required
@@ -478,12 +489,12 @@ export default function Sidebar({ isOpen, onClose }) {
                   autoComplete="new-password"
                   value={pwForm.next}
                   onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
                 />
-                <p className="text-xs text-white/30 mt-1">At least 6 characters</p>
+                <p className="text-xs text-foreground/30 mt-1">At least 6 characters</p>
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Confirm New Password</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Confirm New Password</label>
                 <input
                   type="password"
                   required
@@ -491,7 +502,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   autoComplete="new-password"
                   value={pwForm.confirm}
                   onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
                 />
               </div>
               <button
@@ -509,34 +520,34 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Edit Workspace Modal */}
       {workspaceModal === 'edit' && currentEntity && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setWorkspaceModal(null)}>
-          <div className="bg-[#12122a] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white">Edit Workspace</h2>
-              <button onClick={() => setWorkspaceModal(null)} className="text-white/40 hover:text-white transition-colors">
+          <div className="bg-muted border border-foreground/10 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
+              <h2 className="text-lg font-semibold text-foreground">Edit Workspace</h2>
+              <button onClick={() => setWorkspaceModal(null)} className="text-foreground/40 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleEditWorkspace} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Workspace Name</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Workspace Name</label>
                 <input
                   type="text"
                   required
                   value={wsForm.name}
                   onChange={e => setWsForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">Type</label>
+                <label className="block text-sm text-foreground/50 mb-1.5">Type</label>
                 <select
                   value={wsForm.type}
                   onChange={e => setWsForm(f => ({ ...f, type: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer capitalize"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer capitalize"
                 >
                   {['personal', 'family', 'business'].map(t => (
-                    <option key={t} value={t} className="bg-[#12122a] capitalize">{t}</option>
+                    <option key={t} value={t} className="bg-muted capitalize">{t}</option>
                   ))}
                 </select>
               </div>
@@ -555,31 +566,31 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Delete Workspace Modal */}
       {workspaceModal === 'delete' && currentEntity && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setWorkspaceModal(null)}>
-          <div className="bg-[#12122a] border border-red-500/20 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="bg-muted border border-red-500/20 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-foreground/10">
               <h2 className="text-lg font-semibold text-red-400 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" /> Delete Workspace
               </h2>
-              <button onClick={() => setWorkspaceModal(null)} className="text-white/40 hover:text-white transition-colors">
+              <button onClick={() => setWorkspaceModal(null)} className="text-foreground/40 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-white/70">
-                This permanently deletes <span className="font-semibold text-white">{currentEntity.name}</span> and{' '}
+              <p className="text-sm text-foreground/70">
+                This permanently deletes <span className="font-semibold text-foreground">{currentEntity.name}</span> and{' '}
                 <span className="text-red-400 font-medium">everything in it</span> — all transactions, accounts,
                 budgets, savings, assets, liabilities, reports history. This cannot be undone.
               </p>
               <div>
-                <label className="block text-sm text-white/50 mb-1.5">
-                  Type <span className="text-white font-medium">{currentEntity.name}</span> to confirm
+                <label className="block text-sm text-foreground/50 mb-1.5">
+                  Type <span className="text-foreground font-medium">{currentEntity.name}</span> to confirm
                 </label>
                 <input
                   type="text"
                   value={wsConfirmName}
                   onChange={e => setWsConfirmName(e.target.value)}
                   placeholder={currentEntity.name}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500/50"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:border-red-500/50"
                   autoFocus
                 />
               </div>

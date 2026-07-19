@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { EntityProvider } from './context/EntityContext';
 import { AccountProvider } from './context/AccountContext';
@@ -64,6 +65,7 @@ const g = (key, el) => <PremiumGate module={key}>{el}</PremiumGate>;
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <SubscriptionProvider>
       <EntityProvider>
@@ -159,6 +161,7 @@ function App() {
       </EntityProvider>
       </SubscriptionProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
