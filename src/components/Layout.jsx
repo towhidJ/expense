@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router';
 import Sidebar from './Sidebar';
+import ManualLinks from './ManualLinks';
 import { supabase } from '../lib/supabase';
 import { Menu, Smartphone } from 'lucide-react';
 
@@ -39,16 +40,19 @@ export default function Layout() {
         </main>
 
         <footer className="flex flex-col sm:flex-row items-center gap-2 sm:justify-between px-6 py-4 border-t border-white/5 text-xs text-muted-foreground/60">
-          {apk ? (
-            <a
-              href={apk.apk_url}
-              download
-              className="flex items-center gap-2 text-cyan-400/80 hover:text-cyan-300 transition-colors font-medium"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              Download Android App (v{apk.version_name})
-            </a>
-          ) : <span />}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {apk && (
+              <a
+                href={apk.apk_url}
+                download
+                className="flex items-center gap-2 text-cyan-400/80 hover:text-cyan-300 transition-colors font-medium"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                Download Android App (v{apk.version_name})
+              </a>
+            )}
+            <ManualLinks />
+          </div>
           <span className="flex items-center gap-2">
             <img src="/logo.png" alt="" className="w-4 h-4 rounded" />
             TakaKhata — Developed by Towhidul Islam

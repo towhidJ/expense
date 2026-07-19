@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { supabase } from '../lib/supabase';
 import { useIsAdmin } from '../hooks/useIsAdmin';
-import { ShieldCheck, Loader2, Users, Inbox, Wallet, LayoutGrid, Smartphone, Sparkles } from 'lucide-react';
+import { ShieldCheck, Loader2, Users, Inbox, Wallet, LayoutGrid, Smartphone, Sparkles, BookOpen } from 'lucide-react';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminRequests from '../components/admin/AdminRequests';
 import AdminBilling from '../components/admin/AdminBilling';
 import AdminModules from '../components/admin/AdminModules';
 import AdminReleases from '../components/admin/AdminReleases';
+import AdminManuals from '../components/admin/AdminManuals';
 import AdminAIKey from '../components/admin/AdminAIKey';
 
 const TABS = [
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'billing', label: 'Billing', icon: Wallet },
   { id: 'modules', label: 'Modules', icon: LayoutGrid },
   { id: 'releases', label: 'Releases', icon: Smartphone },
+  { id: 'manuals', label: 'Manuals', icon: BookOpen },
   { id: 'ai', label: 'AI Key', icon: Sparkles }
 ];
 
@@ -94,6 +96,7 @@ export default function Admin() {
       {tab === 'billing' && <AdminBilling />}
       {tab === 'modules' && <AdminModules />}
       {tab === 'releases' && <AdminReleases />}
+      {tab === 'manuals' && <AdminManuals />}
       {tab === 'ai' && <AdminAIKey />}
     </div>
   );

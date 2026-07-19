@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import ManualLinks from '../components/ManualLinks';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function Login() {
@@ -178,6 +179,9 @@ export default function Login() {
             </button>
           </div>
         </div>
+
+        {/* Public user manuals — visible before sign-in */}
+        <ManualLinks className="mt-6 justify-center text-xs" linkClassName="text-white/40 hover:text-cyan-400" />
       </div>
     </div>
   );
