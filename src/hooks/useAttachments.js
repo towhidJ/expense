@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { uploadToMinio, removeFromMinio } from '../lib/minioStorage';
 import { useAuth } from '../context/AuthContext';
 import { useEntity } from '../context/EntityContext';
 
@@ -23,12 +24,7 @@ export function useAttachments() {
     setUploading(true);
     try {
       const path = `${user.id}/${Date.now()}_${safeName(file.name)}`;
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { cacheControl: '3600', upsert: false });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      const publicUrl = await uploadToMinio(BUCKET, path, file);
 
       const { data, error } = await supabase
         .from('attachments')
@@ -42,7 +38,7 @@ export function useAttachments() {
           expiry_date: expiryDate,
           title,
           file_name: file.name,
-          file_url: urlData.publicUrl,
+          file_url: publicUrl,
           storage_path: path,
           file_size: file.size,
           content_type: file.type
@@ -84,7 +80,7 @@ export function useAttachments() {
   const deleteAttachment = useCallback(async (attachment) => {
     if (!user) return;
     if (attachment.storage_path) {
-      await supabase.storage.from(BUCKET).remove([attachment.storage_path]);
+      await removeFromMinio(BUCKET, [attachment.storage_path]);
     }
     const { error } = await supabase
       .from('attachments')

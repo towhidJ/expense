@@ -156,6 +156,53 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (saved == true) _load();
   }
 
+  void _preview(Map<String, dynamic> d) {
+    final url = d['file_url'] as String?;
+    if (url == null) return;
+    final isImage = ((d['content_type'] as String?) ?? '').startsWith('image/');
+    if (!isImage) {
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: kCard,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: InteractiveViewer(
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (c, child, progress) => progress == null
+                        ? child
+                        : const Padding(
+                            padding: EdgeInsets.all(48),
+                            child: CircularProgressIndicator(color: kCyan),
+                          ),
+                    errorBuilder: (c, err, st) => Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text('Could not load "${d['title'] ?? d['file_name'] ?? ''}".',
+                          style: TextStyle(color: kFg54)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _pickSource() {
     showModalBottomSheet<void>(
       context: context,
@@ -230,9 +277,28 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     final soon = expiry != null &&
                         !expired &&
                         expiry.isBefore(today.add(const Duration(days: 30)));
+                    final isImage = ((d['content_type'] as String?) ?? '').startsWith('image/');
+                    final url = d['file_url'] as String?;
                     return Card(
                       child: ListTile(
-                        leading: Text(meta.$1, style: const TextStyle(fontSize: 22)),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: isImage && url != null
+                              ? Image.network(
+                                  url,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: Center(child: Text(meta.$1, style: const TextStyle(fontSize: 22)))),
+                                )
+                              : SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: Center(child: Text(meta.$1, style: const TextStyle(fontSize: 22)))),
+                        ),
                         title: Text(d['title'] ?? d['file_name'] ?? '', style: const TextStyle(fontSize: 14)),
                         subtitle: Text(
                           '${meta.$2}'
@@ -244,12 +310,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           color: kCard,
                           icon: Icon(Icons.more_vert, color: kFg38, size: 20),
                           onSelected: (v) async {
-                            if (v == 'open') {
-                              final url = d['file_url'] as String?;
-                              if (url != null) {
-                                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                              }
-                            }
+                            if (v == 'preview') _preview(d);
                             if (v == 'delete') {
                               try {
                                 await widget.state.deleteVaultDocument(d);
@@ -263,16 +324,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                             }
                           },
                           itemBuilder: (_) => const [
-                            PopupMenuItem(value: 'open', child: Text('Open')),
+                            PopupMenuItem(value: 'preview', child: Text('Preview')),
                             PopupMenuItem(value: 'delete', child: Text('Delete')),
                           ],
                         ),
-                        onTap: () async {
-                          final url = d['file_url'] as String?;
-                          if (url != null) {
-                            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                          }
-                        },
+                        onTap: () => _preview(d),
                       ),
                     );
                   }),

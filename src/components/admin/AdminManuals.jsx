@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { uploadToMinio, removeFromMinio } from '../../lib/minioStorage';
 import { UploadCloud, BookOpen, Trash2, ExternalLink, FileUp, Loader2 } from 'lucide-react';
 
 const BUCKET = 'app-manuals';
@@ -55,22 +56,13 @@ export default function AdminManuals() {
     try {
       const safe = form.title.trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase();
       const path = `${Date.now()}-${safe || 'manual'}.pdf`;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, {
-          contentType: 'application/pdf',
-          cacheControl: '3600',
-          upsert: true
-        });
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      const publicUrl = await uploadToMinio(BUCKET, path, file, 'application/pdf');
 
       const { error: insErr } = await supabase.from('app_manuals').insert({
         title: form.title.trim(),
         description: form.description.trim() || null,
         file_path: path,
-        file_url: urlData.publicUrl,
+        file_url: publicUrl,
         file_size: file.size,
         sort_order: manuals.length
       });
@@ -89,7 +81,7 @@ export default function AdminManuals() {
   const handleDelete = async (m) => {
     if (!window.confirm(`Delete "${m.title}"? It will disappear from the login page and footer.`)) return;
     try {
-      await supabase.storage.from(BUCKET).remove([m.file_path]);
+      await removeFromMinio(BUCKET, [m.file_path]);
       const { error } = await supabase.from('app_manuals').delete().eq('id', m.id);
       if (error) throw error;
       await fetchManuals();

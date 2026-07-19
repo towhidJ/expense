@@ -27,3 +27,7 @@ dist-ssr
 # Secrets — never commit service-account keys
 *firebase-adminsdk*.json
 takakhata-52fb2-firebase-adminsdk-fbsvc-b03c71a005.json
+
+# MinIO credentials used locally to push Supabase edge function secrets
+# (`supabase secrets set --env-file`) — must never reach the repo.
+supabase/.env*

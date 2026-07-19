@@ -2,6 +2,7 @@
 // clashes with our model class.
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'minio_storage.dart';
 import 'models.dart';
 
 final supabase = Supabase.instance.client;
@@ -916,10 +917,8 @@ class AppState extends ChangeNotifier {
   }) async {
     final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = '$_uid/${DateTime.now().millisecondsSinceEpoch}_$safe';
-    await supabase.storage.from('documents').uploadBinary(
-        path, Uint8List.fromList(bytes),
-        fileOptions: FileOptions(cacheControl: '3600', contentType: contentType));
-    final url = supabase.storage.from('documents').getPublicUrl(path);
+    final url = await MinioStorage.upload(
+        bucket: 'documents', path: path, bytes: bytes, contentType: contentType);
     await supabase.from('attachments').insert({
       'user_id': _uid,
       'entity_id': currentEntity?.id,
@@ -947,7 +946,7 @@ class AppState extends ChangeNotifier {
     final path = a.storagePath;
     if (path != null && path.isNotEmpty) {
       try {
-        await supabase.storage.from('documents').remove([path]);
+        await MinioStorage.remove('documents', [path]);
       } catch (_) {/* file already gone — still drop the row */}
     }
     await supabase.from('attachments').delete().eq('id', a.id).eq('user_id', _uid);
@@ -1228,10 +1227,8 @@ class AppState extends ChangeNotifier {
       String groupId, List<int> bytes, String filename) async {
     final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = 'meal/$groupId/${DateTime.now().millisecondsSinceEpoch}_$safe';
-    await supabase.storage.from('documents').uploadBinary(
-        path, Uint8List.fromList(bytes),
-        fileOptions: const FileOptions(cacheControl: '3600'));
-    final url = supabase.storage.from('documents').getPublicUrl(path);
+    final url = await MinioStorage.upload(
+        bucket: 'documents', path: path, bytes: bytes, contentType: 'image/jpeg');
     return (url, path);
   }
 
@@ -2525,10 +2522,8 @@ class AppState extends ChangeNotifier {
   }) async {
     final safe = filename.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = '$_uid/${DateTime.now().millisecondsSinceEpoch}_$safe';
-    await supabase.storage.from('documents').uploadBinary(
-        path, Uint8List.fromList(bytes),
-        fileOptions: FileOptions(cacheControl: '3600', contentType: contentType));
-    final url = supabase.storage.from('documents').getPublicUrl(path);
+    final url = await MinioStorage.upload(
+        bucket: 'documents', path: path, bytes: bytes, contentType: contentType);
     await supabase.from('attachments').insert({
       'user_id': _uid,
       'entity_id': currentEntity?.id,
@@ -2547,7 +2542,7 @@ class AppState extends ChangeNotifier {
     final path = doc['storage_path'] as String?;
     if (path != null) {
       try {
-        await supabase.storage.from('documents').remove([path]);
+        await MinioStorage.remove('documents', [path]);
       } catch (_) {/* row cleanup still proceeds */}
     }
     await supabase.from('attachments').delete().eq('id', doc['id']).eq('user_id', _uid);

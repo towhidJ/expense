@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { uploadToMinio, removeFromMinio } from '../../lib/minioStorage';
 import { UploadCloud, Smartphone, Trash2, Download, FileUp, Loader2 } from 'lucide-react';
 
 const BUCKET = 'app-releases';
@@ -64,23 +65,14 @@ export default function AdminReleases() {
     setUploading(true);
     try {
       const path = `v${code}/TakaKhata-${form.version_name.trim()}.apk`;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, apkFile, {
-          contentType: 'application/vnd.android.package-archive',
-          cacheControl: '3600',
-          upsert: true
-        });
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      const publicUrl = await uploadToMinio(BUCKET, path, apkFile, 'application/vnd.android.package-archive');
 
       const { error: insErr } = await supabase.from('app_versions').insert({
         version_code: code,
         version_name: form.version_name.trim(),
         notes: form.notes.trim() || null,
         apk_path: path,
-        apk_url: urlData.publicUrl,
+        apk_url: publicUrl,
         file_size: apkFile.size
       });
       if (insErr) throw insErr;
@@ -98,7 +90,7 @@ export default function AdminReleases() {
   const handleDelete = async (v) => {
     if (!window.confirm(`Delete version ${v.version_name} (code ${v.version_code})? Devices will no longer be offered this update.`)) return;
     try {
-      await supabase.storage.from(BUCKET).remove([v.apk_path]);
+      await removeFromMinio(BUCKET, [v.apk_path]);
       const { error } = await supabase.from('app_versions').delete().eq('id', v.id);
       if (error) throw error;
       await fetchVersions();

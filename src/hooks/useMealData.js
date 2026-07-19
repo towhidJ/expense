@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { uploadToMinio } from '../lib/minioStorage';
 import { useAuth } from '../context/AuthContext';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -318,12 +319,8 @@ export function useMealData(groupId, year, month) {
   const uploadReceipt = async (file) => {
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `meal/${groupId}/${Date.now()}_${safe}`;
-    const { error } = await supabase.storage
-      .from('documents')
-      .upload(path, file, { cacheControl: '3600', upsert: false });
-    if (error) throw error;
-    const { data } = supabase.storage.from('documents').getPublicUrl(path);
-    return { url: data.publicUrl, path };
+    const url = await uploadToMinio('documents', path, file);
+    return { url, path };
   };
 
   const addExpense = async ({ expense_type, amount, date, note, spent_by, items, attachment_url, attachment_path }) => {
